@@ -1,0 +1,99 @@
+{
+	"title": "Metal SSG Docs",
+	"index": {
+		"title": "Home",
+		"description": "Create beautiful sites for your projects with the power of Soy, Metal.js, and Markdown.",
+		"srcFilePath": "src/pages/index.soy",
+		"url": "/",
+		"children": [
+			{
+				"children": [
+					{
+						"description": "Getting started with a metal-ssg project.",
+						"icon": "arrow-right-rod",
+						"layout": "docs",
+						"title": "Getting Started",
+						"weight": 1,
+						"srcFilePath": "src/pages/docs/getting-started.md",
+						"url": "/docs/getting-started.html"
+					},
+					{
+						"description": "Gulp tasks for site generating, and configuration options.",
+						"icon": "gear",
+						"layout": "docs",
+						"title": "Tasks",
+						"weight": 2,
+						"srcFilePath": "src/pages/docs/tasks.md",
+						"url": "/docs/tasks.html"
+					},
+					{
+						"description": "Basic project structure and boilerplate.",
+						"icon": "folder",
+						"layout": "docs",
+						"title": "Project Structure",
+						"weight": 3,
+						"srcFilePath": "src/pages/docs/project-structure.md",
+						"url": "/docs/project-structure.html"
+					},
+					{
+						"description": "Documentation on base layout and sub layouts.",
+						"layout": "docs",
+						"title": "Layouts",
+						"weight": 4,
+						"srcFilePath": "src/pages/docs/layouts.md",
+						"url": "/docs/layouts.html"
+					},
+					{
+						"description": "Creating pages in soy and markdown.",
+						"layout": "docs",
+						"title": "Pages",
+						"weight": 5,
+						"srcFilePath": "src/pages/docs/pages.md",
+						"url": "/docs/pages.html"
+					},
+					{
+						"description": "Creating and rendering Metal components.",
+						"icon": "module",
+						"layout": "docs",
+						"title": "Metal Components",
+						"weight": 6,
+						"srcFilePath": "src/pages/docs/metal-components.md",
+						"url": "/docs/metal-components.html"
+					},
+					{
+						"description": "Documentation search.",
+						"hidden": true,
+						"title": "Documentation Search",
+						"srcFilePath": "src/pages/docs/search.soy",
+						"url": "/docs/search.html"
+					}
+				],
+				"description": "List of articles documenting metal-ssg.",
+				"title": "Documentation",
+				"srcFilePath": "src/pages/docs/index.soy",
+				"url": "/docs"
+			},
+			{
+				"title": "Updates",
+				"description": "Release information for metal-ssg.",
+				"updates": [
+					{
+						"version": "0.1.0",
+						"major": false,
+						"features": [
+							{
+								"icon": "hammer",
+								"title": "Initial release",
+								"description": "Implements basic site generation with soy, markdown, and metal.",
+								"url": "https://github.com/Robert-Frampton/metal-ssg/commit/19f600816770ea7aa1ae6939c777be4e5d4c5d9a"
+							}
+						]
+					}
+				],
+				"srcFilePath": "src/pages/updates/index.soy",
+				"url": "/updates"
+			}
+		]
+	},
+	"repo": "https://github.com/Robert-Frampton/metal-ssg-docs"
+}
