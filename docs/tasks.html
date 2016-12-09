@@ -4,7 +4,7 @@
 ssg.registerTasks({
     <span class="hljs-attr">gulp</span>: gulp
 });
-</code></pre></article><article id="generate"><h2>Generate</h2><p>To generate your distribution files, simple run the following command.</p><pre><code class="language-bash">gulp generate
+</code></pre></article><article id="tasks"><h2>Available Tasks</h2><h3>Generate</h3><p>To generate your distribution files, simple run the following command.</p><pre><code class="language-bash">gulp generate
 </code></pre><p>This will render all <code>soy</code> and <code>markdown</code> files from <code>src</code> into HTML and place them in the <code>dist</code> folder.</p></article><article id="configuration"><h2>Configuration</h2><h3><code>registerTasks</code></h3><h4>gulp</h4><ul><li>Required: <code>true</code></li><li>Type: Gulp instance</li></ul><p>An instance of <a href="http://gulpjs.com/">gulp</a>.</p><h4>markdownOptions</h4><ul><li>Required: <code>false</code></li><li>Type: <code>Object</code></li></ul><p>An Object Literal containing configuration options for <a href="https://github.com/jonschlinkert/remarkable">Remarkable</a> which is used to render Markdown files.</p><p>Exmaple:</p><pre><code class="language-js">ssg.registerTasks({
     <span class="hljs-attr">gulp</span>: gulp,
     <span class="hljs-attr">markdownOptions</span>: {

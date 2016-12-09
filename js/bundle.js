@@ -18888,11 +18888,11 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param22 = function param22() {
+      var param4 = function param4() {
         $sidebar(soy.$$assignDefaults({ section: opt_data.site.index.children[0] }, opt_data), null, opt_ijData);
         $guide(opt_data, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param22 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param4 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -18911,16 +18911,16 @@ babelHelpers;
       ie_open('header', null, null, 'class', 'guide-header');
       ie_open('div', null, null, 'class', 'container-hybrid');
       ie_open('h1', null, null, 'class', 'guide-header-title');
-      var dyn1 = opt_data.page.title;
-      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
+      var dyn0 = opt_data.page.title;
+      if (typeof dyn0 == 'function') dyn0();else if (dyn0 != null) itext(dyn0);
       ie_close('h1');
       ie_close('div');
       ie_close('header');
       ie_open('div', null, null, 'class', 'container-hybrid');
       ie_open('div', null, null, 'class', 'docs-guide row');
       ie_open('div', null, null, 'class', 'docs-content col-xs-16 col-md-9');
-      var dyn2 = opt_data.content;
-      if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
+      var dyn1 = opt_data.content;
+      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
       $feedback(opt_data, null, opt_ijData);
       ie_close('div');
       ie_open('nav', null, null, 'class', 'col-xs-16 col-md-offset-2 col-md-5');
@@ -19005,20 +19005,20 @@ babelHelpers;
      * @return {void}
      * @suppress {checkTypes}
      */
-    function __deltemplate_s55_a2205383(opt_data, opt_ignored, opt_ijData) {
+    function __deltemplate_s37_a2205383(opt_data, opt_ignored, opt_ijData) {
       ie_open('a', null, null, 'class', 'sidebar-link ' + (opt_data.page.active ? 'sidebar-link-selected' : ''), 'href', opt_data.page.url);
       ie_void('span', null, null, 'class', 'sidebar-icon icon-16-' + opt_data.page.icon);
       ie_open('span');
-      var dyn3 = opt_data.page.title;
-      if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
+      var dyn2 = opt_data.page.title;
+      if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
       ie_close('span');
       ie_close('a');
     }
-    exports.__deltemplate_s55_a2205383 = __deltemplate_s55_a2205383;
+    exports.__deltemplate_s37_a2205383 = __deltemplate_s37_a2205383;
     if (goog.DEBUG) {
-      __deltemplate_s55_a2205383.soyTemplateName = 'docs.__deltemplate_s55_a2205383';
+      __deltemplate_s37_a2205383.soyTemplateName = 'docs.__deltemplate_s37_a2205383';
     }
-    soy.$$registerDelegateFn(soy.$$getDelTemplateId('SSGNavigation.anchor.idom'), 'sidebar', 0, __deltemplate_s55_a2205383);
+    soy.$$registerDelegateFn(soy.$$getDelTemplateId('SSGNavigation.anchor.idom'), 'sidebar', 0, __deltemplate_s37_a2205383);
 
     exports.render.params = ["page", "site"];
     exports.render.types = { "page": "any", "site": "any" };
@@ -19127,8 +19127,8 @@ babelHelpers;
       ie_open('div', null, null, 'class', ($$temp = opt_data.elementClasses) == null ? 'main' : $$temp);
       ie_open('main', null, null, 'class', 'content');
       $topbar(opt_data, null, opt_ijData);
-      var dyn4 = opt_data.content;
-      if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
+      var dyn3 = opt_data.content;
+      if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
       ie_close('main');
       ie_close('div');
     }
@@ -19298,13 +19298,13 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param3 = function param3() {
+      var param71 = function param71() {
         $header(opt_data, null, opt_ijData);
         $why(null, null, opt_ijData);
         $features(null, null, opt_ijData);
         $footer(null, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param3 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param71 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -19325,8 +19325,8 @@ babelHelpers;
       itext('Metal SSG');
       ie_close('h1');
       ie_open('h2', null, null, 'class', 'header-subtitle');
-      var dyn0 = opt_data.site.index.description;
-      if (typeof dyn0 == 'function') dyn0();else if (dyn0 != null) itext(dyn0);
+      var dyn4 = opt_data.site.index.description;
+      if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
       ie_close('h2');
       ie_open('div', null, null, 'class', 'header-cta');
       ie_open('a', null, null, 'href', '/docs/getting-started.html', 'class', 'btn btn-accent');
@@ -21025,7 +21025,7 @@ babelHelpers;
         itext(' properties will be used for search functionality.');
         ie_close('p');
         ie_close('article');
-        ie_open('article', null, null, 'id', 'soy');
+        ie_open('article', null, null, 'id', 'soy_files');
         ie_open('h2');
         itext('Soy');
         ie_close('h2');
@@ -21146,7 +21146,7 @@ babelHelpers;
         itext(' file.');
         ie_close('p');
         ie_close('article');
-        ie_open('article', null, null, 'id', 'markdown');
+        ie_open('article', null, null, 'id', 'markdown_files');
         ie_open('h2');
         itext('Markdown');
         ie_close('h2');
@@ -21245,12 +21245,13 @@ babelHelpers;
         ie_open('span', null, null, 'class', 'hljs-comment');
         itext('# Hello, World!');
         ie_close('span');
-        itext('\n\n{literal}\n\n<script type=');
+        itext('\n\n{literal}\n\n<pre\n    var example = function() {return ');
         ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"text/javascript"');
+        itext('\'Example js\'');
         ie_close('span');
+        itext(';}\n</pre');
         ie_open('span', null, null, 'class', 'hljs-string');
-        itext('>\n    var example = function() {return \'Example js\';}\n</script>\n\n{/literal}\n');
+        itext('>\n\n{/literal}\n');
         ie_close('span');
         ie_close('code');
         ie_close('pre');
@@ -21648,10 +21649,13 @@ babelHelpers;
         ie_close('code');
         ie_close('pre');
         ie_close('article');
-        ie_open('article', null, null, 'id', 'generate');
+        ie_open('article', null, null, 'id', 'tasks');
         ie_open('h2');
-        itext('Generate');
+        itext('Available Tasks');
         ie_close('h2');
+        ie_open('h3');
+        itext('Generate');
+        ie_close('h3');
         ie_open('p');
         itext('To generate your distribution files, simple run the following command.');
         ie_close('p');
