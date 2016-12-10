@@ -37,6 +37,7 @@
 					},
 					{
 						"description": "Documentation on base layout and sub layouts.",
+						"icon": "code-file",
 						"layout": "docs",
 						"title": "Layouts",
 						"weight": 4,
@@ -45,6 +46,7 @@
 					},
 					{
 						"description": "Creating pages in soy and markdown.",
+						"icon": "code-file",
 						"layout": "docs",
 						"title": "Pages",
 						"weight": 5,

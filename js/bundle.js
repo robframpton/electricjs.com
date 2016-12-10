@@ -18888,11 +18888,11 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param4 = function param4() {
+      var param22 = function param22() {
         $sidebar(soy.$$assignDefaults({ section: opt_data.site.index.children[0] }, opt_data), null, opt_ijData);
         $guide(opt_data, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param4 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param22 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -18911,16 +18911,16 @@ babelHelpers;
       ie_open('header', null, null, 'class', 'guide-header');
       ie_open('div', null, null, 'class', 'container-hybrid');
       ie_open('h1', null, null, 'class', 'guide-header-title');
-      var dyn0 = opt_data.page.title;
-      if (typeof dyn0 == 'function') dyn0();else if (dyn0 != null) itext(dyn0);
+      var dyn1 = opt_data.page.title;
+      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
       ie_close('h1');
       ie_close('div');
       ie_close('header');
       ie_open('div', null, null, 'class', 'container-hybrid');
       ie_open('div', null, null, 'class', 'docs-guide row');
       ie_open('div', null, null, 'class', 'docs-content col-xs-16 col-md-9');
-      var dyn1 = opt_data.content;
-      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
+      var dyn2 = opt_data.content;
+      if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
       $feedback(opt_data, null, opt_ijData);
       ie_close('div');
       ie_open('nav', null, null, 'class', 'col-xs-16 col-md-offset-2 col-md-5');
@@ -19005,20 +19005,20 @@ babelHelpers;
      * @return {void}
      * @suppress {checkTypes}
      */
-    function __deltemplate_s37_a2205383(opt_data, opt_ignored, opt_ijData) {
+    function __deltemplate_s55_a2205383(opt_data, opt_ignored, opt_ijData) {
       ie_open('a', null, null, 'class', 'sidebar-link ' + (opt_data.page.active ? 'sidebar-link-selected' : ''), 'href', opt_data.page.url);
       ie_void('span', null, null, 'class', 'sidebar-icon icon-16-' + opt_data.page.icon);
       ie_open('span');
-      var dyn2 = opt_data.page.title;
-      if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
+      var dyn3 = opt_data.page.title;
+      if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
       ie_close('span');
       ie_close('a');
     }
-    exports.__deltemplate_s37_a2205383 = __deltemplate_s37_a2205383;
+    exports.__deltemplate_s55_a2205383 = __deltemplate_s55_a2205383;
     if (goog.DEBUG) {
-      __deltemplate_s37_a2205383.soyTemplateName = 'docs.__deltemplate_s37_a2205383';
+      __deltemplate_s55_a2205383.soyTemplateName = 'docs.__deltemplate_s55_a2205383';
     }
-    soy.$$registerDelegateFn(soy.$$getDelTemplateId('SSGNavigation.anchor.idom'), 'sidebar', 0, __deltemplate_s37_a2205383);
+    soy.$$registerDelegateFn(soy.$$getDelTemplateId('SSGNavigation.anchor.idom'), 'sidebar', 0, __deltemplate_s55_a2205383);
 
     exports.render.params = ["page", "site"];
     exports.render.types = { "page": "any", "site": "any" };
@@ -19127,8 +19127,8 @@ babelHelpers;
       ie_open('div', null, null, 'class', ($$temp = opt_data.elementClasses) == null ? 'main' : $$temp);
       ie_open('main', null, null, 'class', 'content');
       $topbar(opt_data, null, opt_ijData);
-      var dyn3 = opt_data.content;
-      if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
+      var dyn4 = opt_data.content;
+      if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
       ie_close('main');
       ie_close('div');
     }
@@ -19298,13 +19298,13 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param71 = function param71() {
+      var param3 = function param3() {
         $header(opt_data, null, opt_ijData);
         $why(null, null, opt_ijData);
         $features(null, null, opt_ijData);
         $footer(null, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param71 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param3 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -19325,8 +19325,8 @@ babelHelpers;
       itext('Metal SSG');
       ie_close('h1');
       ie_open('h2', null, null, 'class', 'header-subtitle');
-      var dyn4 = opt_data.site.index.description;
-      if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
+      var dyn0 = opt_data.site.index.description;
+      if (typeof dyn0 == 'function') dyn0();else if (dyn0 != null) itext(dyn0);
       ie_close('h2');
       ie_open('div', null, null, 'class', 'header-cta');
       ie_open('a', null, null, 'href', '/docs/getting-started.html', 'class', 'btn btn-accent');
@@ -21160,6 +21160,13 @@ babelHelpers;
         itext('soy');
         ie_close('code');
         itext(' pages.');
+        ie_close('p');
+        ie_open('p');
+        itext('The ');
+        ie_open('code');
+        itext('namespace');
+        ie_close('code');
+        itext(' is also auto-generated based on the file path, so it does not need to be declared at the top of the file.');
         ie_close('p');
         ie_open('pre');
         ie_open('code');
