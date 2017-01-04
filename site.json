@@ -4,7 +4,7 @@
 		"title": "Home",
 		"description": "Create beautiful sites for your projects with the power of Soy, Metal.js, and Markdown.",
 		"srcFilePath": "src/pages/index.soy",
-		"url": "/",
+		"url": "/.",
 		"children": [
 			{
 				"children": [
