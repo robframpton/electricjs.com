@@ -1,5 +1,5 @@
 {
-	"title": "Electric.js Docs",
+	"title": "Metal SSG Docs",
 	"index": {
 		"title": "Home",
 		"description": "Create beautiful sites for your projects with the power of Soy, Metal.js, and Markdown.",
@@ -9,7 +9,7 @@
 			{
 				"children": [
 					{
-						"description": "Getting started with a electric project.",
+						"description": "Getting started with a metal-ssg project.",
 						"icon": "arrow-right-rod",
 						"layout": "docs",
 						"title": "Getting Started",
@@ -70,14 +70,14 @@
 						"url": "/docs/search.html"
 					}
 				],
-				"description": "List of articles documenting electric.",
+				"description": "List of articles documenting metal-ssg.",
 				"title": "Documentation",
 				"srcFilePath": "src/pages/docs/index.soy",
 				"url": "/docs"
 			},
 			{
 				"title": "Updates",
-				"description": "Release information for electric.",
+				"description": "Release information for metal-ssg.",
 				"updates": [
 					{
 						"version": "0.1.0",
@@ -87,7 +87,7 @@
 								"icon": "hammer",
 								"title": "Initial release",
 								"description": "Implements basic site generation with soy, markdown, and metal.",
-								"url": "https://github.com/liferay/electric/commit/19f600816770ea7aa1ae6939c777be4e5d4c5d9a"
+								"url": "https://github.com/Robert-Frampton/metal-ssg/commit/19f600816770ea7aa1ae6939c777be4e5d4c5d9a"
 							}
 						]
 					}
