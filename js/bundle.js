@@ -18768,6 +18768,270 @@ babelHelpers;
   var templates;
   goog.loadModule(function (exports) {
 
+    // This file was automatically generated from index.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace pageIndex.
+     * @public
+     */
+
+    goog.module('pageIndex.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    var $templateAlias1 = Soy.getTemplate('main.incrementaldom', 'render');
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      var param71 = function param71() {
+        $header(opt_data, null, opt_ijData);
+        $why(null, null, opt_ijData);
+        $features(null, null, opt_ijData);
+        $footer(null, null, opt_ijData);
+      };
+      $templateAlias1(soy.$$assignDefaults({ content: param71 }, opt_data), null, opt_ijData);
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'pageIndex.render';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $header(opt_data, opt_ignored, opt_ijData) {
+      ie_open('header', null, null, 'class', 'header');
+      ie_open('div', null, null, 'class', 'container');
+      ie_open('h1', null, null, 'class', 'header-title');
+      itext('Electric.js');
+      ie_close('h1');
+      ie_open('h2', null, null, 'class', 'header-subtitle');
+      var dyn4 = opt_data.site.index.description;
+      if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
+      ie_close('h2');
+      ie_open('div', null, null, 'class', 'header-cta');
+      ie_open('a', null, null, 'href', '/docs/getting-started.html', 'class', 'btn btn-accent');
+      itext('Getting Started');
+      ie_close('a');
+      ie_close('div');
+      ie_close('div');
+      ie_close('header');
+    }
+    exports.header = $header;
+    if (goog.DEBUG) {
+      $header.soyTemplateName = 'pageIndex.header';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $why(opt_data, opt_ignored, opt_ijData) {
+      ie_open('article', null, null, 'class', 'about');
+      ie_open('div', null, null, 'class', 'container');
+      ie_open('div', null, null, 'class', 'row');
+      ie_open('div', null, null, 'class', 'col-md-12 col-md-offset-2');
+      ie_open('h3', null, null, 'class', 'about-title');
+      itext('Why?');
+      ie_close('h3');
+      ie_open('p', null, null, 'class', 'about-description');
+      itext('Because good documentation is a must, and your project deserves better than a readme file.');
+      ie_close('p');
+      ie_open('p', null, null, 'class', 'about-description');
+      itext('Metal SSG exists to accelerate the process of writing detailed, and easy to read documentation sites.');
+      ie_close('p');
+      ie_close('div');
+      ie_close('div');
+      ie_close('div');
+      ie_close('article');
+    }
+    exports.why = $why;
+    if (goog.DEBUG) {
+      $why.soyTemplateName = 'pageIndex.why';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $features(opt_data, opt_ignored, opt_ijData) {
+      ie_open('div', null, null, 'class', 'features');
+      ie_open('div', null, null, 'class', 'container');
+      ie_open('div', null, null, 'class', 'row');
+      ie_open('section', null, null, 'class', 'feature col-md-4 col-md-offset-2');
+      ie_open('div', null, null, 'class', 'feature-icon');
+      ie_void('span', null, null, 'class', 'icon-16-code-file');
+      ie_close('div');
+      ie_open('h3', null, null, 'class', 'feature-title');
+      itext('Soy');
+      ie_close('h3');
+      ie_open('p', null, null, 'class', 'feature-description');
+      itext('Use soy to create reusable layouts and pages.');
+      ie_close('p');
+      ie_close('section');
+      ie_open('section', null, null, 'class', 'feature col-md-4');
+      ie_open('div', null, null, 'class', 'feature-icon');
+      ie_void('span', null, null, 'class', 'icon-16-code-file');
+      ie_close('div');
+      ie_open('h3', null, null, 'class', 'feature-title');
+      itext('Metal.js');
+      ie_close('h3');
+      ie_open('p', null, null, 'class', 'feature-description');
+      itext('Implement UI components with Metal.js.');
+      ie_close('p');
+      ie_close('section');
+      ie_open('section', null, null, 'class', 'feature col-md-4');
+      ie_open('div', null, null, 'class', 'feature-icon');
+      ie_void('span', null, null, 'class', 'icon-16-markdown');
+      ie_close('div');
+      ie_open('h3', null, null, 'class', 'feature-title');
+      itext('Markdown');
+      ie_close('h3');
+      ie_open('p', null, null, 'class', 'feature-description');
+      itext('Quickly right documentation with the simplicity of Markdown.');
+      ie_close('p');
+      ie_close('section');
+      ie_close('div');
+      ie_close('div');
+      ie_close('div');
+    }
+    exports.features = $features;
+    if (goog.DEBUG) {
+      $features.soyTemplateName = 'pageIndex.features';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $footer(opt_data, opt_ignored, opt_ijData) {
+      ie_open('footer', null, null, 'class', 'footer');
+      ie_open('div', null, null, 'class', 'container');
+      ie_open('div', null, null, 'class', 'row');
+      ie_open('p', null, null, 'class', 'footer-description col-md-6 col-md-offset-2');
+      itext('Copyright \xA9 2016 ');
+      ie_open('a', null, null, 'href', 'https://liferay.com');
+      itext('Liferay, Inc');
+      ie_close('a');
+      ie_close('p');
+      ie_open('p', null, null, 'class', 'footer-description col-md-6');
+      itext('Powered by ');
+      ie_open('a', null, null, 'href', 'http://wedeploy.com');
+      itext('WeDeploy\u2122');
+      ie_close('a');
+      ie_close('p');
+      ie_close('div');
+      ie_close('div');
+      ie_close('footer');
+    }
+    exports.footer = $footer;
+    if (goog.DEBUG) {
+      $footer.soyTemplateName = 'pageIndex.footer';
+    }
+
+    exports.render.params = ["site"];
+    exports.render.types = { "site": "any" };
+    exports.header.params = ["site"];
+    exports.header.types = { "site": "any" };
+    exports.why.params = [];
+    exports.why.types = {};
+    exports.features.params = [];
+    exports.features.types = {};
+    exports.footer.params = [];
+    exports.footer.types = {};
+    templates = exports;
+    return exports;
+  });
+
+  var pageIndex = function (_Component) {
+    babelHelpers.inherits(pageIndex, _Component);
+
+    function pageIndex() {
+      babelHelpers.classCallCheck(this, pageIndex);
+      return babelHelpers.possibleConstructorReturn(this, (pageIndex.__proto__ || Object.getPrototypeOf(pageIndex)).apply(this, arguments));
+    }
+
+    return pageIndex;
+  }(Component);
+
+  Soy.register(pageIndex, templates);
+  this['metalNamed']['index'] = this['metalNamed']['index'] || {};
+  this['metalNamed']['index']['pageIndex'] = pageIndex;
+  this['metalNamed']['index']['templates'] = templates;
+  this['metal']['index'] = templates;
+  /* jshint ignore:end */
+}).call(this);
+'use strict';
+
+(function () {
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+  var templates = this['metal']['index'];
+
+  var pageIndex = function (_Component) {
+    babelHelpers.inherits(pageIndex, _Component);
+
+    function pageIndex() {
+      babelHelpers.classCallCheck(this, pageIndex);
+      return babelHelpers.possibleConstructorReturn(this, (pageIndex.__proto__ || Object.getPrototypeOf(pageIndex)).apply(this, arguments));
+    }
+
+    return pageIndex;
+  }(Component);
+
+  ;
+
+  Soy.register(pageIndex, templates);
+
+  this['metal']['pageIndex'] = pageIndex;
+}).call(this);
+'use strict';
+
+(function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
     // This file was automatically generated from docs.soy.
     // Please don't edit this file by hand.
 
@@ -19174,270 +19438,6 @@ babelHelpers;
   Soy.register(main, templates);
 
   this['metal']['main'] = main;
-}).call(this);
-'use strict';
-
-(function () {
-  /* jshint ignore:start */
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-
-  var templates;
-  goog.loadModule(function (exports) {
-
-    // This file was automatically generated from index.soy.
-    // Please don't edit this file by hand.
-
-    /**
-     * @fileoverview Templates in namespace pageIndex.
-     * @public
-     */
-
-    goog.module('pageIndex.incrementaldom');
-
-    /** @suppress {extraRequire} */
-    var soy = goog.require('soy');
-    /** @suppress {extraRequire} */
-    var soydata = goog.require('soydata');
-    /** @suppress {extraRequire} */
-    goog.require('goog.i18n.bidi');
-    /** @suppress {extraRequire} */
-    goog.require('goog.asserts');
-    /** @suppress {extraRequire} */
-    goog.require('goog.string');
-    var IncrementalDom = goog.require('incrementaldom');
-    var ie_open = IncrementalDom.elementOpen;
-    var ie_close = IncrementalDom.elementClose;
-    var ie_void = IncrementalDom.elementVoid;
-    var ie_open_start = IncrementalDom.elementOpenStart;
-    var ie_open_end = IncrementalDom.elementOpenEnd;
-    var itext = IncrementalDom.text;
-    var iattr = IncrementalDom.attr;
-
-    var $templateAlias1 = Soy.getTemplate('main.incrementaldom', 'render');
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $render(opt_data, opt_ignored, opt_ijData) {
-      var param71 = function param71() {
-        $header(opt_data, null, opt_ijData);
-        $why(null, null, opt_ijData);
-        $features(null, null, opt_ijData);
-        $footer(null, null, opt_ijData);
-      };
-      $templateAlias1(soy.$$assignDefaults({ content: param71 }, opt_data), null, opt_ijData);
-    }
-    exports.render = $render;
-    if (goog.DEBUG) {
-      $render.soyTemplateName = 'pageIndex.render';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $header(opt_data, opt_ignored, opt_ijData) {
-      ie_open('header', null, null, 'class', 'header');
-      ie_open('div', null, null, 'class', 'container');
-      ie_open('h1', null, null, 'class', 'header-title');
-      itext('Metal SSG');
-      ie_close('h1');
-      ie_open('h2', null, null, 'class', 'header-subtitle');
-      var dyn4 = opt_data.site.index.description;
-      if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
-      ie_close('h2');
-      ie_open('div', null, null, 'class', 'header-cta');
-      ie_open('a', null, null, 'href', '/docs/getting-started.html', 'class', 'btn btn-accent');
-      itext('Getting Started');
-      ie_close('a');
-      ie_close('div');
-      ie_close('div');
-      ie_close('header');
-    }
-    exports.header = $header;
-    if (goog.DEBUG) {
-      $header.soyTemplateName = 'pageIndex.header';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $why(opt_data, opt_ignored, opt_ijData) {
-      ie_open('article', null, null, 'class', 'about');
-      ie_open('div', null, null, 'class', 'container');
-      ie_open('div', null, null, 'class', 'row');
-      ie_open('div', null, null, 'class', 'col-md-12 col-md-offset-2');
-      ie_open('h3', null, null, 'class', 'about-title');
-      itext('Why?');
-      ie_close('h3');
-      ie_open('p', null, null, 'class', 'about-description');
-      itext('Because good documentation is a must, and your project deserves better than a readme file.');
-      ie_close('p');
-      ie_open('p', null, null, 'class', 'about-description');
-      itext('Metal SSG exists to accelerate the process of writing detailed, and easy to read documentation sites.');
-      ie_close('p');
-      ie_close('div');
-      ie_close('div');
-      ie_close('div');
-      ie_close('article');
-    }
-    exports.why = $why;
-    if (goog.DEBUG) {
-      $why.soyTemplateName = 'pageIndex.why';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $features(opt_data, opt_ignored, opt_ijData) {
-      ie_open('div', null, null, 'class', 'features');
-      ie_open('div', null, null, 'class', 'container');
-      ie_open('div', null, null, 'class', 'row');
-      ie_open('section', null, null, 'class', 'feature col-md-4 col-md-offset-2');
-      ie_open('div', null, null, 'class', 'feature-icon');
-      ie_void('span', null, null, 'class', 'icon-16-code-file');
-      ie_close('div');
-      ie_open('h3', null, null, 'class', 'feature-title');
-      itext('Soy');
-      ie_close('h3');
-      ie_open('p', null, null, 'class', 'feature-description');
-      itext('Use soy to create reusable layouts and pages.');
-      ie_close('p');
-      ie_close('section');
-      ie_open('section', null, null, 'class', 'feature col-md-4');
-      ie_open('div', null, null, 'class', 'feature-icon');
-      ie_void('span', null, null, 'class', 'icon-16-code-file');
-      ie_close('div');
-      ie_open('h3', null, null, 'class', 'feature-title');
-      itext('Metal.js');
-      ie_close('h3');
-      ie_open('p', null, null, 'class', 'feature-description');
-      itext('Implement UI components with Metal.js.');
-      ie_close('p');
-      ie_close('section');
-      ie_open('section', null, null, 'class', 'feature col-md-4');
-      ie_open('div', null, null, 'class', 'feature-icon');
-      ie_void('span', null, null, 'class', 'icon-16-markdown');
-      ie_close('div');
-      ie_open('h3', null, null, 'class', 'feature-title');
-      itext('Markdown');
-      ie_close('h3');
-      ie_open('p', null, null, 'class', 'feature-description');
-      itext('Quickly right documentation with the simplicity of Markdown.');
-      ie_close('p');
-      ie_close('section');
-      ie_close('div');
-      ie_close('div');
-      ie_close('div');
-    }
-    exports.features = $features;
-    if (goog.DEBUG) {
-      $features.soyTemplateName = 'pageIndex.features';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $footer(opt_data, opt_ignored, opt_ijData) {
-      ie_open('footer', null, null, 'class', 'footer');
-      ie_open('div', null, null, 'class', 'container');
-      ie_open('div', null, null, 'class', 'row');
-      ie_open('p', null, null, 'class', 'footer-description col-md-6 col-md-offset-2');
-      itext('Copyright \xA9 2016 ');
-      ie_open('a', null, null, 'href', 'https://liferay.com');
-      itext('Liferay, Inc');
-      ie_close('a');
-      ie_close('p');
-      ie_open('p', null, null, 'class', 'footer-description col-md-6');
-      itext('Powered by ');
-      ie_open('a', null, null, 'href', 'http://wedeploy.com');
-      itext('WeDeploy\u2122');
-      ie_close('a');
-      ie_close('p');
-      ie_close('div');
-      ie_close('div');
-      ie_close('footer');
-    }
-    exports.footer = $footer;
-    if (goog.DEBUG) {
-      $footer.soyTemplateName = 'pageIndex.footer';
-    }
-
-    exports.render.params = ["site"];
-    exports.render.types = { "site": "any" };
-    exports.header.params = ["site"];
-    exports.header.types = { "site": "any" };
-    exports.why.params = [];
-    exports.why.types = {};
-    exports.features.params = [];
-    exports.features.types = {};
-    exports.footer.params = [];
-    exports.footer.types = {};
-    templates = exports;
-    return exports;
-  });
-
-  var pageIndex = function (_Component) {
-    babelHelpers.inherits(pageIndex, _Component);
-
-    function pageIndex() {
-      babelHelpers.classCallCheck(this, pageIndex);
-      return babelHelpers.possibleConstructorReturn(this, (pageIndex.__proto__ || Object.getPrototypeOf(pageIndex)).apply(this, arguments));
-    }
-
-    return pageIndex;
-  }(Component);
-
-  Soy.register(pageIndex, templates);
-  this['metalNamed']['index'] = this['metalNamed']['index'] || {};
-  this['metalNamed']['index']['pageIndex'] = pageIndex;
-  this['metalNamed']['index']['templates'] = templates;
-  this['metal']['index'] = templates;
-  /* jshint ignore:end */
-}).call(this);
-'use strict';
-
-(function () {
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-  var templates = this['metal']['index'];
-
-  var pageIndex = function (_Component) {
-    babelHelpers.inherits(pageIndex, _Component);
-
-    function pageIndex() {
-      babelHelpers.classCallCheck(this, pageIndex);
-      return babelHelpers.possibleConstructorReturn(this, (pageIndex.__proto__ || Object.getPrototypeOf(pageIndex)).apply(this, arguments));
-    }
-
-    return pageIndex;
-  }(Component);
-
-  ;
-
-  Soy.register(pageIndex, templates);
-
-  this['metal']['pageIndex'] = pageIndex;
 }).call(this);
 'use strict';
 
