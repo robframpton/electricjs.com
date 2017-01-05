@@ -2,9 +2,9 @@
 	"title": "Electric.js Docs",
 	"index": {
 		"title": "Home",
-		"description": "Create beautiful sites for your projects with the power of Soy, Metal.js, and Markdown.",
+		"description": "Create beautiful documentation for your projects",
 		"srcFilePath": "src/pages/index.soy",
-		"url": "/.",
+		"url": "/",
 		"children": [
 			{
 				"children": [
