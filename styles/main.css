@@ -8813,13 +8813,18 @@ button.close {
 .feature {
   text-align: center;
   margin-bottom: 80px; }
+  .feature:hover .feature-icon [class^="icon-16-"],
+  .feature:hover .feature-icon [class*="icon-16-"], .feature:focus .feature-icon [class^="icon-16-"],
+  .feature:focus .feature-icon [class*="icon-16-"] {
+    color: rgba(255, 204, 0, 0.7); }
 
 .feature-icon [class^="icon-16-"],
 .feature-icon [class*="icon-16-"] {
   color: #FFCC00;
   font-size: 42px;
   position: relative;
-  top: 10px; }
+  top: 10px;
+  transition: color 0.3s ease-in-out; }
 
 .feature-title {
   font-family: "Galano Bold", sans-serif;

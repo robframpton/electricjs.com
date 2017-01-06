@@ -4,7 +4,7 @@
 		"title": "Home",
 		"description": "Create beautiful documentation for your projects",
 		"srcFilePath": "src/pages/index.soy",
-		"url": "/",
+		"url": "/.",
 		"children": [
 			{
 				"children": [
