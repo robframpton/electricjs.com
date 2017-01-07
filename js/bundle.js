@@ -19305,403 +19305,6 @@ babelHelpers;
   var templates;
   goog.loadModule(function (exports) {
 
-    // This file was automatically generated from index.soy.
-    // Please don't edit this file by hand.
-
-    /**
-     * @fileoverview Templates in namespace pageIndex.
-     * @public
-     */
-
-    goog.module('pageIndex.incrementaldom');
-
-    /** @suppress {extraRequire} */
-    var soy = goog.require('soy');
-    /** @suppress {extraRequire} */
-    var soydata = goog.require('soydata');
-    /** @suppress {extraRequire} */
-    goog.require('goog.i18n.bidi');
-    /** @suppress {extraRequire} */
-    goog.require('goog.asserts');
-    /** @suppress {extraRequire} */
-    goog.require('goog.string');
-    var IncrementalDom = goog.require('incrementaldom');
-    var ie_open = IncrementalDom.elementOpen;
-    var ie_close = IncrementalDom.elementClose;
-    var ie_void = IncrementalDom.elementVoid;
-    var ie_open_start = IncrementalDom.elementOpenStart;
-    var ie_open_end = IncrementalDom.elementOpenEnd;
-    var itext = IncrementalDom.text;
-    var iattr = IncrementalDom.attr;
-
-    var $templateAlias1 = Soy.getTemplate('main.incrementaldom', 'render');
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $render(opt_data, opt_ignored, opt_ijData) {
-      var param26 = function param26() {
-        $header(opt_data, null, opt_ijData);
-        $why(null, null, opt_ijData);
-        $highlights(null, null, opt_ijData);
-        $how(null, null, opt_ijData);
-        $features(null, null, opt_ijData);
-        $footer(null, null, opt_ijData);
-      };
-      $templateAlias1(soy.$$assignDefaults({ content: param26 }, opt_data), null, opt_ijData);
-    }
-    exports.render = $render;
-    if (goog.DEBUG) {
-      $render.soyTemplateName = 'pageIndex.render';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $header(opt_data, opt_ignored, opt_ijData) {
-      ie_open('header', null, null, 'class', 'header');
-      ie_open('div', null, null, 'class', 'container');
-      ie_open('h1', null, null, 'class', 'header-title');
-      itext('Electric');
-      ie_open('span', null, null, 'class', 'header-title-js');
-      itext('.js');
-      ie_close('span');
-      ie_close('h1');
-      ie_open('h2', null, null, 'class', 'header-subtitle');
-      var dyn1 = opt_data.site.index.description;
-      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
-      ie_close('h2');
-      ie_open('div', null, null, 'class', 'header-cta');
-      ie_open('a', null, null, 'href', '/docs/getting-started.html', 'class', 'btn btn-accent');
-      ie_void('span', null, null, 'class', 'icon-16-circle-arrow');
-      itext('Get Started');
-      ie_close('a');
-      ie_close('div');
-      ie_close('div');
-      ie_close('header');
-    }
-    exports.header = $header;
-    if (goog.DEBUG) {
-      $header.soyTemplateName = 'pageIndex.header';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $why(opt_data, opt_ignored, opt_ijData) {
-      ie_open('article', null, null, 'class', 'about');
-      ie_open('div', null, null, 'class', 'container');
-      ie_open('div', null, null, 'class', 'row');
-      ie_open('div', null, null, 'class', 'col-md-12 col-md-offset-2');
-      ie_open('h3', null, null, 'class', 'about-title');
-      itext('Why?');
-      ie_close('h3');
-      ie_open('p', null, null, 'class', 'about-description');
-      itext('Because good documentation is a must, and your project deserves better than a readme file.');
-      ie_close('p');
-      ie_open('p', null, null, 'class', 'about-description');
-      itext('Electric exists to accelerate the process of writing detailed, and easy to read documentation sites.');
-      ie_close('p');
-      ie_close('div');
-      ie_close('div');
-      ie_close('div');
-      ie_close('article');
-    }
-    exports.why = $why;
-    if (goog.DEBUG) {
-      $why.soyTemplateName = 'pageIndex.why';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $highlights(opt_data, opt_ignored, opt_ijData) {
-      ie_open('div', null, null, 'class', 'highlights');
-      ie_open('div', null, null, 'class', 'container');
-      ie_open('section', null, null, 'class', 'highlight row');
-      ie_open('div', null, null, 'class', 'col-md-6 col-md-offset-2');
-      ie_open('h4', null, null, 'class', 'highlight-title');
-      itext('Customize the way you want.');
-      ie_close('h4');
-      ie_open('p', null, null, 'class', 'highlight-description');
-      itext('Electric comes with a flexible default theme that includes a landing page, docs, changelog, search, code highlight, copy to clipboard, and more.');
-      ie_close('p');
-      ie_close('div');
-      ie_open('div', null, null, 'class', 'col-md-5 col-md-offset-1');
-      ie_open('img', null, null, 'class', 'highlight-image', 'src', 'http://placehold.it/500x400/e7e8e8/64696d', 'alt', 'Placeholder');
-      ie_close('img');
-      ie_close('div');
-      ie_close('section');
-      ie_open('section', null, null, 'class', 'highlight row');
-      ie_open('div', null, null, 'class', 'col-md-6 col-md-push-8');
-      ie_open('h4', null, null, 'class', 'highlight-title');
-      itext('Focus on the content.');
-      ie_close('h4');
-      ie_open('p', null, null, 'class', 'highlight-description');
-      itext('No more databases or server-side logic. Transform plain text into dynamic sites using the latest web technologies.');
-      ie_close('p');
-      ie_close('div');
-      ie_open('div', null, null, 'class', 'col-md-5 col-md-offset-2 col-md-pull-6');
-      ie_open('img', null, null, 'class', 'highlight-image', 'src', 'http://placehold.it/500x400/e7e8e8/64696d', 'alt', 'Placeholder');
-      ie_close('img');
-      ie_close('div');
-      ie_close('section');
-      ie_open('section', null, null, 'class', 'highlight row');
-      ie_open('div', null, null, 'class', 'col-md-6 col-md-offset-2');
-      ie_open('h4', null, null, 'class', 'highlight-title');
-      itext('Host anywhere.');
-      ie_close('h4');
-      ie_open('p', null, null, 'class', 'highlight-description');
-      itext('Eletric builds completely static HTML sites that you can host on Amazon S3, GitHub pages, WeDeploy or anywhere else you choose.');
-      ie_close('p');
-      ie_close('div');
-      ie_open('div', null, null, 'class', 'col-md-5 col-md-offset-1');
-      ie_open('img', null, null, 'class', 'highlight-image', 'src', 'http://placehold.it/500x400/e7e8e8/64696d', 'alt', 'Placeholder');
-      ie_close('img');
-      ie_close('div');
-      ie_close('section');
-      ie_close('div');
-      ie_close('div');
-    }
-    exports.highlights = $highlights;
-    if (goog.DEBUG) {
-      $highlights.soyTemplateName = 'pageIndex.highlights';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $how(opt_data, opt_ignored, opt_ijData) {
-      ie_open('article', null, null, 'class', 'about');
-      ie_open('div', null, null, 'class', 'container');
-      ie_open('div', null, null, 'class', 'row');
-      ie_open('div', null, null, 'class', 'col-md-12 col-md-offset-2');
-      ie_open('h3', null, null, 'class', 'about-title');
-      itext('How?');
-      ie_close('h3');
-      ie_open('p', null, null, 'class', 'about-description');
-      itext('We\'re not trying to reinvent the wheel here. Our idea is to leverage existing and well established tools, so you can feel more familiar with the workflow, worry less about tooling, and focus on what\'s important.');
-      ie_close('p');
-      ie_close('div');
-      ie_close('div');
-      ie_close('div');
-      ie_close('article');
-    }
-    exports.how = $how;
-    if (goog.DEBUG) {
-      $how.soyTemplateName = 'pageIndex.how';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $features(opt_data, opt_ignored, opt_ijData) {
-      ie_open('div', null, null, 'class', 'features');
-      ie_open('div', null, null, 'class', 'container');
-      ie_open('div', null, null, 'class', 'row');
-      ie_open('a', null, null, 'class', 'feature col-md-4 col-md-offset-2', 'href', 'https://developers.google.com/closure/templates/', 'target', '_blank');
-      ie_open('div', null, null, 'class', 'feature-icon');
-      ie_void('span', null, null, 'class', 'icon-16-code-file');
-      ie_close('div');
-      ie_open('h3', null, null, 'class', 'feature-title');
-      itext('Soy');
-      ie_close('h3');
-      ie_open('p', null, null, 'class', 'feature-description');
-      itext('Create reusable layouts and pages using Closure Templates (aka Soy).');
-      ie_close('p');
-      ie_close('a');
-      ie_open('a', null, null, 'class', 'feature col-md-4', 'href', 'http://sass-lang.com/', 'target', '_blank');
-      ie_open('div', null, null, 'class', 'feature-icon');
-      ie_void('span', null, null, 'class', 'icon-16-image');
-      ie_close('div');
-      ie_open('h3', null, null, 'class', 'feature-title');
-      itext('Sass');
-      ie_close('h3');
-      ie_open('p', null, null, 'class', 'feature-description');
-      itext('Customize the entire look and feel of our default theme using Sass.');
-      ie_close('p');
-      ie_close('a');
-      ie_open('a', null, null, 'class', 'feature col-md-4', 'href', 'http://metaljs.com/', 'target', '_blank');
-      ie_open('div', null, null, 'class', 'feature-icon');
-      ie_void('span', null, null, 'class', 'icon-16-file-js');
-      ie_close('div');
-      ie_open('h3', null, null, 'class', 'feature-title');
-      itext('Metal.js');
-      ie_close('h3');
-      ie_open('p', null, null, 'class', 'feature-description');
-      itext('Use existing UI components with Metal.js or just build your own.');
-      ie_close('p');
-      ie_close('a');
-      ie_close('div');
-      ie_open('div', null, null, 'class', 'row');
-      ie_open('a', null, null, 'class', 'feature col-md-4 col-md-offset-2', 'href', 'https://guides.github.com/features/mastering-markdown/', 'target', '_blank');
-      ie_open('div', null, null, 'class', 'feature-icon');
-      ie_void('span', null, null, 'class', 'icon-16-markdown');
-      ie_close('div');
-      ie_open('h3', null, null, 'class', 'feature-title');
-      itext('Markdown');
-      ie_close('h3');
-      ie_open('p', null, null, 'class', 'feature-description');
-      itext('Write documentation with the simplicity of Markdown and Front Matter.');
-      ie_close('p');
-      ie_close('a');
-      ie_open('a', null, null, 'class', 'feature col-md-4', 'href', 'http://gulpjs.com/', 'target', '_blank');
-      ie_open('div', null, null, 'class', 'feature-icon');
-      ie_void('span', null, null, 'class', 'icon-16-hammer');
-      ie_close('div');
-      ie_open('h3', null, null, 'class', 'feature-title');
-      itext('Gulp');
-      ie_close('h3');
-      ie_open('p', null, null, 'class', 'feature-description');
-      itext('Run Gulp tasks to leverage the power of node streams and get fast builds.');
-      ie_close('p');
-      ie_close('a');
-      ie_open('a', null, null, 'class', 'feature col-md-4', 'href', 'http://yeoman.io/', 'target', '_blank');
-      ie_open('div', null, null, 'class', 'feature-icon');
-      ie_void('span', null, null, 'class', 'icon-16-command-line');
-      ie_close('div');
-      ie_open('h3', null, null, 'class', 'feature-title');
-      itext('Yeoman');
-      ie_close('h3');
-      ie_open('p', null, null, 'class', 'feature-description');
-      itext('Kickstart new projects and themes using a Yeoman generator.');
-      ie_close('p');
-      ie_close('a');
-      ie_close('div');
-      ie_close('div');
-      ie_close('div');
-    }
-    exports.features = $features;
-    if (goog.DEBUG) {
-      $features.soyTemplateName = 'pageIndex.features';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $footer(opt_data, opt_ignored, opt_ijData) {
-      ie_open('footer', null, null, 'class', 'footer');
-      ie_open('div', null, null, 'class', 'container');
-      ie_open('div', null, null, 'class', 'row');
-      ie_open('p', null, null, 'class', 'footer-description col-md-6 col-md-offset-2');
-      itext('Copyright \xA9 2016 ');
-      ie_open('a', null, null, 'href', 'https://liferay.com');
-      itext('Liferay, Inc');
-      ie_close('a');
-      ie_close('p');
-      ie_open('p', null, null, 'class', 'footer-description col-md-6');
-      itext('Powered by ');
-      ie_open('a', null, null, 'href', 'http://wedeploy.com');
-      itext('WeDeploy\u2122');
-      ie_close('a');
-      ie_close('p');
-      ie_close('div');
-      ie_close('div');
-      ie_close('footer');
-    }
-    exports.footer = $footer;
-    if (goog.DEBUG) {
-      $footer.soyTemplateName = 'pageIndex.footer';
-    }
-
-    exports.render.params = ["site"];
-    exports.render.types = { "site": "any" };
-    exports.header.params = ["site"];
-    exports.header.types = { "site": "any" };
-    exports.why.params = [];
-    exports.why.types = {};
-    exports.highlights.params = [];
-    exports.highlights.types = {};
-    exports.how.params = [];
-    exports.how.types = {};
-    exports.features.params = [];
-    exports.features.types = {};
-    exports.footer.params = [];
-    exports.footer.types = {};
-    templates = exports;
-    return exports;
-  });
-
-  var pageIndex = function (_Component) {
-    babelHelpers.inherits(pageIndex, _Component);
-
-    function pageIndex() {
-      babelHelpers.classCallCheck(this, pageIndex);
-      return babelHelpers.possibleConstructorReturn(this, (pageIndex.__proto__ || Object.getPrototypeOf(pageIndex)).apply(this, arguments));
-    }
-
-    return pageIndex;
-  }(Component);
-
-  Soy.register(pageIndex, templates);
-  this['metalNamed']['index'] = this['metalNamed']['index'] || {};
-  this['metalNamed']['index']['pageIndex'] = pageIndex;
-  this['metalNamed']['index']['templates'] = templates;
-  this['metal']['index'] = templates;
-  /* jshint ignore:end */
-}).call(this);
-'use strict';
-
-(function () {
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-  var templates = this['metal']['index'];
-
-  var pageIndex = function (_Component) {
-    babelHelpers.inherits(pageIndex, _Component);
-
-    function pageIndex() {
-      babelHelpers.classCallCheck(this, pageIndex);
-      return babelHelpers.possibleConstructorReturn(this, (pageIndex.__proto__ || Object.getPrototypeOf(pageIndex)).apply(this, arguments));
-    }
-
-    return pageIndex;
-  }(Component);
-
-  ;
-
-  Soy.register(pageIndex, templates);
-
-  this['metal']['pageIndex'] = pageIndex;
-}).call(this);
-'use strict';
-
-(function () {
-  /* jshint ignore:start */
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-
-  var templates;
-  goog.loadModule(function (exports) {
-
     // This file was automatically generated from docs.soy.
     // Please don't edit this file by hand.
 
@@ -20054,6 +19657,407 @@ babelHelpers;
   Soy.register(main, templates);
 
   this['metal']['main'] = main;
+}).call(this);
+'use strict';
+
+(function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
+    // This file was automatically generated from index.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace pageIndex.
+     * @public
+     */
+
+    goog.module('pageIndex.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    var $templateAlias1 = Soy.getTemplate('main.incrementaldom', 'render');
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      var param26 = function param26() {
+        $header(opt_data, null, opt_ijData);
+        $why(null, null, opt_ijData);
+        $highlights(null, null, opt_ijData);
+        $how(null, null, opt_ijData);
+        $features(null, null, opt_ijData);
+        $footer(null, null, opt_ijData);
+      };
+      $templateAlias1(soy.$$assignDefaults({ content: param26 }, opt_data), null, opt_ijData);
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'pageIndex.render';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $header(opt_data, opt_ignored, opt_ijData) {
+      ie_open('header', null, null, 'class', 'header');
+      ie_open('div', null, null, 'class', 'container');
+      ie_open('h1', null, null, 'class', 'header-title');
+      ie_void('span', null, null, 'class', 'icon-16-flash');
+      itext('Electric');
+      ie_open('span', null, null, 'class', 'header-title-js');
+      itext('.js');
+      ie_close('span');
+      ie_close('h1');
+      ie_open('h2', null, null, 'class', 'header-subtitle');
+      var dyn1 = opt_data.site.index.description;
+      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
+      ie_close('h2');
+      ie_open('div', null, null, 'class', 'header-cta');
+      ie_open('a', null, null, 'href', '/docs/getting-started.html', 'class', 'btn btn-accent');
+      ie_void('span', null, null, 'class', 'icon-16-circle-arrow');
+      itext('Get Started');
+      ie_close('a');
+      ie_close('div');
+      ie_close('div');
+      ie_close('header');
+    }
+    exports.header = $header;
+    if (goog.DEBUG) {
+      $header.soyTemplateName = 'pageIndex.header';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $why(opt_data, opt_ignored, opt_ijData) {
+      ie_open('article', null, null, 'class', 'about');
+      ie_open('div', null, null, 'class', 'container');
+      ie_open('div', null, null, 'class', 'row');
+      ie_open('div', null, null, 'class', 'col-md-12 col-md-offset-2');
+      ie_open('h3', null, null, 'class', 'about-title');
+      itext('Why?');
+      ie_close('h3');
+      ie_open('p', null, null, 'class', 'about-description');
+      itext('Because good documentation is a must, and your project deserves better than a readme file.');
+      ie_close('p');
+      ie_open('p', null, null, 'class', 'about-description');
+      itext('Electric exists to accelerate the process of writing detailed, and easy to read documentation sites.');
+      ie_close('p');
+      ie_close('div');
+      ie_close('div');
+      ie_close('div');
+      ie_close('article');
+    }
+    exports.why = $why;
+    if (goog.DEBUG) {
+      $why.soyTemplateName = 'pageIndex.why';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $highlights(opt_data, opt_ignored, opt_ijData) {
+      ie_open('div', null, null, 'class', 'highlights');
+      ie_open('div', null, null, 'class', 'container');
+      ie_open('section', null, null, 'class', 'highlight row');
+      ie_open('div', null, null, 'class', 'col-md-6 col-md-offset-2');
+      ie_open('h4', null, null, 'class', 'highlight-title');
+      itext('Customize the way you want.');
+      ie_close('h4');
+      ie_open('p', null, null, 'class', 'highlight-description');
+      itext('Electric comes with a flexible default theme that includes a landing page, docs, changelog, search, code highlight, copy to clipboard, and more.');
+      ie_close('p');
+      ie_close('div');
+      ie_open('div', null, null, 'class', 'col-md-5 col-md-offset-1');
+      ie_open('div', null, null, 'class', 'highlight-graphic');
+      ie_void('span', null, null, 'class', 'icon-16-star');
+      ie_close('div');
+      ie_close('div');
+      ie_close('section');
+      ie_open('section', null, null, 'class', 'highlight row');
+      ie_open('div', null, null, 'class', 'col-md-6 col-md-push-8');
+      ie_open('h4', null, null, 'class', 'highlight-title');
+      itext('Focus on the content.');
+      ie_close('h4');
+      ie_open('p', null, null, 'class', 'highlight-description');
+      itext('No more databases or server-side logic. Transform plain text into dynamic sites using the latest web technologies.');
+      ie_close('p');
+      ie_close('div');
+      ie_open('div', null, null, 'class', 'col-md-5 col-md-offset-2 col-md-pull-6');
+      ie_open('div', null, null, 'class', 'highlight-graphic');
+      ie_void('span', null, null, 'class', 'icon-16-streams');
+      ie_close('div');
+      ie_close('div');
+      ie_close('section');
+      ie_open('section', null, null, 'class', 'highlight row');
+      ie_open('div', null, null, 'class', 'col-md-6 col-md-offset-2');
+      ie_open('h4', null, null, 'class', 'highlight-title');
+      itext('Host anywhere.');
+      ie_close('h4');
+      ie_open('p', null, null, 'class', 'highlight-description');
+      itext('Eletric builds completely static HTML sites that you can host on Amazon S3, GitHub pages, WeDeploy or anywhere else you choose.');
+      ie_close('p');
+      ie_close('div');
+      ie_open('div', null, null, 'class', 'col-md-5 col-md-offset-1');
+      ie_open('div', null, null, 'class', 'highlight-graphic');
+      ie_void('span', null, null, 'class', 'icon-16-cloud');
+      ie_close('div');
+      ie_close('div');
+      ie_close('section');
+      ie_close('div');
+      ie_close('div');
+    }
+    exports.highlights = $highlights;
+    if (goog.DEBUG) {
+      $highlights.soyTemplateName = 'pageIndex.highlights';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $how(opt_data, opt_ignored, opt_ijData) {
+      ie_open('article', null, null, 'class', 'about');
+      ie_open('div', null, null, 'class', 'container');
+      ie_open('div', null, null, 'class', 'row');
+      ie_open('div', null, null, 'class', 'col-md-12 col-md-offset-2');
+      ie_open('h3', null, null, 'class', 'about-title');
+      itext('How?');
+      ie_close('h3');
+      ie_open('p', null, null, 'class', 'about-description');
+      itext('We\'re not trying to reinvent the wheel here. Our idea is to leverage existing and well established tools, so you can feel more familiar with the workflow, worry less about tooling, and focus on what\'s important.');
+      ie_close('p');
+      ie_close('div');
+      ie_close('div');
+      ie_close('div');
+      ie_close('article');
+    }
+    exports.how = $how;
+    if (goog.DEBUG) {
+      $how.soyTemplateName = 'pageIndex.how';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $features(opt_data, opt_ignored, opt_ijData) {
+      ie_open('div', null, null, 'class', 'features');
+      ie_open('div', null, null, 'class', 'container');
+      ie_open('div', null, null, 'class', 'row');
+      ie_open('a', null, null, 'class', 'feature col-md-4 col-md-offset-2', 'href', 'https://developers.google.com/closure/templates/', 'target', '_blank');
+      ie_open('div', null, null, 'class', 'feature-icon');
+      ie_void('span', null, null, 'class', 'icon-16-code-file');
+      ie_close('div');
+      ie_open('h3', null, null, 'class', 'feature-title');
+      itext('Soy');
+      ie_close('h3');
+      ie_open('p', null, null, 'class', 'feature-description');
+      itext('Create reusable layouts and pages using Closure Templates (aka Soy).');
+      ie_close('p');
+      ie_close('a');
+      ie_open('a', null, null, 'class', 'feature col-md-4', 'href', 'http://sass-lang.com/', 'target', '_blank');
+      ie_open('div', null, null, 'class', 'feature-icon');
+      ie_void('span', null, null, 'class', 'icon-16-image');
+      ie_close('div');
+      ie_open('h3', null, null, 'class', 'feature-title');
+      itext('Sass');
+      ie_close('h3');
+      ie_open('p', null, null, 'class', 'feature-description');
+      itext('Customize the entire look and feel of our default theme using Sass.');
+      ie_close('p');
+      ie_close('a');
+      ie_open('a', null, null, 'class', 'feature col-md-4', 'href', 'http://metaljs.com/', 'target', '_blank');
+      ie_open('div', null, null, 'class', 'feature-icon');
+      ie_void('span', null, null, 'class', 'icon-16-file-js');
+      ie_close('div');
+      ie_open('h3', null, null, 'class', 'feature-title');
+      itext('Metal.js');
+      ie_close('h3');
+      ie_open('p', null, null, 'class', 'feature-description');
+      itext('Use existing UI components with Metal.js or just build your own.');
+      ie_close('p');
+      ie_close('a');
+      ie_close('div');
+      ie_open('div', null, null, 'class', 'row');
+      ie_open('a', null, null, 'class', 'feature col-md-4 col-md-offset-2', 'href', 'https://guides.github.com/features/mastering-markdown/', 'target', '_blank');
+      ie_open('div', null, null, 'class', 'feature-icon');
+      ie_void('span', null, null, 'class', 'icon-16-markdown');
+      ie_close('div');
+      ie_open('h3', null, null, 'class', 'feature-title');
+      itext('Markdown');
+      ie_close('h3');
+      ie_open('p', null, null, 'class', 'feature-description');
+      itext('Write documentation with the simplicity of Markdown and Front Matter.');
+      ie_close('p');
+      ie_close('a');
+      ie_open('a', null, null, 'class', 'feature col-md-4', 'href', 'http://gulpjs.com/', 'target', '_blank');
+      ie_open('div', null, null, 'class', 'feature-icon');
+      ie_void('span', null, null, 'class', 'icon-16-hammer');
+      ie_close('div');
+      ie_open('h3', null, null, 'class', 'feature-title');
+      itext('Gulp');
+      ie_close('h3');
+      ie_open('p', null, null, 'class', 'feature-description');
+      itext('Run Gulp tasks to leverage the power of node streams and get fast builds.');
+      ie_close('p');
+      ie_close('a');
+      ie_open('a', null, null, 'class', 'feature col-md-4', 'href', 'http://yeoman.io/', 'target', '_blank');
+      ie_open('div', null, null, 'class', 'feature-icon');
+      ie_void('span', null, null, 'class', 'icon-16-command-line');
+      ie_close('div');
+      ie_open('h3', null, null, 'class', 'feature-title');
+      itext('Yeoman');
+      ie_close('h3');
+      ie_open('p', null, null, 'class', 'feature-description');
+      itext('Kickstart new projects and themes using a Yeoman generator.');
+      ie_close('p');
+      ie_close('a');
+      ie_close('div');
+      ie_close('div');
+      ie_close('div');
+    }
+    exports.features = $features;
+    if (goog.DEBUG) {
+      $features.soyTemplateName = 'pageIndex.features';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $footer(opt_data, opt_ignored, opt_ijData) {
+      ie_open('footer', null, null, 'class', 'footer');
+      ie_open('div', null, null, 'class', 'container');
+      ie_open('div', null, null, 'class', 'row');
+      ie_open('p', null, null, 'class', 'footer-description col-md-6 col-md-offset-2');
+      itext('Copyright \xA9 2016 ');
+      ie_open('a', null, null, 'href', 'https://liferay.com');
+      itext('Liferay, Inc');
+      ie_close('a');
+      ie_close('p');
+      ie_open('p', null, null, 'class', 'footer-description col-md-6');
+      itext('Powered by ');
+      ie_open('a', null, null, 'href', 'http://wedeploy.com');
+      itext('WeDeploy\u2122');
+      ie_close('a');
+      ie_close('p');
+      ie_close('div');
+      ie_close('div');
+      ie_close('footer');
+    }
+    exports.footer = $footer;
+    if (goog.DEBUG) {
+      $footer.soyTemplateName = 'pageIndex.footer';
+    }
+
+    exports.render.params = ["site"];
+    exports.render.types = { "site": "any" };
+    exports.header.params = ["site"];
+    exports.header.types = { "site": "any" };
+    exports.why.params = [];
+    exports.why.types = {};
+    exports.highlights.params = [];
+    exports.highlights.types = {};
+    exports.how.params = [];
+    exports.how.types = {};
+    exports.features.params = [];
+    exports.features.types = {};
+    exports.footer.params = [];
+    exports.footer.types = {};
+    templates = exports;
+    return exports;
+  });
+
+  var pageIndex = function (_Component) {
+    babelHelpers.inherits(pageIndex, _Component);
+
+    function pageIndex() {
+      babelHelpers.classCallCheck(this, pageIndex);
+      return babelHelpers.possibleConstructorReturn(this, (pageIndex.__proto__ || Object.getPrototypeOf(pageIndex)).apply(this, arguments));
+    }
+
+    return pageIndex;
+  }(Component);
+
+  Soy.register(pageIndex, templates);
+  this['metalNamed']['index'] = this['metalNamed']['index'] || {};
+  this['metalNamed']['index']['pageIndex'] = pageIndex;
+  this['metalNamed']['index']['templates'] = templates;
+  this['metal']['index'] = templates;
+  /* jshint ignore:end */
+}).call(this);
+'use strict';
+
+(function () {
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+  var templates = this['metal']['index'];
+
+  var pageIndex = function (_Component) {
+    babelHelpers.inherits(pageIndex, _Component);
+
+    function pageIndex() {
+      babelHelpers.classCallCheck(this, pageIndex);
+      return babelHelpers.possibleConstructorReturn(this, (pageIndex.__proto__ || Object.getPrototypeOf(pageIndex)).apply(this, arguments));
+    }
+
+    return pageIndex;
+  }(Component);
+
+  ;
+
+  Soy.register(pageIndex, templates);
+
+  this['metal']['pageIndex'] = pageIndex;
 }).call(this);
 'use strict';
 
