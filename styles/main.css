@@ -8749,9 +8749,6 @@ button.close {
   line-height: 36px;
   margin-left: 8px; }
 
-.topbar-logo-link .js {
-  color: rgba(255, 255, 255, 0.6); }
-
 .topbar-logo-link .by {
   color: rgba(255, 255, 255, 0.3);
   font-family: "Galano Medium", sans-serif;
@@ -8774,9 +8771,6 @@ button.close {
     display: block;
     margin: 0 0 20px;
     font-size: 120px; }
-
-.header-title-js {
-  color: rgba(14, 20, 26, 0.6); }
 
 .header-subtitle {
   font-family: "Open Sans", sans-serif;
