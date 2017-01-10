@@ -96,6 +96,44 @@ babelHelpers.possibleConstructorReturn = function (self, call) {
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
 
+babelHelpers.slicedToArray = function () {
+  function sliceIterator(arr, i) {
+    var _arr = [];
+    var _n = true;
+    var _d = false;
+    var _e = undefined;
+
+    try {
+      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+        _arr.push(_s.value);
+
+        if (i && _arr.length === i) break;
+      }
+    } catch (err) {
+      _d = true;
+      _e = err;
+    } finally {
+      try {
+        if (!_n && _i["return"]) _i["return"]();
+      } finally {
+        if (_d) throw _e;
+      }
+    }
+
+    return _arr;
+  }
+
+  return function (arr, i) {
+    if (Array.isArray(arr)) {
+      return arr;
+    } else if (Symbol.iterator in Object(arr)) {
+      return sliceIterator(arr, i);
+    } else {
+      throw new TypeError("Invalid attempt to destructure non-iterable instance");
+    }
+  };
+}();
+
 babelHelpers.toConsumableArray = function (arr) {
   if (Array.isArray(arr)) {
     for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
@@ -16177,355 +16215,1151 @@ babelHelpers;
 }).call(this);
 'use strict';
 
-(function () {
-	var Component = this['metal']['component'];
-	var core = this['metal']['metal'];
-
-	var ElectricSearchBase = function (_Component) {
-		babelHelpers.inherits(ElectricSearchBase, _Component);
-
-		function ElectricSearchBase() {
-			babelHelpers.classCallCheck(this, ElectricSearchBase);
-			return babelHelpers.possibleConstructorReturn(this, (ElectricSearchBase.__proto__ || Object.getPrototypeOf(ElectricSearchBase)).apply(this, arguments));
-		}
-
-		babelHelpers.createClass(ElectricSearchBase, [{
-			key: 'attached',
-			value: function attached() {
-				this.on('queryChanged', this.handleQueryChange_.bind(this));
-			}
-		}, {
-			key: 'filterResults_',
-			value: function filterResults_(data, query) {
-				var _this2 = this;
-
-				var children = data.children,
-				    description = data.description,
-				    hidden = data.hidden,
-				    title = data.title;
-
-
-				var results = [];
-
-				description = description ? description.toLowerCase() : '';
-				title = title ? title.toLowerCase() : '';
-
-				if (!hidden && title.indexOf(query) > -1 || description.indexOf(query) > -1) {
-					results.push(data);
-				}
-
-				if (children) {
-					children.forEach(function (child) {
-						results = results.concat(_this2.filterResults_(child, query));
-					});
-				}
-
-				return results;
-			}
-		}, {
-			key: 'handleQueryChange_',
-			value: function handleQueryChange_(_ref) {
-				var newVal = _ref.newVal;
-
-				this.results = this.search_(newVal);
-			}
-		}, {
-			key: 'search_',
-			value: function search_(query) {
-				var maxResults = this.maxResults,
-				    section = this.section;
-
-
-				var results = [];
-
-				if (section && query) {
-					results = this.filterResults_(section, query.toLowerCase());
-
-					if (results.length > maxResults) {
-						results = results.slice(0, maxResults);
-					}
-				}
-
-				return results;
-			}
-		}]);
-		return ElectricSearchBase;
-	}(Component);
-
-	;
-
-	ElectricSearchBase.STATE = {
-		maxResults: {
-			validator: core.isNumber,
-			value: 4
-		},
-
-		query: {
-			validator: core.isString,
-			value: ''
-		},
-
-		results: {
-			validator: core.isArray,
-			value: []
-		},
-
-		section: {
-			validator: core.isObject
-		}
-	};
-
-	this['metal']['ElectricSearchBase'] = ElectricSearchBase;
-}).call(this);
-'use strict';
-
-(function () {
-  /* jshint ignore:start */
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-
-  var templates;
-  goog.loadModule(function (exports) {
-
-    // This file was automatically generated from ElectricSearch.soy.
-    // Please don't edit this file by hand.
-
-    /**
-     * @fileoverview Templates in namespace ElectricSearch.
-     * @public
-     */
-
-    goog.module('ElectricSearch.incrementaldom');
-
-    /** @suppress {extraRequire} */
-    var soy = goog.require('soy');
-    /** @suppress {extraRequire} */
-    var soydata = goog.require('soydata');
-    /** @suppress {extraRequire} */
-    goog.require('goog.i18n.bidi');
-    /** @suppress {extraRequire} */
-    goog.require('goog.asserts');
-    /** @suppress {extraRequire} */
-    goog.require('goog.string');
-    var IncrementalDom = goog.require('incrementaldom');
-    var ie_open = IncrementalDom.elementOpen;
-    var ie_close = IncrementalDom.elementClose;
-    var ie_void = IncrementalDom.elementVoid;
-    var ie_open_start = IncrementalDom.elementOpenStart;
-    var ie_open_end = IncrementalDom.elementOpenEnd;
-    var itext = IncrementalDom.text;
-    var iattr = IncrementalDom.attr;
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $render(opt_data, opt_ignored, opt_ijData) {
-      opt_data = opt_data || {};
-      ie_open('div', null, null, 'class', 'search');
-      $form(opt_data, null, opt_ijData);
-      $results(opt_data, null, opt_ijData);
-      ie_close('div');
-    }
-    exports.render = $render;
-    if (goog.DEBUG) {
-      $render.soyTemplateName = 'ElectricSearch.render';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $form(opt_data, opt_ignored, opt_ijData) {
-      opt_data = opt_data || {};
-      ie_open('form', null, null, 'class', 'docs-home-top-form', 'action', opt_data.action, 'method', 'GET', 'enctype', 'multipart/form-data');
-      ie_open('div', null, null, 'class', 'row');
-      ie_open('div', null, null, 'class', 'col-md-7 col-md-offset-3 col-xs-16');
-      ie_open('div', null, null, 'class', 'form-group');
-      ie_open('div', null, null, 'class', 'input-inner-addon input-inner-addon-right');
-      ie_open('input', null, null, 'autocomplete', 'off', 'class', 'form-control', 'name', 'q', 'onInput', 'handleInput_', 'placeholder', opt_data.placeholder, 'value', opt_data.query, 'type', 'text');
-      ie_close('input');
-      ie_void('span', null, null, 'class', 'input-inner-icon-helper icon-16-magnifier');
-      ie_close('div');
-      ie_close('div');
-      ie_close('div');
-      ie_open('div', null, null, 'class', 'col-md-3 col-xs-16');
-      ie_open('button', null, null, 'class', 'btn btn-accent btn-block', 'type', 'submit');
-      itext('Search');
-      ie_close('button');
-      ie_close('div');
-      ie_close('div');
-      ie_close('form');
-    }
-    exports.form = $form;
-    if (goog.DEBUG) {
-      $form.soyTemplateName = 'ElectricSearch.form';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $results(opt_data, opt_ignored, opt_ijData) {
-      opt_data = opt_data || {};
-      ie_open('div', null, null, 'class', 'search-result-container');
-      if (opt_data.query) {
-        ie_open('p', null, null, 'class', 'search-result-summary');
-        itext('Showing ');
-        var dyn2 = opt_data.results.length;
-        if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
-        itext(' results for ');
-        ie_open('strong');
-        itext('"');
-        var dyn3 = opt_data.query;
-        if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
-        itext('"');
-        ie_close('strong');
-        ie_close('p');
-      }
-      if (opt_data.results) {
-        var resultList94 = opt_data.results;
-        var resultListLen94 = resultList94.length;
-        for (var resultIndex94 = 0; resultIndex94 < resultListLen94; resultIndex94++) {
-          var resultData94 = resultList94[resultIndex94];
-          ie_open('div', null, null, 'class', 'search-result');
-          if (resultData94.icon) {
-            ie_open('div', null, null, 'class', 'search-result-icon');
-            ie_void('span', null, null, 'class', 'icon-16-' + resultData94.icon);
-            ie_close('div');
-          }
-          ie_open('a', null, null, 'class', 'search-result-link', 'href', resultData94.url);
-          var dyn4 = resultData94.title;
-          if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
-          ie_close('a');
-          ie_open('p', null, null, 'class', 'search-result-text');
-          var dyn5 = resultData94.description;
-          if (typeof dyn5 == 'function') dyn5();else if (dyn5 != null) itext(dyn5);
-          ie_close('p');
-          ie_close('div');
-        }
-      }
-      ie_close('div');
-    }
-    exports.results = $results;
-    if (goog.DEBUG) {
-      $results.soyTemplateName = 'ElectricSearch.results';
-    }
-
-    exports.render.params = ["action", "placeholder", "query", "results"];
-    exports.render.types = { "action": "any", "placeholder": "any", "query": "any", "results": "any" };
-    exports.form.params = ["action", "placeholder", "query"];
-    exports.form.types = { "action": "any", "placeholder": "any", "query": "any" };
-    exports.results.params = ["results", "query"];
-    exports.results.types = { "results": "any", "query": "any" };
-    templates = exports;
-    return exports;
-  });
-
-  var ElectricSearch = function (_Component) {
-    babelHelpers.inherits(ElectricSearch, _Component);
-
-    function ElectricSearch() {
-      babelHelpers.classCallCheck(this, ElectricSearch);
-      return babelHelpers.possibleConstructorReturn(this, (ElectricSearch.__proto__ || Object.getPrototypeOf(ElectricSearch)).apply(this, arguments));
-    }
-
-    return ElectricSearch;
-  }(Component);
-
-  Soy.register(ElectricSearch, templates);
-  this['metalNamed']['ElectricSearch'] = this['metalNamed']['ElectricSearch'] || {};
-  this['metalNamed']['ElectricSearch']['ElectricSearch'] = ElectricSearch;
-  this['metalNamed']['ElectricSearch']['templates'] = templates;
-  this['metal']['ElectricSearch'] = templates;
-  /* jshint ignore:end */
-}).call(this);
-'use strict';
-
-(function () {
-	var core = this['metal']['metal'];
-	var Soy = this['metal']['Soy'];
-	var ElectricSearchBase = this['metal']['ElectricSearchBase'];
-	var templates = this['metal']['ElectricSearch'];
-
-	var ElectricSearch = function (_ElectricSearchBase) {
-		babelHelpers.inherits(ElectricSearch, _ElectricSearchBase);
-
-		function ElectricSearch() {
-			babelHelpers.classCallCheck(this, ElectricSearch);
-			return babelHelpers.possibleConstructorReturn(this, (ElectricSearch.__proto__ || Object.getPrototypeOf(ElectricSearch)).apply(this, arguments));
-		}
-
-		babelHelpers.createClass(ElectricSearch, [{
-			key: 'attached',
-			value: function attached() {
-				ElectricSearchBase.prototype.attached.apply(this);
-
-				var queryString = window.location.search;
-				var queryIndex = queryString.indexOf('q=');
-
-				if (queryIndex !== -1) {
-					this.query = queryString.substr(queryIndex + 2);
-				}
-			}
-		}, {
-			key: 'handleInput_',
-			value: function handleInput_(event) {
-				var target = event.target;
-
-
-				this.query = target.value;
-			}
-		}]);
-		return ElectricSearch;
-	}(ElectricSearchBase);
-
-	;
-
-	Soy.register(ElectricSearch, templates);
-
-	this['metal']['ElectricSearch'] = ElectricSearch;
-}).call(this);
-'use strict';
-
 /**
-  * Debounces function execution.
-  * @param {!function()} fn
-  * @param {number} delay
-  * @return {!function()}
-  */
+ * Parses the given uri string into an object.
+ * @param {*=} opt_uri Optional string URI to parse
+ */
 
 (function () {
-	function debounce(fn, delay) {
-		return function debounced() {
-			var args = arguments;
-			cancelDebounce(debounced);
-			debounced.id = setTimeout(function () {
-				fn.apply(null, args);
-			}, delay);
+	function parseFromAnchor(opt_uri) {
+		var link = document.createElement('a');
+		link.href = opt_uri;
+		return {
+			hash: link.hash,
+			hostname: link.hostname,
+			password: link.password,
+			pathname: link.pathname[0] === '/' ? link.pathname : '/' + link.pathname,
+			port: link.port,
+			protocol: link.protocol,
+			search: link.search,
+			username: link.username
 		};
 	}
 
+	this['metal']['parseFromAnchor'] = parseFromAnchor;
+}).call(this);
+'use strict';
+
+(function () {
+	var isFunction = this['metalNamed']['metal']['isFunction'];
+	var parseFromAnchor = this['metal']['parseFromAnchor'];
+
 	/**
-  * Cancels the scheduled debounced function.
+  * Parses the given uri string into an object. The URL function will be used
+  * when present, otherwise we'll fall back to the anchor node element.
+  * @param {*=} opt_uri Optional string URI to parse
   */
-	function cancelDebounce(debounced) {
-		clearTimeout(debounced.id);
+
+	function parse(opt_uri) {
+		if (isFunction(URL) && URL.length) {
+			return new URL(opt_uri);
+		} else {
+			return parseFromAnchor(opt_uri);
+		}
 	}
 
-	this['metal']['debounce'] = debounce;
-	this['metalNamed']['debounce'] = this['metalNamed']['debounce'] || {};
-	this['metalNamed']['debounce']['cancelDebounce'] = cancelDebounce;
-	this['metalNamed']['debounce']['debounce'] = debounce;
+	this['metal']['parse'] = parse;
+}).call(this);
+'use strict';
+
+(function () {
+	var Disposable = this['metalNamed']['metal']['Disposable'];
+
+	/**
+  * A cached reference to the create function.
+  */
+
+	var create = Object.create;
+
+	/**
+  * Case insensitive string Multimap implementation. Allows multiple values for
+  * the same key name.
+  * @extends {Disposable}
+  */
+
+	var MultiMap = function (_Disposable) {
+		babelHelpers.inherits(MultiMap, _Disposable);
+
+		function MultiMap() {
+			babelHelpers.classCallCheck(this, MultiMap);
+
+			var _this = babelHelpers.possibleConstructorReturn(this, (MultiMap.__proto__ || Object.getPrototypeOf(MultiMap)).call(this));
+
+			_this.keys = create(null);
+			_this.values = create(null);
+			return _this;
+		}
+
+		/**
+   * Adds value to a key name.
+   * @param {string} name
+   * @param {*} value
+   * @chainable
+   */
+
+
+		babelHelpers.createClass(MultiMap, [{
+			key: 'add',
+			value: function add(name, value) {
+				this.keys[name.toLowerCase()] = name;
+				this.values[name.toLowerCase()] = this.values[name.toLowerCase()] || [];
+				this.values[name.toLowerCase()].push(value);
+				return this;
+			}
+
+			/**
+    * Clears map names and values.
+    * @chainable
+    */
+
+		}, {
+			key: 'clear',
+			value: function clear() {
+				this.keys = create(null);
+				this.values = create(null);
+				return this;
+			}
+
+			/**
+    * Checks if map contains a value to the key name.
+    * @param {string} name
+    * @return {boolean}
+    * @chainable
+    */
+
+		}, {
+			key: 'contains',
+			value: function contains(name) {
+				return name.toLowerCase() in this.values;
+			}
+
+			/**
+    * @inheritDoc
+    */
+
+		}, {
+			key: 'disposeInternal',
+			value: function disposeInternal() {
+				this.values = null;
+			}
+
+			/**
+    * Creates a `MultiMap` instance from the given object.
+    * @param {!Object} obj
+    * @return {!MultiMap}
+    */
+
+		}, {
+			key: 'get',
+
+
+			/**
+    * Gets the first added value from a key name.
+    * @param {string} name
+    * @return {*}
+    * @chainable
+    */
+			value: function get(name) {
+				var values = this.values[name.toLowerCase()];
+				if (values) {
+					return values[0];
+				}
+			}
+
+			/**
+    * Gets all values from a key name.
+    * @param {string} name
+    * @return {Array.<*>}
+    */
+
+		}, {
+			key: 'getAll',
+			value: function getAll(name) {
+				return this.values[name.toLowerCase()];
+			}
+
+			/**
+    * Returns true if the map is empty, false otherwise.
+    * @return {boolean}
+    */
+
+		}, {
+			key: 'isEmpty',
+			value: function isEmpty() {
+				return this.size() === 0;
+			}
+
+			/**
+    * Gets array of key names.
+    * @return {Array.<string>}
+    */
+
+		}, {
+			key: 'names',
+			value: function names() {
+				var _this2 = this;
+
+				return Object.keys(this.values).map(function (key) {
+					return _this2.keys[key];
+				});
+			}
+
+			/**
+    * Removes all values from a key name.
+    * @param {string} name
+    * @chainable
+    */
+
+		}, {
+			key: 'remove',
+			value: function remove(name) {
+				delete this.keys[name.toLowerCase()];
+				delete this.values[name.toLowerCase()];
+				return this;
+			}
+
+			/**
+    * Sets the value of a key name. Relevant to replace the current values with
+    * a new one.
+    * @param {string} name
+    * @param {*} value
+    * @chainable
+    */
+
+		}, {
+			key: 'set',
+			value: function set(name, value) {
+				this.keys[name.toLowerCase()] = name;
+				this.values[name.toLowerCase()] = [value];
+				return this;
+			}
+
+			/**
+    * Gets the size of the map key names.
+    * @return {number}
+    */
+
+		}, {
+			key: 'size',
+			value: function size() {
+				return this.names().length;
+			}
+
+			/**
+    * Returns the parsed values as a string.
+    * @return {string}
+    */
+
+		}, {
+			key: 'toString',
+			value: function toString() {
+				return JSON.stringify(this.values);
+			}
+		}], [{
+			key: 'fromObject',
+			value: function fromObject(obj) {
+				var map = new MultiMap();
+				var keys = Object.keys(obj);
+				for (var i = 0; i < keys.length; i++) {
+					map.set(keys[i], obj[keys[i]]);
+				}
+				return map;
+			}
+		}]);
+		return MultiMap;
+	}(Disposable);
+
+	this['metal']['MultiMap'] = MultiMap;
+}).call(this);
+'use strict';
+
+(function () {
+	var array = this['metalNamed']['metal']['array'];
+
+	/**
+  * Generic tree node data structure with arbitrary number of child nodes.
+  * @param {V} value Value.
+  * @constructor
+  */
+
+	var TreeNode = function () {
+		function TreeNode(value) {
+			babelHelpers.classCallCheck(this, TreeNode);
+
+			/**
+    * The value.
+    * @private {V}
+    */
+			this.value_ = value;
+
+			/**
+    * Reference to the parent node or null if it has no parent.
+    * @private {TreeNode}
+    */
+			this.parent_ = null;
+
+			/**
+    * Child nodes or null in case of leaf node.
+    * @private {Array<!TreeNode>}
+    */
+			this.children_ = null;
+		}
+
+		/**
+   * Appends a child node to this node.
+   * @param {!TreeNode} child Orphan child node.
+   */
+
+
+		babelHelpers.createClass(TreeNode, [{
+			key: 'addChild',
+			value: function addChild(child) {
+				assertChildHasNoParent(child);
+				child.setParent(this);
+				this.children_ = this.children_ || [];
+				this.children_.push(child);
+			}
+
+			/**
+    * Tells whether this node is the ancestor of the given node.
+    * @param {!TreeNode} node A node.
+    * @return {boolean} Whether this node is the ancestor of {@code node}.
+    */
+
+		}, {
+			key: 'contains',
+			value: function contains(node) {
+				var current = node.getParent();
+				while (current) {
+					if (current === this) {
+						return true;
+					}
+					current = current.getParent();
+				}
+				return false;
+			}
+
+			/**
+    * @return {!Array<TreeNode>} All ancestor nodes in bottom-up order.
+    */
+
+		}, {
+			key: 'getAncestors',
+			value: function getAncestors() {
+				var ancestors = [];
+				var node = this.getParent();
+				while (node) {
+					ancestors.push(node);
+					node = node.getParent();
+				}
+				return ancestors;
+			}
+
+			/**
+    * Gets the child node of this node at the given index.
+    * @param {number} index Child index.
+    * @return {?TreeNode} The node at the given index
+    * or null if not found.
+    */
+
+		}, {
+			key: 'getChildAt',
+			value: function getChildAt(index) {
+				return this.getChildren()[index] || null;
+			}
+
+			/**
+    * @return {?Array<!TreeNode>} Child nodes or null in case of leaf node.
+    */
+
+		}, {
+			key: 'getChildren',
+			value: function getChildren() {
+				return this.children_ || TreeNode.EMPTY_ARRAY;
+			}
+
+			/**
+    * @return {number} The number of children.
+    */
+
+		}, {
+			key: 'getChildCount',
+			value: function getChildCount() {
+				return this.getChildren().length;
+			}
+
+			/**
+    * @return {number} The number of ancestors of the node.
+    */
+
+		}, {
+			key: 'getDepth',
+			value: function getDepth() {
+				var depth = 0;
+				var node = this;
+				while (node.getParent()) {
+					depth++;
+					node = node.getParent();
+				}
+				return depth;
+			}
+
+			/**
+    * @return {?TreeNode} Parent node or null if it has no parent.
+    */
+
+		}, {
+			key: 'getParent',
+			value: function getParent() {
+				return this.parent_;
+			}
+
+			/**
+    * @return {!TreeNode} The root of the tree structure, i.e. the farthest
+    * ancestor of the node or the node itself if it has no parents.
+    */
+
+		}, {
+			key: 'getRoot',
+			value: function getRoot() {
+				var root = this;
+				while (root.getParent()) {
+					root = root.getParent();
+				}
+				return root;
+			}
+
+			/**
+    * Gets the value.
+    * @return {V} The value.
+    */
+
+		}, {
+			key: 'getValue',
+			value: function getValue() {
+				return this.value_;
+			}
+
+			/**
+    * @return {boolean} Whether the node is a leaf node.
+    */
+
+		}, {
+			key: 'isLeaf',
+			value: function isLeaf() {
+				return !this.getChildCount();
+			}
+
+			/**
+    * Removes the given child node of this node.
+    * @param {TreeNode} child The node to remove.
+    * @return {TreeNode} The removed node if any, null otherwise.
+    */
+
+		}, {
+			key: 'removeChild',
+			value: function removeChild(child) {
+				if (array.remove(this.getChildren(), child)) {
+					return child;
+				}
+				return null;
+			}
+
+			/**
+    * Sets the parent node of this node. The callers must ensure that the
+    * parent node and only that has this node among its children.
+    * @param {TreeNode} parent The parent to set. If null, the node will be
+    * detached from the tree.
+    * @protected
+    */
+
+		}, {
+			key: 'setParent',
+			value: function setParent(parent) {
+				this.parent_ = parent;
+			}
+
+			/**
+    * Traverses the subtree. The first callback starts with this node,
+    * and visits the descendant nodes depth-first, in preorder.
+    * The second callback, starts with deepest child then visits
+    * the ancestor nodes depth-first, in postorder. E.g.
+    *
+    *  	 A
+    *    / \
+    *   B   C
+    *  /   / \
+    * D   E   F
+    *
+    * preorder -> ['A', 'B', 'D', 'C', 'E', 'F']
+    * postorder -> ['D', 'B', 'E', 'F', 'C', 'A']
+    *
+    * @param {function=} opt_preorderFn The callback to execute when visiting a node.
+    * @param {function=} opt_postorderFn The callback to execute before leaving a node.
+    */
+
+		}, {
+			key: 'traverse',
+			value: function traverse(opt_preorderFn, opt_postorderFn) {
+				if (opt_preorderFn) {
+					opt_preorderFn(this);
+				}
+				this.getChildren().forEach(function (child) {
+					return child.traverse(opt_preorderFn, opt_postorderFn);
+				});
+				if (opt_postorderFn) {
+					opt_postorderFn(this);
+				}
+			}
+		}]);
+		return TreeNode;
+	}();
+
+	/**
+  * Constant for empty array to avoid unnecessary allocations.
+  * @private
+  */
+
+
+	TreeNode.EMPTY_ARRAY = [];
+
+	/**
+  * Asserts that child has no parent.
+  * @param {TreeNode} child A child.
+  * @private
+  */
+	var assertChildHasNoParent = function assertChildHasNoParent(child) {
+		if (child.getParent()) {
+			throw new Error('Cannot add child with parent.');
+		}
+	};
+
+	this['metal']['TreeNode'] = TreeNode;
+}).call(this);
+'use strict';
+
+(function () {
+  var MultiMap = this['metal']['MultiMap'];
+  var TreeNode = this['metal']['TreeNode'];
+  this['metalNamed']['structs'] = this['metalNamed']['structs'] || {};
+  this['metalNamed']['structs']['MultiMap'] = MultiMap;
+  this['metalNamed']['structs']['TreeNode'] = TreeNode;
+}).call(this);
+'use strict';
+
+(function () {
+	var isDef = this['metalNamed']['metal']['isDef'];
+	var string = this['metalNamed']['metal']['string'];
+	var parse = this['metal']['parse'];
+	var MultiMap = this['metalNamed']['structs']['MultiMap'];
+
+
+	var parseFn_ = parse;
+
+	var Uri = function () {
+
+		/**
+   * This class contains setters and getters for the parts of the URI.
+   * The following figure displays an example URIs and their component parts.
+   *
+   *                                  path
+   *	                             ┌───┴────┐
+   *	  abc://example.com:123/path/data?key=value#fragid1
+   *	  └┬┘   └────┬────┘ └┬┘           └───┬───┘ └──┬──┘
+   * protocol  hostname  port            search    hash
+   *          └──────┬───────┘
+   *                host
+   *
+   * @param {*=} opt_uri Optional string URI to parse
+   * @constructor
+   */
+		function Uri() {
+			var opt_uri = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+			babelHelpers.classCallCheck(this, Uri);
+
+			this.url = Uri.parse(this.maybeAddProtocolAndHostname_(opt_uri));
+		}
+
+		/**
+   * Adds parameters to uri from a <code>MultiMap</code> as source.
+   * @param {MultiMap} multimap The <code>MultiMap</code> containing the
+   *   parameters.
+   * @protected
+   * @chainable
+   */
+
+
+		babelHelpers.createClass(Uri, [{
+			key: 'addParametersFromMultiMap',
+			value: function addParametersFromMultiMap(multimap) {
+				var _this = this;
+
+				multimap.names().forEach(function (name) {
+					multimap.getAll(name).forEach(function (value) {
+						_this.addParameterValue(name, value);
+					});
+				});
+				return this;
+			}
+
+			/**
+    * Adds the value of the named query parameters.
+    * @param {string} key The parameter to set.
+    * @param {*} value The new value. Will be explicitly casted to String.
+    * @chainable
+    */
+
+		}, {
+			key: 'addParameterValue',
+			value: function addParameterValue(name, value) {
+				this.ensureQueryInitialized_();
+				if (isDef(value)) {
+					value = String(value);
+				}
+				this.query.add(name, value);
+				return this;
+			}
+
+			/**
+    * Adds the values of the named query parameter.
+    * @param {string} key The parameter to set.
+    * @param {*} value The new value.
+    * @chainable
+    */
+
+		}, {
+			key: 'addParameterValues',
+			value: function addParameterValues(name, values) {
+				var _this2 = this;
+
+				values.forEach(function (value) {
+					return _this2.addParameterValue(name, value);
+				});
+				return this;
+			}
+
+			/**
+    * Ensures query internal map is initialized and synced with initial value
+    * extracted from URI search part.
+    * @protected
+    */
+
+		}, {
+			key: 'ensureQueryInitialized_',
+			value: function ensureQueryInitialized_() {
+				var _this3 = this;
+
+				if (this.query) {
+					return;
+				}
+				this.query = new MultiMap();
+				var search = this.url.search;
+				if (search) {
+					search.substring(1).split('&').forEach(function (param) {
+						var _param$split = param.split('='),
+						    _param$split2 = babelHelpers.slicedToArray(_param$split, 2),
+						    key = _param$split2[0],
+						    value = _param$split2[1];
+
+						if (isDef(value)) {
+							value = Uri.urlDecode(value);
+						}
+						_this3.addParameterValue(key, value);
+					});
+				}
+			}
+
+			/**
+    * Gets the hash part of uri.
+    * @return {string}
+    */
+
+		}, {
+			key: 'getHash',
+			value: function getHash() {
+				return this.url.hash || '';
+			}
+
+			/**
+    * Gets the host part of uri. E.g. <code>[hostname]:[port]</code>.
+    * @return {string}
+    */
+
+		}, {
+			key: 'getHost',
+			value: function getHost() {
+				var host = this.getHostname();
+				if (host) {
+					var port = this.getPort();
+					if (port && port !== '80') {
+						host += ':' + port;
+					}
+				}
+				return host;
+			}
+
+			/**
+    * Gets the hostname part of uri without protocol and port.
+    * @return {string}
+    */
+
+		}, {
+			key: 'getHostname',
+			value: function getHostname() {
+				var hostname = this.url.hostname;
+				if (hostname === Uri.HOSTNAME_PLACEHOLDER) {
+					return '';
+				}
+				return hostname;
+			}
+
+			/**
+    * Gets the origin part of uri. E.g. <code>http://[hostname]:[port]</code>.
+    * @return {string}
+    */
+
+		}, {
+			key: 'getOrigin',
+			value: function getOrigin() {
+				var host = this.getHost();
+				if (host) {
+					return this.getProtocol() + '//' + host;
+				}
+				return '';
+			}
+
+			/**
+    * Returns the first value for a given parameter or undefined if the given
+    * parameter name does not appear in the query string.
+    * @param {string} paramName Unescaped parameter name.
+    * @return {string|undefined} The first value for a given parameter or
+    *   undefined if the given parameter name does not appear in the query
+    *   string.
+    */
+
+		}, {
+			key: 'getParameterValue',
+			value: function getParameterValue(name) {
+				this.ensureQueryInitialized_();
+				return this.query.get(name);
+			}
+
+			/**
+    * Returns the value<b>s</b> for a given parameter as a list of decoded
+    * query parameter values.
+    * @param {string} name The parameter to get values for.
+    * @return {!Array<?>} The values for a given parameter as a list of decoded
+    *   query parameter values.
+    */
+
+		}, {
+			key: 'getParameterValues',
+			value: function getParameterValues(name) {
+				this.ensureQueryInitialized_();
+				return this.query.getAll(name);
+			}
+
+			/**
+    * Returns the name<b>s</b> of the parameters.
+    * @return {!Array<string>} The names for the parameters as a list of
+    *   strings.
+    */
+
+		}, {
+			key: 'getParameterNames',
+			value: function getParameterNames() {
+				this.ensureQueryInitialized_();
+				return this.query.names();
+			}
+
+			/**
+    * Gets the function currently being used to parse URIs.
+    * @return {!function()}
+    */
+
+		}, {
+			key: 'getPathname',
+
+
+			/**
+    * Gets the pathname part of uri.
+    * @return {string}
+    */
+			value: function getPathname() {
+				return this.url.pathname;
+			}
+
+			/**
+    * Gets the port number part of uri as string.
+    * @return {string}
+    */
+
+		}, {
+			key: 'getPort',
+			value: function getPort() {
+				return this.url.port;
+			}
+
+			/**
+    * Gets the protocol part of uri. E.g. <code>http:</code>.
+    * @return {string}
+    */
+
+		}, {
+			key: 'getProtocol',
+			value: function getProtocol() {
+				return this.url.protocol;
+			}
+
+			/**
+    * Gets the search part of uri. Search value is retrieved from query
+    * parameters.
+    * @return {string}
+    */
+
+		}, {
+			key: 'getSearch',
+			value: function getSearch() {
+				var _this4 = this;
+
+				var search = '';
+				var querystring = '';
+				this.getParameterNames().forEach(function (name) {
+					_this4.getParameterValues(name).forEach(function (value) {
+						querystring += name;
+						if (isDef(value)) {
+							querystring += '=' + encodeURIComponent(value);
+						}
+						querystring += '&';
+					});
+				});
+				querystring = querystring.slice(0, -1);
+				if (querystring) {
+					search += '?' + querystring;
+				}
+				return search;
+			}
+
+			/**
+    * Checks if uri contains the parameter.
+    * @param {string} name
+    * @return {boolean}
+    */
+
+		}, {
+			key: 'hasParameter',
+			value: function hasParameter(name) {
+				this.ensureQueryInitialized_();
+				return this.query.contains(name);
+			}
+
+			/**
+    * Makes this URL unique by adding a random param to it. Useful for avoiding
+    * cache.
+    */
+
+		}, {
+			key: 'makeUnique',
+			value: function makeUnique() {
+				this.setParameterValue(Uri.RANDOM_PARAM, string.getRandomString());
+				return this;
+			}
+
+			/**
+    * Maybe adds protocol and a hostname placeholder on a parial URI if needed.
+    * Relevent for compatibility with <code>URL</code> native object.
+    * @param {string=} opt_uri
+    * @return {string} URI with protocol and hostname placeholder.
+    */
+
+		}, {
+			key: 'maybeAddProtocolAndHostname_',
+			value: function maybeAddProtocolAndHostname_(opt_uri) {
+				var url = opt_uri;
+				if (opt_uri.indexOf('://') === -1 && opt_uri.indexOf('javascript:') !== 0) {
+					// jshint ignore:line
+
+					url = Uri.DEFAULT_PROTOCOL;
+					if (opt_uri[0] !== '/' || opt_uri[1] !== '/') {
+						url += '//';
+					}
+
+					switch (opt_uri.charAt(0)) {
+						case '.':
+						case '?':
+						case '#':
+							url += Uri.HOSTNAME_PLACEHOLDER;
+							url += '/';
+							url += opt_uri;
+							break;
+						case '':
+						case '/':
+							if (opt_uri[1] !== '/') {
+								url += Uri.HOSTNAME_PLACEHOLDER;
+							}
+							url += opt_uri;
+							break;
+						default:
+							url += opt_uri;
+					}
+				}
+				return url;
+			}
+
+			/**
+    * Normalizes the parsed object to be in the expected standard.
+    * @param {!Object}
+    */
+
+		}, {
+			key: 'removeParameter',
+
+
+			/**
+    * Removes the named query parameter.
+    * @param {string} name The parameter to remove.
+    * @chainable
+    */
+			value: function removeParameter(name) {
+				this.ensureQueryInitialized_();
+				this.query.remove(name);
+				return this;
+			}
+
+			/**
+    * Removes uniqueness parameter of the uri.
+    * @chainable
+    */
+
+		}, {
+			key: 'removeUnique',
+			value: function removeUnique() {
+				this.removeParameter(Uri.RANDOM_PARAM);
+				return this;
+			}
+
+			/**
+    * Sets the hash.
+    * @param {string} hash
+    * @chainable
+    */
+
+		}, {
+			key: 'setHash',
+			value: function setHash(hash) {
+				this.url.hash = hash;
+				return this;
+			}
+
+			/**
+    * Sets the hostname.
+    * @param {string} hostname
+    * @chainable
+    */
+
+		}, {
+			key: 'setHostname',
+			value: function setHostname(hostname) {
+				this.url.hostname = hostname;
+				return this;
+			}
+
+			/**
+    * Sets the value of the named query parameters, clearing previous values
+    * for that key.
+    * @param {string} key The parameter to set.
+    * @param {*} value The new value.
+    * @chainable
+    */
+
+		}, {
+			key: 'setParameterValue',
+			value: function setParameterValue(name, value) {
+				this.removeParameter(name);
+				this.addParameterValue(name, value);
+				return this;
+			}
+
+			/**
+    * Sets the values of the named query parameters, clearing previous values
+    * for that key.
+    * @param {string} key The parameter to set.
+    * @param {*} value The new value.
+    * @chainable
+    */
+
+		}, {
+			key: 'setParameterValues',
+			value: function setParameterValues(name, values) {
+				var _this5 = this;
+
+				this.removeParameter(name);
+				values.forEach(function (value) {
+					return _this5.addParameterValue(name, value);
+				});
+				return this;
+			}
+
+			/**
+    * Sets the pathname.
+    * @param {string} pathname
+    * @chainable
+    */
+
+		}, {
+			key: 'setPathname',
+			value: function setPathname(pathname) {
+				this.url.pathname = pathname;
+				return this;
+			}
+
+			/**
+    * Sets the port number.
+    * @param {*} port Port number.
+    * @chainable
+    */
+
+		}, {
+			key: 'setPort',
+			value: function setPort(port) {
+				this.url.port = port;
+				return this;
+			}
+
+			/**
+    * Sets the function that will be used for parsing the original string uri
+    * into an object.
+    * @param {!function()} parseFn
+    */
+
+		}, {
+			key: 'setProtocol',
+
+
+			/**
+    * Sets the protocol. If missing <code>http:</code> is used as default.
+    * @param {string} protocol
+    * @chainable
+    */
+			value: function setProtocol(protocol) {
+				this.url.protocol = protocol;
+				if (this.url.protocol[this.url.protocol.length - 1] !== ':') {
+					this.url.protocol += ':';
+				}
+				return this;
+			}
+
+			/**
+    * @return {string} The string form of the url.
+    * @override
+    */
+
+		}, {
+			key: 'toString',
+			value: function toString() {
+				var href = '';
+				var host = this.getHost();
+				if (host) {
+					href += this.getProtocol() + '//';
+				}
+				href += host + this.getPathname() + this.getSearch() + this.getHash();
+				return href;
+			}
+
+			/**
+    * Joins the given paths.
+    * @param {string} basePath
+    * @param {...string} ...paths Any number of paths to be joined with the base url.
+    * @static
+    */
+
+		}], [{
+			key: 'getParseFn',
+			value: function getParseFn() {
+				return parseFn_;
+			}
+		}, {
+			key: 'normalizeObject',
+			value: function normalizeObject(parsed) {
+				var length = parsed.pathname ? parsed.pathname.length : 0;
+				if (length > 1 && parsed.pathname[length - 1] === '/') {
+					parsed.pathname = parsed.pathname.substr(0, length - 1);
+				}
+				return parsed;
+			}
+
+			/**
+    * Parses the given uri string into an object.
+    * @param {*=} opt_uri Optional string URI to parse
+    */
+
+		}, {
+			key: 'parse',
+			value: function parse(opt_uri) {
+				return Uri.normalizeObject(parseFn_(opt_uri));
+			}
+		}, {
+			key: 'setParseFn',
+			value: function setParseFn(parseFn) {
+				parseFn_ = parseFn;
+			}
+		}, {
+			key: 'joinPaths',
+			value: function joinPaths(basePath) {
+				for (var _len = arguments.length, paths = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+					paths[_key - 1] = arguments[_key];
+				}
+
+				if (basePath.charAt(basePath.length - 1) === '/') {
+					basePath = basePath.substring(0, basePath.length - 1);
+				}
+				paths = paths.map(function (path) {
+					return path.charAt(0) === '/' ? path.substring(1) : path;
+				});
+				return [basePath].concat(paths).join('/').replace(/\/$/, '');
+			}
+
+			/**
+    * URL-decodes the string. We need to specially handle '+'s because
+    * the javascript library doesn't convert them to spaces.
+    * @param {string} str The string to url decode.
+    * @return {string} The decoded {@code str}.
+    */
+
+		}, {
+			key: 'urlDecode',
+			value: function urlDecode(str) {
+				return decodeURIComponent(str.replace(/\+/g, ' '));
+			}
+		}]);
+		return Uri;
+	}();
+
+	/**
+  * Default protocol value.
+  * @type {string}
+  * @default http:
+  * @static
+  */
+
+
+	Uri.DEFAULT_PROTOCOL = 'http:';
+
+	/**
+  * Hostname placeholder. Relevant to internal usage only.
+  * @type {string}
+  * @static
+  */
+	Uri.HOSTNAME_PLACEHOLDER = 'hostname' + Date.now();
+
+	/**
+  * Name used by the param generated by `makeUnique`.
+  * @type {string}
+  * @static
+  */
+	Uri.RANDOM_PARAM = 'zx';
+
+	this['metal']['Uri'] = Uri;
 }).call(this);
 /*!
  * Promises polyfill from Google's Closure Library.
@@ -17449,6 +18283,509 @@ babelHelpers;
   this['metalNamed']['Promise'] = this['metalNamed']['Promise'] || {};
   this['metalNamed']['Promise']['CancellablePromise'] = CancellablePromise;
   this['metal']['Promise'] = CancellablePromise;
+}).call(this);
+'use strict';
+
+(function () {
+	var isDef = this['metalNamed']['metal']['isDef'];
+	var isDefAndNotNull = this['metalNamed']['metal']['isDefAndNotNull'];
+	var Uri = this['metal']['Uri'];
+	var Promise = this['metalNamed']['Promise']['CancellablePromise'];
+
+	var Ajax = function () {
+		function Ajax() {
+			babelHelpers.classCallCheck(this, Ajax);
+		}
+
+		babelHelpers.createClass(Ajax, null, [{
+			key: 'parseResponseHeaders',
+
+
+			/**
+    * XmlHttpRequest's getAllResponseHeaders() method returns a string of
+    * response headers according to the format described on the spec:
+    * {@link http://www.w3.org/TR/XMLHttpRequest/#the-getallresponseheaders-method}.
+    * This method parses that string into a user-friendly name/value pair
+    * object.
+    * @param {string} allHeaders All headers as string.
+    * @return {!Array.<Object<string, string>>}
+    */
+			value: function parseResponseHeaders(allHeaders) {
+				var headers = [];
+				if (!allHeaders) {
+					return headers;
+				}
+				var pairs = allHeaders.split('\r\n');
+				for (var i = 0; i < pairs.length; i++) {
+					var index = pairs[i].indexOf(': ');
+					if (index > 0) {
+						var name = pairs[i].substring(0, index);
+						var value = pairs[i].substring(index + 2);
+						headers.push({
+							name: name,
+							value: value
+						});
+					}
+				}
+				return headers;
+			}
+
+			/**
+    * Requests the url using XMLHttpRequest.
+    * @param {!string} url
+    * @param {!string} method
+    * @param {?string} body
+    * @param {MultiMap=} opt_headers
+    * @param {MultiMap=} opt_params
+    * @param {number=} opt_timeout
+    * @param {boolean=} opt_sync
+    * @param {boolean=} opt_withCredentials
+    * @return {Promise} Deferred ajax request.
+    * @protected
+    */
+
+		}, {
+			key: 'request',
+			value: function request(url, method, body, opt_headers, opt_params, opt_timeout, opt_sync, opt_withCredentials) {
+				url = url || '';
+				method = method || 'GET';
+
+				var request = new XMLHttpRequest();
+
+				var promise = new Promise(function (resolve, reject) {
+					request.onload = function () {
+						if (request.aborted) {
+							request.onerror();
+							return;
+						}
+						resolve(request);
+					};
+					request.onerror = function () {
+						var error = new Error('Request error');
+						error.request = request;
+						reject(error);
+					};
+				}).thenCatch(function (reason) {
+					request.abort();
+					throw reason;
+				}).thenAlways(function () {
+					clearTimeout(timeout);
+				});
+
+				if (opt_params) {
+					url = new Uri(url).addParametersFromMultiMap(opt_params).toString();
+				}
+
+				request.open(method, url, !opt_sync);
+
+				if (opt_withCredentials) {
+					request.withCredentials = true;
+				}
+
+				if (opt_headers) {
+					opt_headers.names().forEach(function (name) {
+						request.setRequestHeader(name, opt_headers.getAll(name).join(', '));
+					});
+				}
+
+				request.send(isDef(body) ? body : null);
+
+				if (isDefAndNotNull(opt_timeout)) {
+					var timeout = setTimeout(function () {
+						promise.cancel('Request timeout');
+					}, opt_timeout);
+				}
+
+				return promise;
+			}
+		}]);
+		return Ajax;
+	}();
+
+	this['metal']['Ajax'] = Ajax;
+}).call(this);
+'use strict';
+
+(function () {
+	var ajax = this['metal']['Ajax'];
+	var Component = this['metal']['component'];
+	var core = this['metal']['metal'];
+	var Promise = this['metalNamed']['Promise']['CancellablePromise'];
+
+	var ElectricSearchBase = function (_Component) {
+		babelHelpers.inherits(ElectricSearchBase, _Component);
+
+		function ElectricSearchBase() {
+			babelHelpers.classCallCheck(this, ElectricSearchBase);
+			return babelHelpers.possibleConstructorReturn(this, (ElectricSearchBase.__proto__ || Object.getPrototypeOf(ElectricSearchBase)).apply(this, arguments));
+		}
+
+		babelHelpers.createClass(ElectricSearchBase, [{
+			key: 'attached',
+			value: function attached() {
+				this.on('queryChanged', this.handleQueryChange_.bind(this));
+			}
+		}, {
+			key: 'filterResults_',
+			value: function filterResults_(data, query) {
+				var _this2 = this;
+
+				var children = data.children,
+				    content = data.content,
+				    description = data.description,
+				    hidden = data.hidden,
+				    title = data.title;
+
+
+				var results = [];
+
+				content = content ? content.toLowerCase() : '';
+				description = description ? description.toLowerCase() : '';
+				title = title ? title.toLowerCase() : '';
+
+				if (!hidden && title.indexOf(query) > -1 || description.indexOf(query) > -1 || content.indexOf(query) > -1) {
+					results.push(data);
+				}
+
+				if (children) {
+					children.forEach(function (child) {
+						results = results.concat(_this2.filterResults_(child, query));
+					});
+				}
+
+				return results;
+			}
+		}, {
+			key: 'handleQueryChange_',
+			value: function handleQueryChange_(_ref) {
+				var newVal = _ref.newVal;
+
+				var instance = this;
+
+				this.search_(newVal).then(function (results) {
+					instance.results = results;
+				});
+			}
+		}, {
+			key: 'search_',
+			value: function search_(query) {
+				var instance = this;
+
+				return Promise.resolve(this.data).then(function (data) {
+					if (data) {
+						return data;
+					} else {
+						return ajax.request('/site.json');
+						then(res);
+					}
+				}).then(function (data) {
+					console.log(data);
+					if (data.response) {
+						data = JSON.parse(data.response).index;
+
+						instance.data = data;
+					}
+
+					var maxResults = instance.maxResults;
+
+
+					var results = [];
+
+					if (data && query) {
+						results = instance.filterResults_(data, query.toLowerCase());
+
+						if (results.length > maxResults) {
+							results = results.slice(0, maxResults);
+						}
+					}
+
+					return results;
+				});
+			}
+		}]);
+		return ElectricSearchBase;
+	}(Component);
+
+	;
+
+	ElectricSearchBase.STATE = {
+		data: {
+			validator: core.isObject
+		},
+
+		maxResults: {
+			validator: core.isNumber,
+			value: 4
+		},
+
+		query: {
+			validator: core.isString,
+			value: ''
+		},
+
+		results: {
+			validator: core.isArray,
+			value: []
+		}
+	};
+
+	this['metal']['ElectricSearchBase'] = ElectricSearchBase;
+}).call(this);
+'use strict';
+
+(function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
+    // This file was automatically generated from ElectricSearch.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace ElectricSearch.
+     * @public
+     */
+
+    goog.module('ElectricSearch.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      opt_data = opt_data || {};
+      ie_open('div', null, null, 'class', 'search');
+      $form(opt_data, null, opt_ijData);
+      $results(opt_data, null, opt_ijData);
+      ie_close('div');
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'ElectricSearch.render';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $form(opt_data, opt_ignored, opt_ijData) {
+      opt_data = opt_data || {};
+      ie_open('form', null, null, 'class', 'docs-home-top-form', 'action', opt_data.action, 'method', 'GET', 'enctype', 'multipart/form-data');
+      ie_open('div', null, null, 'class', 'row');
+      ie_open('div', null, null, 'class', 'col-md-7 col-md-offset-3 col-xs-16');
+      ie_open('div', null, null, 'class', 'form-group');
+      ie_open('div', null, null, 'class', 'input-inner-addon input-inner-addon-right');
+      ie_open('input', null, null, 'autocomplete', 'off', 'class', 'form-control', 'name', 'q', 'onInput', 'handleInput_', 'placeholder', opt_data.placeholder, 'value', opt_data.query, 'type', 'text');
+      ie_close('input');
+      ie_void('span', null, null, 'class', 'input-inner-icon-helper icon-16-magnifier');
+      ie_close('div');
+      ie_close('div');
+      ie_close('div');
+      ie_open('div', null, null, 'class', 'col-md-3 col-xs-16');
+      ie_open('button', null, null, 'class', 'btn btn-accent btn-block', 'type', 'submit');
+      itext('Search');
+      ie_close('button');
+      ie_close('div');
+      ie_close('div');
+      ie_close('form');
+    }
+    exports.form = $form;
+    if (goog.DEBUG) {
+      $form.soyTemplateName = 'ElectricSearch.form';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $results(opt_data, opt_ignored, opt_ijData) {
+      opt_data = opt_data || {};
+      ie_open('div', null, null, 'class', 'search-result-container');
+      if (opt_data.query) {
+        ie_open('p', null, null, 'class', 'search-result-summary');
+        itext('Showing ');
+        var dyn2 = opt_data.results.length;
+        if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
+        itext(' results for ');
+        ie_open('strong');
+        itext('"');
+        var dyn3 = opt_data.query;
+        if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
+        itext('"');
+        ie_close('strong');
+        ie_close('p');
+      }
+      if (opt_data.results) {
+        var resultList94 = opt_data.results;
+        var resultListLen94 = resultList94.length;
+        for (var resultIndex94 = 0; resultIndex94 < resultListLen94; resultIndex94++) {
+          var resultData94 = resultList94[resultIndex94];
+          ie_open('div', null, null, 'class', 'search-result');
+          if (resultData94.icon) {
+            ie_open('div', null, null, 'class', 'search-result-icon');
+            ie_void('span', null, null, 'class', 'icon-16-' + resultData94.icon);
+            ie_close('div');
+          }
+          ie_open('a', null, null, 'class', 'search-result-link', 'href', resultData94.url);
+          var dyn4 = resultData94.title;
+          if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
+          ie_close('a');
+          ie_open('p', null, null, 'class', 'search-result-text');
+          var dyn5 = resultData94.description;
+          if (typeof dyn5 == 'function') dyn5();else if (dyn5 != null) itext(dyn5);
+          ie_close('p');
+          ie_close('div');
+        }
+      }
+      ie_close('div');
+    }
+    exports.results = $results;
+    if (goog.DEBUG) {
+      $results.soyTemplateName = 'ElectricSearch.results';
+    }
+
+    exports.render.params = ["action", "placeholder", "query", "results"];
+    exports.render.types = { "action": "any", "placeholder": "any", "query": "any", "results": "any" };
+    exports.form.params = ["action", "placeholder", "query"];
+    exports.form.types = { "action": "any", "placeholder": "any", "query": "any" };
+    exports.results.params = ["results", "query"];
+    exports.results.types = { "results": "any", "query": "any" };
+    templates = exports;
+    return exports;
+  });
+
+  var ElectricSearch = function (_Component) {
+    babelHelpers.inherits(ElectricSearch, _Component);
+
+    function ElectricSearch() {
+      babelHelpers.classCallCheck(this, ElectricSearch);
+      return babelHelpers.possibleConstructorReturn(this, (ElectricSearch.__proto__ || Object.getPrototypeOf(ElectricSearch)).apply(this, arguments));
+    }
+
+    return ElectricSearch;
+  }(Component);
+
+  Soy.register(ElectricSearch, templates);
+  this['metalNamed']['ElectricSearch'] = this['metalNamed']['ElectricSearch'] || {};
+  this['metalNamed']['ElectricSearch']['ElectricSearch'] = ElectricSearch;
+  this['metalNamed']['ElectricSearch']['templates'] = templates;
+  this['metal']['ElectricSearch'] = templates;
+  /* jshint ignore:end */
+}).call(this);
+'use strict';
+
+(function () {
+	var core = this['metal']['metal'];
+	var Soy = this['metal']['Soy'];
+	var ElectricSearchBase = this['metal']['ElectricSearchBase'];
+	var templates = this['metal']['ElectricSearch'];
+
+	var ElectricSearch = function (_ElectricSearchBase) {
+		babelHelpers.inherits(ElectricSearch, _ElectricSearchBase);
+
+		function ElectricSearch() {
+			babelHelpers.classCallCheck(this, ElectricSearch);
+			return babelHelpers.possibleConstructorReturn(this, (ElectricSearch.__proto__ || Object.getPrototypeOf(ElectricSearch)).apply(this, arguments));
+		}
+
+		babelHelpers.createClass(ElectricSearch, [{
+			key: 'attached',
+			value: function attached() {
+				ElectricSearchBase.prototype.attached.apply(this);
+
+				var queryString = window.location.search;
+				var queryIndex = queryString.indexOf('q=');
+
+				if (queryIndex !== -1) {
+					this.query = queryString.substr(queryIndex + 2);
+				}
+			}
+		}, {
+			key: 'handleInput_',
+			value: function handleInput_(event) {
+				var target = event.target;
+
+
+				this.query = target.value;
+			}
+		}]);
+		return ElectricSearch;
+	}(ElectricSearchBase);
+
+	;
+
+	ElectricSearch.STATE = {
+		maxResults: {
+			value: Infinity
+		}
+	};
+
+	Soy.register(ElectricSearch, templates);
+
+	this['metal']['ElectricSearch'] = ElectricSearch;
+}).call(this);
+'use strict';
+
+/**
+  * Debounces function execution.
+  * @param {!function()} fn
+  * @param {number} delay
+  * @return {!function()}
+  */
+
+(function () {
+	function debounce(fn, delay) {
+		return function debounced() {
+			var args = arguments;
+			cancelDebounce(debounced);
+			debounced.id = setTimeout(function () {
+				fn.apply(null, args);
+			}, delay);
+		};
+	}
+
+	/**
+  * Cancels the scheduled debounced function.
+  */
+	function cancelDebounce(debounced) {
+		clearTimeout(debounced.id);
+	}
+
+	this['metal']['debounce'] = debounce;
+	this['metalNamed']['debounce'] = this['metalNamed']['debounce'] || {};
+	this['metalNamed']['debounce']['cancelDebounce'] = cancelDebounce;
+	this['metalNamed']['debounce']['debounce'] = debounce;
 }).call(this);
 'use strict';
 
@@ -19222,20 +20559,20 @@ babelHelpers;
      * @return {void}
      * @suppress {checkTypes}
      */
-    function __deltemplate_s38_d34389eb(opt_data, opt_ignored, opt_ijData) {
+    function __deltemplate_s14_d34389eb(opt_data, opt_ignored, opt_ijData) {
       ie_open('a', null, null, 'class', 'sidebar-link ' + (opt_data.page.active ? 'sidebar-link-selected' : ''), 'href', opt_data.page.url);
       ie_void('span', null, null, 'class', 'sidebar-icon icon-16-' + opt_data.page.icon);
       ie_open('span');
-      var dyn1 = opt_data.page.title;
-      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
+      var dyn0 = opt_data.page.title;
+      if (typeof dyn0 == 'function') dyn0();else if (dyn0 != null) itext(dyn0);
       ie_close('span');
       ie_close('a');
     }
-    exports.__deltemplate_s38_d34389eb = __deltemplate_s38_d34389eb;
+    exports.__deltemplate_s14_d34389eb = __deltemplate_s14_d34389eb;
     if (goog.DEBUG) {
-      __deltemplate_s38_d34389eb.soyTemplateName = 'SideBar.__deltemplate_s38_d34389eb';
+      __deltemplate_s14_d34389eb.soyTemplateName = 'SideBar.__deltemplate_s14_d34389eb';
     }
-    soy.$$registerDelegateFn(soy.$$getDelTemplateId('ElectricNavigation.anchor.idom'), 'sidebar', 0, __deltemplate_s38_d34389eb);
+    soy.$$registerDelegateFn(soy.$$getDelTemplateId('ElectricNavigation.anchor.idom'), 'sidebar', 0, __deltemplate_s14_d34389eb);
 
     exports.render.params = ["section"];
     exports.render.types = { "section": "any" };
@@ -19704,7 +21041,7 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param3 = function param3() {
+      var param26 = function param26() {
         $header(opt_data, null, opt_ijData);
         $why(null, null, opt_ijData);
         $highlights(null, null, opt_ijData);
@@ -19712,7 +21049,7 @@ babelHelpers;
         $features(null, null, opt_ijData);
         $footer(null, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param3 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param26 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -19734,8 +21071,8 @@ babelHelpers;
       itext(' Electric');
       ie_close('h1');
       ie_open('h2', null, null, 'class', 'header-subtitle');
-      var dyn0 = opt_data.site.index.description;
-      if (typeof dyn0 == 'function') dyn0();else if (dyn0 != null) itext(dyn0);
+      var dyn1 = opt_data.site.index.description;
+      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
       ie_close('h2');
       ie_open('div', null, null, 'class', 'header-cta');
       ie_open('a', null, null, 'href', '/docs/getting-started.html', 'class', 'btn btn-accent');
