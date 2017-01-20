@@ -21509,16 +21509,16 @@ babelHelpers;
   var templates;
   goog.loadModule(function (exports) {
 
-    // This file was automatically generated from SideBar.soy.
+    // This file was automatically generated from Sidebar.soy.
     // Please don't edit this file by hand.
 
     /**
-     * @fileoverview Templates in namespace SideBar.
+     * @fileoverview Templates in namespace Sidebar.
      * @hassoydeltemplate {ElectricNavigation.anchor.idom}
      * @public
      */
 
-    goog.module('SideBar.incrementaldom');
+    goog.module('Sidebar.incrementaldom');
 
     /** @suppress {extraRequire} */
     var soy = goog.require('soy');
@@ -21572,7 +21572,7 @@ babelHelpers;
     }
     exports.render = $render;
     if (goog.DEBUG) {
-      $render.soyTemplateName = 'SideBar.render';
+      $render.soyTemplateName = 'Sidebar.render';
     }
 
     /**
@@ -21593,7 +21593,7 @@ babelHelpers;
     }
     exports.__deltemplate_s14_d34389eb = __deltemplate_s14_d34389eb;
     if (goog.DEBUG) {
-      __deltemplate_s14_d34389eb.soyTemplateName = 'SideBar.__deltemplate_s14_d34389eb';
+      __deltemplate_s14_d34389eb.soyTemplateName = 'Sidebar.__deltemplate_s14_d34389eb';
     }
     soy.$$registerDelegateFn(soy.$$getDelTemplateId('ElectricNavigation.anchor.idom'), 'sidebar', 0, __deltemplate_s14_d34389eb);
 
@@ -21603,22 +21603,22 @@ babelHelpers;
     return exports;
   });
 
-  var SideBar = function (_Component) {
-    babelHelpers.inherits(SideBar, _Component);
+  var Sidebar = function (_Component) {
+    babelHelpers.inherits(Sidebar, _Component);
 
-    function SideBar() {
-      babelHelpers.classCallCheck(this, SideBar);
-      return babelHelpers.possibleConstructorReturn(this, (SideBar.__proto__ || Object.getPrototypeOf(SideBar)).apply(this, arguments));
+    function Sidebar() {
+      babelHelpers.classCallCheck(this, Sidebar);
+      return babelHelpers.possibleConstructorReturn(this, (Sidebar.__proto__ || Object.getPrototypeOf(Sidebar)).apply(this, arguments));
     }
 
-    return SideBar;
+    return Sidebar;
   }(Component);
 
-  Soy.register(SideBar, templates);
-  this['metalNamed']['SideBar'] = this['metalNamed']['SideBar'] || {};
-  this['metalNamed']['SideBar']['SideBar'] = SideBar;
-  this['metalNamed']['SideBar']['templates'] = templates;
-  this['metal']['SideBar'] = templates;
+  Soy.register(Sidebar, templates);
+  this['metalNamed']['Sidebar'] = this['metalNamed']['Sidebar'] || {};
+  this['metalNamed']['Sidebar']['Sidebar'] = Sidebar;
+  this['metalNamed']['Sidebar']['templates'] = templates;
+  this['metal']['Sidebar'] = templates;
   /* jshint ignore:end */
 }).call(this);
 'use strict';
@@ -21627,17 +21627,17 @@ babelHelpers;
 	var Component = this['metal']['component'];
 	var Soy = this['metal']['Soy'];
 	var Toggler = this['metal']['Toggler'];
-	var templates = this['metal']['SideBar'];
+	var templates = this['metal']['Sidebar'];
 
-	var SideBar = function (_Component) {
-		babelHelpers.inherits(SideBar, _Component);
+	var Sidebar = function (_Component) {
+		babelHelpers.inherits(Sidebar, _Component);
 
-		function SideBar() {
-			babelHelpers.classCallCheck(this, SideBar);
-			return babelHelpers.possibleConstructorReturn(this, (SideBar.__proto__ || Object.getPrototypeOf(SideBar)).apply(this, arguments));
+		function Sidebar() {
+			babelHelpers.classCallCheck(this, Sidebar);
+			return babelHelpers.possibleConstructorReturn(this, (Sidebar.__proto__ || Object.getPrototypeOf(Sidebar)).apply(this, arguments));
 		}
 
-		babelHelpers.createClass(SideBar, [{
+		babelHelpers.createClass(Sidebar, [{
 			key: 'attached',
 			value: function attached() {
 				new Toggler({
@@ -21646,14 +21646,14 @@ babelHelpers;
 				});
 			}
 		}]);
-		return SideBar;
+		return Sidebar;
 	}(Component);
 
 	;
 
-	Soy.register(SideBar, templates);
+	Soy.register(Sidebar, templates);
 
-	this['metal']['SideBar'] = SideBar;
+	this['metal']['Sidebar'] = Sidebar;
 }).call(this);
 'use strict';
 
@@ -21696,7 +21696,7 @@ babelHelpers;
 
     var $templateAlias3 = Soy.getTemplate('ElectricReadingProgress.incrementaldom', 'render');
 
-    var $templateAlias2 = Soy.getTemplate('SideBar.incrementaldom', 'render');
+    var $templateAlias2 = Soy.getTemplate('Sidebar.incrementaldom', 'render');
 
     var $templateAlias1 = Soy.getTemplate('main.incrementaldom', 'render');
 
@@ -21708,11 +21708,11 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param27 = function param27() {
+      var param51 = function param51() {
         $templateAlias2(soy.$$assignDefaults({ section: opt_data.site.index.children[0] }, opt_data), null, opt_ijData);
         $guide(opt_data, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param27 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param51 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -21731,16 +21731,16 @@ babelHelpers;
       ie_open('header', null, null, 'class', 'guide-header');
       ie_open('div', null, null, 'class', 'container-hybrid');
       ie_open('h1', null, null, 'class', 'guide-header-title');
-      var dyn1 = opt_data.page.title;
-      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
+      var dyn2 = opt_data.page.title;
+      if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
       ie_close('h1');
       ie_close('div');
       ie_close('header');
       ie_open('div', null, null, 'class', 'container-hybrid');
       ie_open('div', null, null, 'class', 'docs-guide row');
       ie_open('div', null, null, 'class', 'docs-content col-xs-16 col-md-9');
-      var dyn2 = opt_data.content;
-      if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
+      var dyn3 = opt_data.content;
+      if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
       $feedback(opt_data, null, opt_ijData);
       ie_close('div');
       ie_open('nav', null, null, 'class', 'col-xs-16 col-md-offset-2 col-md-5');
@@ -21773,7 +21773,7 @@ babelHelpers;
       ie_close('div');
       ie_open('div', null, null, 'class', 'guide-github-text');
       ie_open('p');
-      itext('Contribute to this Doc on Github! ');
+      itext('Contribute on Github! ');
       ie_open('a', null, null, 'href', (($$temp = opt_data.site.repo) == null ? '' : $$temp) + '/tree/master/' + opt_data.page.srcFilePath, 'class', 'docs-github-link', 'target', '_blank');
       itext('Edit this section');
       ie_close('a');
@@ -21893,8 +21893,8 @@ babelHelpers;
       ie_open('div', null, null, 'class', ($$temp = opt_data.elementClasses) == null ? 'main' : $$temp);
       ie_open('main', null, null, 'class', 'content');
       $topbar(opt_data, null, opt_ijData);
-      var dyn3 = opt_data.content;
-      if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
+      var dyn4 = opt_data.content;
+      if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
       ie_close('main');
       ie_close('div');
     }
@@ -22064,7 +22064,7 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param72 = function param72() {
+      var param26 = function param26() {
         $header(opt_data, null, opt_ijData);
         $why(null, null, opt_ijData);
         $highlights(null, null, opt_ijData);
@@ -22072,7 +22072,7 @@ babelHelpers;
         $features(null, null, opt_ijData);
         $footer(null, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param72 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param26 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -22094,8 +22094,8 @@ babelHelpers;
       itext(' Electric');
       ie_close('h1');
       ie_open('h2', null, null, 'class', 'header-subtitle');
-      var dyn4 = opt_data.site.index.description;
-      if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
+      var dyn1 = opt_data.site.index.description;
+      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
       ie_close('h2');
       ie_open('div', null, null, 'class', 'header-cta');
       ie_open('a', null, null, 'href', '/docs/getting-started.html', 'class', 'btn btn-accent');
@@ -22600,7 +22600,7 @@ babelHelpers;
         ie_open('p');
         itext('Example:');
         ie_close('p');
-        $templateAlias2({ code: 'ssg.registerTasks({\n    gulp: gulp,\n    markdownOptions: {\n        breaks: true\n    }\n});', mode: 'javascript' }, null, opt_ijData);
+        $templateAlias2({ code: 'electric.registerTasks({\n    gulp: gulp,\n    markdownOptions: {\n        breaks: true\n    }\n});', mode: 'javascript' }, null, opt_ijData);
         ie_open('p');
         itext('See ');
         ie_open('a', null, null, 'href', 'https://github.com/jonschlinkert/remarkable#options');
@@ -22637,7 +22637,7 @@ babelHelpers;
         ie_open('p');
         itext('Example:');
         ie_close('p');
-        $templateAlias2({ code: 'ssg.registerTasks({\n    gulp: gulp,\n    pathDest: \'build\'\n});', mode: 'javascript' }, null, opt_ijData);
+        $templateAlias2({ code: 'electric.registerTasks({\n    gulp: gulp,\n    pathDest: \'build\'\n});', mode: 'javascript' }, null, opt_ijData);
         ie_open('p');
         itext('Now all generated files will be placed in the ');
         ie_open('code');
@@ -22674,7 +22674,7 @@ babelHelpers;
         ie_open('p');
         itext('Example:');
         ie_close('p');
-        $templateAlias2({ code: 'ssg.registerTasks({\n    gulp: gulp,\n    pathSrc: \'web\'\n});', mode: 'javascript' }, null, opt_ijData);
+        $templateAlias2({ code: 'electric.registerTasks({\n    gulp: gulp,\n    pathSrc: \'web\'\n});', mode: 'javascript' }, null, opt_ijData);
         ie_open('p');
         itext('Now ');
         ie_open('code');
@@ -22763,7 +22763,7 @@ babelHelpers;
         ie_open('p');
         itext('Example:');
         ie_close('p');
-        $templateAlias2({ code: 'ssg.registerTasks({\n    gulp: gulp,\n    taskPrefix: \'ssg:\'\n});', mode: 'javascript' }, null, opt_ijData);
+        $templateAlias2({ code: 'electric.registerTasks({\n    gulp: gulp,\n    taskPrefix: \'electric:\'\n});', mode: 'javascript' }, null, opt_ijData);
         ie_open('p');
         itext('The ');
         ie_open('code');
@@ -22771,7 +22771,7 @@ babelHelpers;
         ie_close('code');
         itext(' task will now be exposed as ');
         ie_open('code');
-        itext('ssg:generate');
+        itext('electric:generate');
         ie_close('code');
         itext('. This option allows you to implement ');
         ie_open('code');
@@ -22934,8 +22934,15 @@ babelHelpers;
         ie_close('a');
         itext(' for troubleshooting tips.');
         ie_close('p');
+        ie_open('h3');
+        itext('Build');
+        ie_close('h3');
         ie_open('p');
-        itext('Build the site.');
+        itext('All ');
+        ie_open('code');
+        itext('gulp');
+        ie_close('code');
+        itext(' commands should be run from your project root.');
         ie_close('p');
         $templateAlias2({ code: 'gulp', mode: 'shell' }, null, opt_ijData);
         ie_open('p');
@@ -23945,7 +23952,7 @@ babelHelpers;
 
     var $templateAlias3 = Soy.getTemplate('ElectricSearch.incrementaldom', 'render');
 
-    var $templateAlias2 = Soy.getTemplate('SideBar.incrementaldom', 'render');
+    var $templateAlias2 = Soy.getTemplate('Sidebar.incrementaldom', 'render');
 
     var $templateAlias1 = Soy.getTemplate('main.incrementaldom', 'render');
 
@@ -23992,7 +23999,7 @@ babelHelpers;
       ie_close('div');
       ie_close('div');
       ie_open('div', null, null, 'class', 'row');
-      ie_open('div', null, null, 'class', 'container-hybrid docs-home-top');
+      ie_open('div', null, null, 'class', 'container-hybrid');
       $templateAlias3({ action: '/docs', placeholder: 'Search Docs', section: opt_data.site.index.children[0] }, null, opt_ijData);
       ie_close('div');
       ie_close('div');
