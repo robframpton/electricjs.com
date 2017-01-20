@@ -19447,24 +19447,39 @@ babelHelpers;
 				this.on('queryChanged', this.handleQueryChange_.bind(this));
 			}
 		}, {
-			key: 'filterResults_',
-			value: function filterResults_(data, query) {
-				var _this2 = this;
-
-				var children = data.children,
-				    content = data.content,
+			key: 'matchesQuery_',
+			value: function matchesQuery_(data, query) {
+				var childrenOnly = this.childrenOnly;
+				var _location = location,
+				    pathname = _location.pathname;
+				var content = data.content,
 				    description = data.description,
 				    hidden = data.hidden,
-				    title = data.title;
+				    title = data.title,
+				    url = data.url;
 
 
-				var results = [];
+				if (childrenOnly && url.indexOf(pathname) !== 0) {
+					return false;
+				}
 
 				content = content ? content.toLowerCase() : '';
 				description = description ? description.toLowerCase() : '';
 				title = title ? title.toLowerCase() : '';
 
-				if (!hidden && title.indexOf(query) > -1 || description.indexOf(query) > -1 || content.indexOf(query) > -1) {
+				return !hidden && title.indexOf(query) > -1 || description.indexOf(query) > -1 || content.indexOf(query) > -1;
+			}
+		}, {
+			key: 'filterResults_',
+			value: function filterResults_(data, query) {
+				var _this2 = this;
+
+				var children = data.children;
+
+
+				var results = [];
+
+				if (this.matchesQuery_(data, query)) {
 					results.push(data);
 				}
 
@@ -19530,6 +19545,11 @@ babelHelpers;
 	;
 
 	ElectricSearchBase.STATE = {
+		childrenOnly: {
+			validator: core.isBoolean,
+			value: true
+		},
+
 		data: {
 			validator: core.isObject
 		},
@@ -21509,7 +21529,7 @@ babelHelpers;
   var templates;
   goog.loadModule(function (exports) {
 
-    // This file was automatically generated from Sidebar.soy.
+    // This file was automatically generated from SideBar.soy.
     // Please don't edit this file by hand.
 
     /**
@@ -21653,7 +21673,129 @@ babelHelpers;
 
 	Soy.register(Sidebar, templates);
 
-	this['metal']['Sidebar'] = Sidebar;
+	this['metal']['SideBar'] = Sidebar;
+}).call(this);
+'use strict';
+
+(function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
+    // This file was automatically generated from SideBar.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace Sidebar.
+     * @hassoydeltemplate {ElectricNavigation.anchor.idom}
+     * @public
+     */
+
+    goog.module('Sidebar.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    var $templateAlias2 = Soy.getTemplate('ElectricNavigation.incrementaldom', 'render');
+
+    var $templateAlias1 = Soy.getTemplate('ElectricSearchAutocomplete.incrementaldom', 'render');
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      ie_open('nav', null, null, 'class', 'sidebar');
+      ie_open('a', null, null, 'class', 'sidebar-header toggler-header-collapsed');
+      ie_void('span', null, null, 'class', 'sidebar-icon icon-16-menu');
+      ie_open('span');
+      itext('Docs Menu');
+      ie_close('span');
+      ie_open('span', null, null, 'class', 'sidebar-icon-right');
+      ie_void('span', null, null, 'class', 'icon-12-arrow-down-short');
+      ie_void('span', null, null, 'class', 'icon-12-arrow-up-short');
+      ie_close('span');
+      ie_close('a');
+      ie_open('div', null, null, 'class', 'sidebar-toggler-content toggler-collapsed');
+      ie_open('div', null, null, 'class', 'sidebar-search');
+      $templateAlias1({ section: opt_data.section, placeholder: 'Search Docs' }, null, opt_ijData);
+      ie_close('div');
+      $templateAlias2({ elementClasses: 'sidebar-list sidebar-list-1', listItemClasses: 'sidebar-item', anchorVariant: 'sidebar', section: opt_data.section }, null, opt_ijData);
+      ie_close('div');
+      ie_close('nav');
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'Sidebar.render';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function __deltemplate_s14_d34389eb(opt_data, opt_ignored, opt_ijData) {
+      ie_open('a', null, null, 'class', 'sidebar-link ' + (opt_data.page.active ? 'sidebar-link-selected' : ''), 'href', opt_data.page.url);
+      ie_void('span', null, null, 'class', 'sidebar-icon icon-16-' + opt_data.page.icon);
+      ie_open('span');
+      var dyn0 = opt_data.page.title;
+      if (typeof dyn0 == 'function') dyn0();else if (dyn0 != null) itext(dyn0);
+      ie_close('span');
+      ie_close('a');
+    }
+    exports.__deltemplate_s14_d34389eb = __deltemplate_s14_d34389eb;
+    if (goog.DEBUG) {
+      __deltemplate_s14_d34389eb.soyTemplateName = 'Sidebar.__deltemplate_s14_d34389eb';
+    }
+    soy.$$registerDelegateFn(soy.$$getDelTemplateId('ElectricNavigation.anchor.idom'), 'sidebar', 0, __deltemplate_s14_d34389eb);
+
+    exports.render.params = ["section"];
+    exports.render.types = { "section": "any" };
+    templates = exports;
+    return exports;
+  });
+
+  var Sidebar = function (_Component) {
+    babelHelpers.inherits(Sidebar, _Component);
+
+    function Sidebar() {
+      babelHelpers.classCallCheck(this, Sidebar);
+      return babelHelpers.possibleConstructorReturn(this, (Sidebar.__proto__ || Object.getPrototypeOf(Sidebar)).apply(this, arguments));
+    }
+
+    return Sidebar;
+  }(Component);
+
+  Soy.register(Sidebar, templates);
+  this['metalNamed']['SideBar'] = this['metalNamed']['SideBar'] || {};
+  this['metalNamed']['SideBar']['Sidebar'] = Sidebar;
+  this['metalNamed']['SideBar']['templates'] = templates;
+  this['metal']['SideBar'] = templates;
+  /* jshint ignore:end */
 }).call(this);
 'use strict';
 
@@ -21708,11 +21850,11 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param51 = function param51() {
+      var param27 = function param27() {
         $templateAlias2(soy.$$assignDefaults({ section: opt_data.site.index.children[0] }, opt_data), null, opt_ijData);
         $guide(opt_data, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param51 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param27 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -21731,16 +21873,16 @@ babelHelpers;
       ie_open('header', null, null, 'class', 'guide-header');
       ie_open('div', null, null, 'class', 'container-hybrid');
       ie_open('h1', null, null, 'class', 'guide-header-title');
-      var dyn2 = opt_data.page.title;
-      if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
+      var dyn1 = opt_data.page.title;
+      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
       ie_close('h1');
       ie_close('div');
       ie_close('header');
       ie_open('div', null, null, 'class', 'container-hybrid');
       ie_open('div', null, null, 'class', 'docs-guide row');
       ie_open('div', null, null, 'class', 'docs-content col-xs-16 col-md-9');
-      var dyn3 = opt_data.content;
-      if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
+      var dyn2 = opt_data.content;
+      if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
       $feedback(opt_data, null, opt_ijData);
       ie_close('div');
       ie_open('nav', null, null, 'class', 'col-xs-16 col-md-offset-2 col-md-5');
@@ -21893,8 +22035,8 @@ babelHelpers;
       ie_open('div', null, null, 'class', ($$temp = opt_data.elementClasses) == null ? 'main' : $$temp);
       ie_open('main', null, null, 'class', 'content');
       $topbar(opt_data, null, opt_ijData);
-      var dyn4 = opt_data.content;
-      if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
+      var dyn3 = opt_data.content;
+      if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
       ie_close('main');
       ie_close('div');
     }
@@ -22064,7 +22206,7 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param26 = function param26() {
+      var param72 = function param72() {
         $header(opt_data, null, opt_ijData);
         $why(null, null, opt_ijData);
         $highlights(null, null, opt_ijData);
@@ -22072,7 +22214,7 @@ babelHelpers;
         $features(null, null, opt_ijData);
         $footer(null, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param26 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param72 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -22094,8 +22236,8 @@ babelHelpers;
       itext(' Electric');
       ie_close('h1');
       ie_open('h2', null, null, 'class', 'header-subtitle');
-      var dyn1 = opt_data.site.index.description;
-      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
+      var dyn4 = opt_data.site.index.description;
+      if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
       ie_close('h2');
       ie_open('div', null, null, 'class', 'header-cta');
       ie_open('a', null, null, 'href', '/docs/getting-started.html', 'class', 'btn btn-accent');
