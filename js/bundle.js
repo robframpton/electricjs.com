@@ -186,27 +186,8 @@ babelHelpers;
   }
 
   this['metalNamed']['coreNamed']['abstractMethod'] = abstractMethod; /**
-                                                                       * Loops constructor super classes collecting its properties values. If
-                                                                       * property is not available on the super class `undefined` will be
-                                                                       * collected as value for the class hierarchy position.
-                                                                       * @param {!function()} constructor Class constructor.
-                                                                       * @param {string} propertyName Property name to be collected.
-                                                                       * @return {Array.<*>} Array of collected values.
-                                                                       * TODO(*): Rethink superclass loop.
+                                                                       * Disables Metal.js's compatibility mode.
                                                                        */
-
-  function collectSuperClassesProperty(constructor, propertyName) {
-    var propertyValues = [constructor[propertyName]];
-    while (constructor.__proto__ && !constructor.__proto__.isPrototypeOf(Function)) {
-      constructor = constructor.__proto__;
-      propertyValues.push(constructor[propertyName]);
-    }
-    return propertyValues;
-  }
-
-  this['metalNamed']['coreNamed']['collectSuperClassesProperty'] = collectSuperClassesProperty; /**
-                                                                                                 * Disables Metal.js's compatibility mode.
-                                                                                                 */
 
   function disableCompatibilityMode() {
     compatibilityModeData_ = undefined;
@@ -252,13 +233,24 @@ babelHelpers;
   }
 
   this['metalNamed']['coreNamed']['getCompatibilityModeData'] = getCompatibilityModeData; /**
-                                                                                           * Gets the name of the given function. If the current browser doesn't
-                                                                                           * support the `name` property, this will calculate it from the function's
-                                                                                           * content string.
-                                                                                           * @param {!function()} fn
-                                                                                           * @return {string}
+                                                                                           * Returns the first argument if it's truthy, or the second otherwise.
+                                                                                           * @param {*} a
+                                                                                           * @param {*} b
+                                                                                           * @return {*}
+                                                                                           * @protected
                                                                                            */
 
+  function getFirstTruthy_(a, b) {
+    return a || b;
+  }
+
+  /**
+   * Gets the name of the given function. If the current browser doesn't
+   * support the `name` property, this will calculate it from the function's
+   * content string.
+   * @param {!function()} fn
+   * @return {string}
+   */
   function getFunctionName(fn) {
     if (!fn.name) {
       var str = fn.toString();
@@ -268,16 +260,44 @@ babelHelpers;
   }
 
   this['metalNamed']['coreNamed']['getFunctionName'] = getFunctionName; /**
-                                                                         * Gets an unique id. If `opt_object` argument is passed, the object is
-                                                                         * mutated with an unique id. Consecutive calls with the same object
-                                                                         * reference won't mutate the object again, instead the current object uid
-                                                                         * returns. See {@link UID_PROPERTY}.
-                                                                         * @param {Object=} opt_object Optional object to be mutated with the uid. If
-                                                                         *     not specified this method only returns the uid.
-                                                                         * @param {boolean=} opt_noInheritance Optional flag indicating if this
-                                                                         *     object's uid property can be inherited from parents or not.
-                                                                         * @throws {Error} when invoked to indicate the method should be overridden.
+                                                                         * Gets the value of a static property in the given class. The value will be
+                                                                         * inherited from ancestors as expected, unless a custom merge function is given,
+                                                                         * which can change how the super classes' value for that property will be merged
+                                                                         * together.
+                                                                         * The final merged value will be stored in another property, so that it won't
+                                                                         * be recalculated even if this function is called multiple times.
+                                                                         * @param {!function()} ctor Class constructor.
+                                                                         * @param {string} propertyName Property name to be merged.
+                                                                         * @param {function(*, *):*=} opt_mergeFn Function that receives the merged
+                                                                         *     value of the property so far and the next value to be merged to it.
+                                                                         *     Should return these two merged together. If not passed the final property
+                                                                         *     will be the first truthy value among ancestors.
                                                                          */
+
+  function getStaticProperty(ctor, propertyName, opt_mergeFn) {
+    var mergedName = propertyName + '_MERGED';
+    if (!ctor.hasOwnProperty(mergedName)) {
+      var merged = ctor.hasOwnProperty(propertyName) ? ctor[propertyName] : null;
+      if (ctor.__proto__ && !ctor.__proto__.isPrototypeOf(Function)) {
+        var mergeFn = opt_mergeFn || getFirstTruthy_;
+        merged = mergeFn(merged, getStaticProperty(ctor.__proto__, propertyName, mergeFn));
+      }
+      ctor[mergedName] = merged;
+    }
+    return ctor[mergedName];
+  }
+
+  this['metalNamed']['coreNamed']['getStaticProperty'] = getStaticProperty; /**
+                                                                             * Gets an unique id. If `opt_object` argument is passed, the object is
+                                                                             * mutated with an unique id. Consecutive calls with the same object
+                                                                             * reference won't mutate the object again, instead the current object uid
+                                                                             * returns. See {@link UID_PROPERTY}.
+                                                                             * @param {Object=} opt_object Optional object to be mutated with the uid. If
+                                                                             *     not specified this method only returns the uid.
+                                                                             * @param {boolean=} opt_noInheritance Optional flag indicating if this
+                                                                             *     object's uid property can be inherited from parents or not.
+                                                                             * @throws {Error} when invoked to indicate the method should be overridden.
+                                                                             */
 
   function getUid(opt_object, opt_noInheritance) {
     if (opt_object) {
@@ -423,36 +443,9 @@ babelHelpers;
   }
 
   this['metalNamed']['coreNamed']['isString'] = isString; /**
-                                                           * Merges the values of a export function property a class with the values of that
-                                                           * property for all its super classes, and stores it as a new static
-                                                           * property of that class. If the export function property already existed, it won't
-                                                           * be recalculated.
-                                                           * @param {!function()} constructor Class constructor.
-                                                           * @param {string} propertyName Property name to be collected.
-                                                           * @param {function(*, *):*=} opt_mergeFn Function that receives an array filled
-                                                           *   with the values of the property for the current class and all its super classes.
-                                                           *   Should return the merged value to be stored on the current class.
-                                                           * @return {boolean} Returns true if merge happens, false otherwise.
+                                                           * Null function used for default values of callbacks, etc.
+                                                           * @return {void} Nothing.
                                                            */
-
-  function mergeSuperClassesProperty(constructor, propertyName, opt_mergeFn) {
-    var mergedName = propertyName + '_MERGED';
-    if (constructor.hasOwnProperty(mergedName)) {
-      return false;
-    }
-
-    var merged = collectSuperClassesProperty(constructor, propertyName);
-    if (opt_mergeFn) {
-      merged = opt_mergeFn(merged);
-    }
-    constructor[mergedName] = merged;
-    return true;
-  }
-
-  this['metalNamed']['coreNamed']['mergeSuperClassesProperty'] = mergeSuperClassesProperty; /**
-                                                                                             * Null function used for default values of callbacks, etc.
-                                                                                             * @return {void} Nothing.
-                                                                                             */
 
   function nullFunction() {}
   this['metalNamed']['coreNamed']['nullFunction'] = nullFunction;
@@ -553,7 +546,7 @@ babelHelpers;
 			key: 'remove',
 			value: function remove(arr, obj) {
 				var i = arr.indexOf(obj);
-				var rv;
+				var rv = void 0;
 				if (rv = i >= 0) {
 					array.removeAt(arr, i);
 				}
@@ -736,7 +729,7 @@ babelHelpers;
 	async.nextTick.getSetImmediateEmulator_ = function () {
 		// Create a private message channel and use it to postMessage empty messages
 		// to ourselves.
-		var Channel;
+		var Channel = void 0;
 
 		// Verify if variable is defined on the current runtime (i.e., node, browser).
 		// Can't use typeof enclosed in a function (such as core.isFunction) or an
@@ -783,23 +776,29 @@ babelHelpers;
 			};
 		}
 		if (typeof Channel !== 'undefined') {
-			var channel = new Channel();
-			// Use a fifo linked list to call callbacks in the right order.
-			var head = {};
-			var tail = head;
-			channel.port1.onmessage = function () {
-				head = head.next;
-				var cb = head.cb;
-				head.cb = null;
-				cb();
-			};
-			return function (cb) {
-				tail.next = {
-					cb: cb
+			var _ret = function () {
+				var channel = new Channel();
+				// Use a fifo linked list to call callbacks in the right order.
+				var head = {};
+				var tail = head;
+				channel.port1.onmessage = function () {
+					head = head.next;
+					var cb = head.cb;
+					head.cb = null;
+					cb();
 				};
-				tail = tail.next;
-				channel.port2.postMessage(0);
-			};
+				return {
+					v: function v(cb) {
+						tail.next = {
+							cb: cb
+						};
+						tail = tail.next;
+						channel.port2.postMessage(0);
+					}
+				};
+			}();
+
+			if ((typeof _ret === 'undefined' ? 'undefined' : babelHelpers.typeof(_ret)) === "object") return _ret.v;
 		}
 		// Implementation for IE6-8: Script elements fire an asynchronous
 		// onreadystatechange event when inserted into the DOM.
@@ -918,7 +917,8 @@ babelHelpers;
     * @return {Object} Returns the target object reference.
     */
 			value: function mixin(target) {
-				var key, source;
+				var key = void 0,
+				    source = void 0;
 				for (var i = 1; i < arguments.length; i++) {
 					source = arguments[i];
 					for (key in source) {
@@ -1388,6 +1388,36 @@ babelHelpers;
 			}
 
 			/**
+    * Builds facade for the given event.
+    * @param {string} event
+    * @return {Object}
+    * @protected
+    */
+
+		}, {
+			key: 'buildFacade_',
+			value: function buildFacade_(event) {
+				var _this2 = this;
+
+				if (this.getShouldUseFacade()) {
+					var _ret = function () {
+						var facade = {
+							preventDefault: function preventDefault() {
+								facade.preventedDefault = true;
+							},
+							target: _this2,
+							type: event
+						};
+						return {
+							v: facade
+						};
+					}();
+
+					if ((typeof _ret === 'undefined' ? 'undefined' : babelHelpers.typeof(_ret)) === "object") return _ret.v;
+				}
+			}
+
+			/**
     * Disposes of this instance's object references.
     * @override
     */
@@ -1408,53 +1438,28 @@ babelHelpers;
 		}, {
 			key: 'emit',
 			value: function emit(event) {
-				var listeners = toArray(this.getRawListeners_(event)).concat();
+				var listeners = this.getRawListeners_(event);
 				if (listeners.length === 0) {
 					return false;
 				}
 
 				var args = array.slice(arguments, 1);
-				var facade;
-				if (this.getShouldUseFacade()) {
-					facade = {
-						preventDefault: function preventDefault() {
-							facade.preventedDefault = true;
-						},
-						target: this,
-						type: event
-					};
-					args.push(facade);
-				}
-
-				var defaultListeners = [];
-				for (var i = 0; i < listeners.length; i++) {
-					var listener = listeners[i].fn || listeners[i];
-					if (listeners[i].default) {
-						defaultListeners.push(listener);
-					} else {
-						listener.apply(this, args);
-					}
-				}
-				if (!facade || !facade.preventedDefault) {
-					for (var j = 0; j < defaultListeners.length; j++) {
-						defaultListeners[j].apply(this, args);
-					}
-				}
-
+				this.runListeners_(listeners, args, this.buildFacade_(event));
 				return true;
 			}
 
 			/**
     * Gets the listener objects for the given event, if there are any.
     * @param {string} event
-    * @return {Array}
+    * @return {!Array}
     * @protected
     */
 
 		}, {
 			key: 'getRawListeners_',
 			value: function getRawListeners_(event) {
-				return this.events_ && this.events_[event];
+				var directListeners = toArray(this.events_ && this.events_[event]);
+				return directListeners.concat(toArray(this.events_ && this.events_['*']));
 			}
 
 			/**
@@ -1479,7 +1484,7 @@ babelHelpers;
 		}, {
 			key: 'listeners',
 			value: function listeners(event) {
-				return toArray(this.getRawListeners_(event)).map(function (listener) {
+				return this.getRawListeners_(event).map(function (listener) {
 					return listener.fn ? listener.fn : listener;
 				});
 			}
@@ -1651,12 +1656,13 @@ babelHelpers;
 		}, {
 			key: 'removeMatchingListenerObjs_',
 			value: function removeMatchingListenerObjs_(listenerObjs, listener) {
-				for (var i = listenerObjs.length - 1; i >= 0; i--) {
-					if (this.matchesListener_(listenerObjs[i], listener)) {
-						listenerObjs.splice(i, 1);
+				var finalListeners = [];
+				for (var i = 0; i < listenerObjs.length; i++) {
+					if (!this.matchesListener_(listenerObjs[i], listener)) {
+						finalListeners.push(listenerObjs[i]);
 					}
 				}
-				return listenerObjs.length > 0 ? listenerObjs : null;
+				return finalListeners.length > 0 ? finalListeners : null;
 			}
 
 			/**
@@ -1687,6 +1693,37 @@ babelHelpers;
 					handlers = toArray(handlers);
 					for (var i = 0; i < handlers.length; i++) {
 						handlers[i](event);
+					}
+				}
+			}
+
+			/**
+    * Runs the given listeners.
+    * @param {!Array} listeners
+    * @param {!Array} args
+    * @param (Object) facade
+    * @protected
+    */
+
+		}, {
+			key: 'runListeners_',
+			value: function runListeners_(listeners, args, facade) {
+				if (facade) {
+					args.push(facade);
+				}
+
+				var defaultListeners = [];
+				for (var i = 0; i < listeners.length; i++) {
+					var listener = listeners[i].fn || listeners[i];
+					if (listeners[i].default) {
+						defaultListeners.push(listener);
+					} else {
+						listener.apply(this, args);
+					}
+				}
+				if (!facade || !facade.preventedDefault) {
+					for (var j = 0; j < defaultListeners.length; j++) {
+						defaultListeners[j].apply(this, args);
 					}
 				}
 			}
@@ -1752,7 +1789,6 @@ babelHelpers;
 'use strict';
 
 (function () {
-	var array = this['metalNamed']['metal']['array'];
 	var Disposable = this['metalNamed']['metal']['Disposable'];
 
 	/**
@@ -1844,19 +1880,6 @@ babelHelpers;
 			}
 
 			/**
-    * Adds the proxy listener for the given event.
-    * @param {string} event
-    * @return {!EventHandle} The listened event's handle.
-    * @protected
-    */
-
-		}, {
-			key: 'addListenerForEvent_',
-			value: function addListenerForEvent_(event) {
-				return this.addListener_(event, this.emitOnTarget_.bind(this, event));
-			}
-
-			/**
     * @inheritDoc
     */
 
@@ -1871,15 +1894,13 @@ babelHelpers;
 
 			/**
     * Emits the specified event type on the target emitter.
-    * @param {string} eventType
     * @protected
     */
 
 		}, {
 			key: 'emitOnTarget_',
-			value: function emitOnTarget_(eventType) {
-				var args = [eventType].concat(array.slice(arguments, 1));
-				this.targetEmitter_.emit.apply(this.targetEmitter_, args);
+			value: function emitOnTarget_() {
+				this.targetEmitter_.emit.apply(this.targetEmitter_, arguments);
 			}
 
 			/**
@@ -1977,7 +1998,7 @@ babelHelpers;
 			value: function tryToAddListener_(event) {
 				if (this.originEmitter_) {
 					this.proxiedEvents_ = this.proxiedEvents_ || {};
-					this.proxiedEvents_[event] = this.addListenerForEvent_(event);
+					this.proxiedEvents_[event] = this.addListener_(event, this.emitOnTarget_.bind(this, event));
 				} else {
 					this.pendingEvents_ = this.pendingEvents_ || [];
 					this.pendingEvents_.push(event);
@@ -2206,7 +2227,7 @@ babelHelpers;
 
 	this['metalNamed']['domNamed'] = this['metalNamed']['domNamed'] || {};
 	this['metalNamed']['domNamed']['customEvents'] = customEvents;
-	var NEXT_TARGET = '__metal_next_target__';
+	var LAST_CONTAINER = '__metal_last_container__';
 	var USE_CAPTURE = {
 		blur: true,
 		error: true,
@@ -2501,17 +2522,15 @@ babelHelpers;
 
 	function handleDelegateEvent_(event) {
 		normalizeDelegateEvent_(event);
-		var currElement = isDef(event[NEXT_TARGET]) ? event[NEXT_TARGET] : event.target;
 		var ret = true;
 		var container = event.currentTarget;
-		var limit = event.currentTarget.parentNode;
 		var defFns = [];
 
-		ret &= triggerDelegatedListeners_(container, currElement, event, limit, defFns);
+		ret &= triggerDelegatedListeners_(container, event, defFns);
 		ret &= triggerDefaultDelegatedListeners_(defFns, event);
 
 		event.delegateTarget = null;
-		event[NEXT_TARGET] = limit;
+		event[LAST_CONTAINER] = container;
 		return ret;
 	}
 
@@ -2702,7 +2721,7 @@ babelHelpers;
                                                                                */
 
 	function removeChildren(node) {
-		var child;
+		var child = void 0;
 		while (child = node.firstChild) {
 			node.removeChild(child);
 		}
@@ -2783,7 +2802,7 @@ babelHelpers;
                                                        */
 
 	function stopImmediatePropagation_() {
-		var event = this; // jshint ignore:line
+		var event = this; // eslint-disable-line
 		event.stopped = true;
 		event.stoppedImmediate = true;
 		Event.prototype.stopImmediatePropagation.call(event);
@@ -2794,7 +2813,7 @@ babelHelpers;
   * @private
   */
 	function stopPropagation_() {
-		var event = this; // jshint ignore:line
+		var event = this; // eslint-disable-line
 		event.stopped = true;
 		Event.prototype.stopPropagation.call(event);
 	}
@@ -2849,22 +2868,23 @@ babelHelpers;
   * This triggers all matched delegated listeners of a given event type when its
   * delegated target is able to interact.
   * @param {!Element} container
-  * @param {!Element} currElement
   * @param {!Event} event
-  * @param {!Element} limit the fartest parent of the given element
   * @param {!Array} defaultFns Array to collect default listeners in, instead
   *     of running them.
   * @return {boolean} False if at least one of the triggered callbacks returns
   *     false, or true otherwise.
   * @private
   */
-	function triggerDelegatedListeners_(container, currElement, event, limit, defaultFns) {
+	function triggerDelegatedListeners_(container, event, defaultFns) {
 		var ret = true;
+		var currElement = event.target;
+		var limit = container.parentNode;
 
 		while (currElement && currElement !== limit && !event.stopped) {
 			if (isAbleToInteractWith_(currElement, event.type, event)) {
 				event.delegateTarget = currElement;
-				ret &= triggerMatchedListeners_(container, currElement, event, defaultFns);
+				ret &= triggerElementListeners_(currElement, event, defaultFns);
+				ret &= triggerSelectorListeners_(container, currElement, event, defaultFns);
 			}
 			currElement = currElement.parentNode;
 		}
@@ -2945,13 +2965,35 @@ babelHelpers;
 			var classIndex = elementClassName.indexOf(className);
 
 			if (classIndex === -1) {
-				elementClassName = elementClassName + classes[i] + ' ';
+				elementClassName = '' + elementClassName + classes[i] + ' ';
 			} else {
-				elementClassName = elementClassName.substring(0, classIndex) + ' ' + elementClassName.substring(classIndex + className.length);
+				var before = elementClassName.substring(0, classIndex);
+				var after = elementClassName.substring(classIndex + className.length);
+				elementClassName = before + ' ' + after;
 			}
 		}
 
 		element.className = elementClassName.trim();
+	}
+
+	/**
+  * Triggers all listeners for the given event type that are stored in the
+  * specified element.
+  * @param {!Element} element
+  * @param {!Event} event
+  * @param {!Array} defaultFns Array to collect default listeners in, instead
+  *     of running them.
+  * @return {boolean} False if at least one of the triggered callbacks returns
+  *     false, or true otherwise.
+  * @private
+  */
+	function triggerElementListeners_(element, event, defaultFns) {
+		var lastContainer = event[LAST_CONTAINER];
+		if (!isDef(lastContainer) || !contains(lastContainer, element)) {
+			var listeners = domData.get(element, 'listeners', {})[event.type];
+			return triggerListeners_(listeners, event, element, defaultFns);
+		}
+		return true;
 	}
 
 	/**
@@ -3000,8 +3042,7 @@ babelHelpers;
 	}
 
 	/**
-  * Triggers all listeners for the given event type that are stored in the
-  * specified element.
+  * Triggers all selector listeners for the given event.
   * @param {!Element} container
   * @param {!Element} element
   * @param {!Event} event
@@ -3011,20 +3052,17 @@ babelHelpers;
   *     false, or true otherwise.
   * @private
   */
-	function triggerMatchedListeners_(container, element, event, defaultFns) {
-		var listeners = domData.get(element, 'listeners', {})[event.type];
-		var ret = triggerListeners_(listeners, event, element, defaultFns);
-
-		var delegatingData = domData.get(container, 'delegating', {});
-		var selectorsMap = delegatingData[event.type].selectors;
-		var selectors = Object.keys(selectorsMap);
+	function triggerSelectorListeners_(container, element, event, defaultFns) {
+		var ret = true;
+		var data = domData.get(container, 'delegating', {});
+		var map = data[event.type].selectors;
+		var selectors = Object.keys(map);
 		for (var i = 0; i < selectors.length && !event.stoppedImmediate; i++) {
 			if (match(element, selectors[i])) {
-				listeners = selectorsMap[selectors[i]];
+				var listeners = map[selectors[i]];
 				ret &= triggerListeners_(listeners, event, element, defaultFns);
 			}
 		}
-
 		return ret;
 	}
 }).call(this);
@@ -3565,9 +3603,14 @@ babelHelpers;
 
 (function () {
 	var getFunctionName = this['metalNamed']['metal']['getFunctionName'];
-	var isDef = this['metalNamed']['metal']['isDef'];
 	var isDefAndNotNull = this['metalNamed']['metal']['isDefAndNotNull'];
-	var isNull = this['metalNamed']['metal']['isNull'];
+
+
+	var ERROR_ARRAY_OF_TYPE = 'Expected an array of single type.';
+	var ERROR_OBJECT_OF_TYPE = 'Expected object of one type.';
+	var ERROR_ONE_OF = 'Expected one of given values.';
+	var ERROR_ONE_OF_TYPE = 'Expected one of given types.';
+	var ERROR_SHAPE_OF = 'Expected object with a specific shape.';
 
 	/**
   * Provides access to various type validators that will return an
@@ -3575,24 +3618,24 @@ babelHelpers;
   * will also accept null or undefined values. To not accept these you should
   * instead make your state property required.
   */
-
 	var validators = {
 		any: function any() {
 			return function () {
 				return true;
 			};
 		},
-		array: validateType('array'),
-		bool: validateType('boolean'),
-		func: validateType('function'),
-		number: validateType('number'),
-		object: validateType('object'),
-		string: validateType('string'),
+		array: buildTypeValidator('array'),
+		bool: buildTypeValidator('boolean'),
+		func: buildTypeValidator('function'),
+		number: buildTypeValidator('number'),
+		object: buildTypeValidator('object'),
+		string: buildTypeValidator('string'),
 
 		/**
-   * Creates a validator that checks the values of an array against a type.
-   * @param {function()} validator Type validator to check each index against.
-   * @return {function()} Validator.
+   * Creates a validator that checks that the value it receives is an array
+   * of items, and that all of the items pass the given validator.
+   * @param {!function()} validator Validator to check each item against.
+   * @return {!function()}
    */
 		arrayOf: function arrayOf(validator) {
 			return maybe(function (value, name, context) {
@@ -3600,39 +3643,36 @@ babelHelpers;
 				if (isInvalid(result)) {
 					return result;
 				}
-				for (var i = 0; i < value.length; i++) {
-					if (isInvalid(validator(value[i], name, context))) {
-						return composeError('Expected an array of single type', name, context);
-					}
-				}
-				return true;
+				return validateArrayItems(validator, value, name, context);
 			});
 		},
 
 		/**
-   * Creates a validator that compares a value to a specific class.
-   * @param {function()} expectedClass Class to check value against.
-   * @return {function()} Validator.
+   * Creates a validator that checks if a value is an instance of a given class.
+   * @param {!function()} expectedClass Class to check value against.
+   * @return {!function()}
    */
 		instanceOf: function instanceOf(expectedClass) {
 			return maybe(function (value, name, context) {
-				if (!(value instanceof expectedClass)) {
-					return composeError('Expected instance of ' + expectedClass, name, context);
+				if (value instanceof expectedClass) {
+					return true;
 				}
-				return true;
+				var msg = 'Expected instance of ' + expectedClass;
+				return composeError(msg, name, context);
 			});
 		},
 
 		/**
-   * Creates a validator that checks the values of an object against a type.
-   * @param {function()} typeValidator Validator to check value against.
-   * @return {function()} Validator.
+   * Creates a validator that checks that the value it receives is an object,
+   * and that all values within that object pass the given validator.
+   * @param {!function()} validator Validator to check each object value against.
+   * @return {!function()}
    */
-		objectOf: function objectOf(typeValidator) {
+		objectOf: function objectOf(validator) {
 			return maybe(function (value, name, context) {
 				for (var key in value) {
-					if (isInvalid(typeValidator(value[key]))) {
-						return composeError('Expected object of one type', name, context);
+					if (isInvalid(validator(value[key]))) {
+						return composeError(ERROR_OBJECT_OF_TYPE, name, context);
 					}
 				}
 				return true;
@@ -3640,9 +3680,10 @@ babelHelpers;
 		},
 
 		/**
-   * Creates a validator that checks equality against specific values.
+   * Creates a validator that checks if the received value matches one of the
+   * given values.
    * @param {!Array} arrayOfValues Array of values to check equality against.
-   * @return {function()} Validator.
+   * @return {!function()}
    */
 		oneOf: function oneOf(arrayOfValues) {
 			return maybe(function (value, name, context) {
@@ -3650,24 +3691,16 @@ babelHelpers;
 				if (isInvalid(result)) {
 					return result;
 				}
-
-				for (var i = 0; i < arrayOfValues.length; i++) {
-					var oneOfValue = arrayOfValues[i];
-					if (value === oneOfValue) {
-						return true;
-					}
-				}
-
-				return composeError('Expected one of given values.', name, context);
+				return arrayOfValues.indexOf(value) === -1 ? composeError(ERROR_ONE_OF, name, context) : true;
 			});
 		},
 
 		/**
-   * Creates a validator that checks a value against multiple types and only has
-   * to pass one.
+   * Creates a validator that checks if the received value matches one of the
+   * given types.
    * @param {!Array} arrayOfTypeValidators Array of validators to check value
    *     against.
-   * @return {function()} Validator.
+   * @return {!function()}
    */
 		oneOfType: function oneOfType(arrayOfTypeValidators) {
 			return maybe(function (value, name, context) {
@@ -3681,15 +3714,15 @@ babelHelpers;
 						return true;
 					}
 				}
-
-				return composeError('Expected one of given types.', name, context);
+				return composeError(ERROR_ONE_OF_TYPE, name, context);
 			});
 		},
 
 		/**
-   * Creates a validator that checks the shape of an object.
-   * @param {!Object} shape An object containing type validators for each key.
-   * @return {function()} Validator.
+   * Creates a validator that checks if the received value is an object, and
+   * that its contents match the given shape.
+   * @param {!Object} shape An object containing validators for each key.
+   * @return {!function()}
    */
 		shapeOf: function shapeOf(shape) {
 			return maybe(function (value, name, context) {
@@ -3699,33 +3732,55 @@ babelHelpers;
 				}
 
 				for (var key in shape) {
-					var required = false;
 					var validator = shape[key];
+					var required = false;
 					if (validator.config) {
 						required = validator.config.required;
 						validator = validator.config.validator;
 					}
 					if (required && !isDefAndNotNull(value[key]) || isInvalid(validator(value[key]))) {
-						return composeError('Expected object with a specific shape', name, context);
+						return composeError(ERROR_SHAPE_OF, name, context);
 					}
 				}
-
 				return true;
 			});
 		}
 	};
 
 	/**
+  * Creates a validator that checks against a specific primitive type.
+  * @param {string} expectedType Type to check against.
+  * @return {!function()} Function that runs the validator if called with
+  *     arguments, or just returns it otherwise. This means that when using a
+  *     type validator in `State` it may be just passed directly (like
+  *     `validators.bool`), or called with no args (like `validators.bool()`).
+  *     That's done to allow all validators to be used consistently, since some
+  *     (like `arrayOf`) always require that you call the function before
+  *     receiving the actual validator. Type validators don't need the call, but
+  *     work if it's made anyway.
+  */
+	function buildTypeValidator(expectedType) {
+		var validatorFn = maybe(validateType.bind(null, expectedType));
+		return function () {
+			if (arguments.length === 0) {
+				return validatorFn;
+			} else {
+				return validatorFn.apply(undefined, arguments);
+			}
+		};
+	}
+
+	/**
   * Composes a warning a warning message.
   * @param {string} error Error message to display to console.
   * @param {?string} name Name of state property that is giving the error.
-  * @param {Object} context
-  * @return {!Error} Instance of Error class.
+  * @param {Object} context The property's owner.
+  * @return {!Error}
   */
 	function composeError(error, name, context) {
 		var compName = context ? getFunctionName(context.constructor) : null;
 		var renderer = context && context.getRenderer && context.getRenderer();
-		var parent = renderer && renderer.getParent ? context.getRenderer().getParent() : null;
+		var parent = renderer && renderer.getParent && renderer.getParent();
 		var parentName = parent ? getFunctionName(parent.constructor) : null;
 		var location = parentName ? 'Check render method of \'' + parentName + '\'.' : '';
 		return new Error('Warning: Invalid state passed to \'' + name + '\'. ' + (error + ' Passed to \'' + compName + '\'. ' + location));
@@ -3737,11 +3792,7 @@ babelHelpers;
   * @return {string} Type of value.
   */
 	function getType(value) {
-		var type = typeof value === 'undefined' ? 'undefined' : babelHelpers.typeof(value);
-		if (Array.isArray(value)) {
-			return 'array';
-		}
-		return type;
+		return Array.isArray(value) ? 'array' : typeof value === 'undefined' ? 'undefined' : babelHelpers.typeof(value);
 	}
 
 	/**
@@ -3754,45 +3805,50 @@ babelHelpers;
 	}
 
 	/**
-  * Creates a validator that checks a value against a single type, null, or
+  * Wraps the given validator so that it also accepts null/undefined values.
+  *   a validator that checks a value against a single type, null, or
   * undefined.
-  * @param {function()} typeValidator Validator to check value against.
-  * @return {function()} Validator.
+  * @param {!function()} typeValidator Validator to wrap.
+  * @return {!function()} Wrapped validator.
   */
 	function maybe(typeValidator) {
 		return function (value, name, context) {
-			if (!isDef(value) || isNull(value)) {
-				return true;
-			}
-			return typeValidator(value, name, context);
+			return isDefAndNotNull(value) ? typeValidator(value, name, context) : true;
 		};
 	}
 
 	/**
-  * Creates a validator that checks against a specific primitive type. If this
-  * validator is called with no arguments, it will return the actual validator
-  * function instead of running it. That's done to allow all validators to be
-  * used consistently, since some (like `arrayOf`) always require that you call
-  * the function before receiving the actual validator.
-  * @param {string} expectedType Type to check against.
-  * @return {function()} Validator if called with arguments, or wrapper function
-  *     that returns the validator otherwise.
+  * Checks if all the items of the given array pass the given validator.
+  * @param {!function()} validator
+  * @param {*} value The array to validate items for.
+  * @param {string} name The name of the array property being checked.
+  * @param {!Object} context Owner of the array property being checked.
+  * @return {!Error|boolean} `true` if the type matches, or an error otherwise.
   */
-	function validateType(expectedType) {
-		var validatorFn = maybe(function (value, name, context) {
-			var type = getType(value);
-			if (type !== expectedType) {
-				return composeError('Expected type \'' + expectedType + '\', but received type \'' + type + '\'.', name, context);
+	function validateArrayItems(validator, value, name, context) {
+		for (var i = 0; i < value.length; i++) {
+			if (isInvalid(validator(value[i], name, context))) {
+				return composeError(ERROR_ARRAY_OF_TYPE, name, context);
 			}
-			return true;
-		});
-		return function () {
-			if (arguments.length === 0) {
-				return validatorFn;
-			} else {
-				return validatorFn.apply(undefined, arguments);
-			}
-		};
+		}
+		return true;
+	}
+
+	/**
+  * Checks if the given value matches the expected type.
+  * @param {string} expectedType String representing the expected type.
+  * @param {*} value The value to match the type of.
+  * @param {string} name The name of the property being checked.
+  * @param {!Object} context Owner of the property being checked.
+  * @return {!Error|boolean} `true` if the type matches, or an error otherwise.
+  */
+	function validateType(expectedType, value, name, context) {
+		var type = getType(value);
+		if (type !== expectedType) {
+			var msg = 'Expected type \'' + expectedType + '\', but received type \'' + type + '\'.';
+			return composeError(msg, name, context);
+		}
+		return true;
 	}
 
 	this['metal']['validators'] = validators;
@@ -3836,7 +3892,9 @@ babelHelpers;
 		required: function required() {
 			var _required = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
 
-			return mergeConfig(this, { required: _required });
+			return mergeConfig(this, {
+				required: _required
+			});
 		},
 
 
@@ -3846,7 +3904,9 @@ babelHelpers;
    * @return {!Object} `State` configuration object.
    */
 		setter: function setter(_setter) {
-			return mergeConfig(this, { setter: _setter });
+			return mergeConfig(this, {
+				setter: _setter
+			});
 		},
 
 
@@ -3856,7 +3916,9 @@ babelHelpers;
    * @return {!Object} `State` configuration object.
    */
 		validator: function validator(_validator) {
-			return mergeConfig(this, { validator: _validator });
+			return mergeConfig(this, {
+				validator: _validator
+			});
 		},
 
 
@@ -3866,7 +3928,9 @@ babelHelpers;
    * @return {!Object} `State` configuration object.
    */
 		value: function value(_value) {
-			return mergeConfig(this, { value: _value });
+			return mergeConfig(this, {
+				value: _value
+			});
 		}
 	};
 
@@ -3900,11 +3964,11 @@ babelHelpers;
 
 (function () {
 	var async = this['metalNamed']['metal']['async'];
+	var getStaticProperty = this['metalNamed']['metal']['getStaticProperty'];
 	var isDefAndNotNull = this['metalNamed']['metal']['isDefAndNotNull'];
 	var isFunction = this['metalNamed']['metal']['isFunction'];
 	var isObject = this['metalNamed']['metal']['isObject'];
 	var isString = this['metalNamed']['metal']['isString'];
-	var mergeSuperClassesProperty = this['metalNamed']['metal']['mergeSuperClassesProperty'];
 	var object = this['metalNamed']['metal']['object'];
 	var EventEmitter = this['metalNamed']['events']['EventEmitter'];
 
@@ -4002,7 +4066,7 @@ babelHelpers;
 					var info = this.getStateInfo(name);
 					var value = info.state === State.KeyStates.INITIALIZED ? this.get(name) : this.initialValues_[name];
 					if (!isDefAndNotNull(value)) {
-						console.error('The property called "' + name + '" is required but didn\'t ' + 'receive a value.');
+						console.error('The property called "' + name + '" is required but didn\'t receive a value.');
 					}
 				}
 			}
@@ -4190,12 +4254,12 @@ babelHelpers;
 			value: function configStateFromStaticHint_() {
 				var ctor = this.constructor;
 				if (ctor !== State) {
-					var defineContext;
-					var merged = State.mergeStateStatic(ctor);
+					var defineContext = void 0;
 					if (this.obj_ === this) {
-						defineContext = merged ? ctor.prototype : false;
+						defineContext = ctor.hasConfiguredState_ ? false : ctor.prototype;
+						ctor.hasConfiguredState_ = true;
 					}
-					this.configState(ctor.STATE_MERGED, defineContext);
+					this.configState(State.getStateStatic(ctor), defineContext);
 				}
 			}
 
@@ -4320,14 +4384,22 @@ babelHelpers;
 			}
 
 			/**
+    * Merges the STATE static variable for the given constructor function.
+    * @param  {!Function} ctor Constructor function.
+    * @return {boolean} Returns true if merge happens, false otherwise.
+    * @static
+    */
+
+		}, {
+			key: 'hasBeenSet',
+
+
+			/**
     * Checks if the value of the state key with the given name has already been
     * set. Note that this doesn't run the key's getter.
     * @param {string} name The name of the key.
     * @return {boolean}
     */
-
-		}, {
-			key: 'hasBeenSet',
 			value: function hasBeenSet(name) {
 				var info = this.getStateInfo(name);
 				return info.state === State.KeyStates.INITIALIZED || this.hasInitialValue_(name);
@@ -4406,8 +4478,9 @@ babelHelpers;
 			}
 
 			/**
-    * Merges an array of values for the STATE property into a single object.
-    * @param {!Array} values The values to be merged.
+    * Merges two values for the STATE property into a single object.
+    * @param {Object} mergedVal
+    * @param {Object} currVal
     * @return {!Object} The merged value.
     * @static
     */
@@ -4520,8 +4593,8 @@ babelHelpers;
     */
 
 		}, {
-			key: 'setKeysBlacklist_',
-			value: function setKeysBlacklist_(blacklist) {
+			key: 'setKeysBlacklist',
+			value: function setKeysBlacklist(blacklist) {
 				this.keysBlacklist_ = blacklist;
 			}
 
@@ -4562,12 +4635,8 @@ babelHelpers;
 					return;
 				}
 
-				var info = this.getStateInfo(name);
-				if (!this.hasInitialValue_(name) && info.state === State.KeyStates.UNINITIALIZED) {
-					info.state = State.KeyStates.INITIALIZED;
-				}
-
 				var prevVal = this.get(name);
+				var info = this.getStateInfo(name);
 				info.value = this.callSetter_(name, value, prevVal);
 				this.assertGivenIfRequired_(name);
 				info.written = true;
@@ -4641,22 +4710,14 @@ babelHelpers;
 				return disposed;
 			}
 		}], [{
-			key: 'mergeState',
-			value: function mergeState(values) {
-				return object.mixin.apply(null, [{}].concat(values.reverse()));
+			key: 'getStateStatic',
+			value: function getStateStatic(ctor) {
+				return getStaticProperty(ctor, 'STATE', State.mergeState);
 			}
-
-			/**
-    * Merges the STATE static variable for the given constructor function.
-    * @param  {!Function} ctor Constructor function.
-    * @return {boolean} Returns true if merge happens, false otherwise.
-    * @static
-    */
-
 		}, {
-			key: 'mergeStateStatic',
-			value: function mergeStateStatic(ctor) {
-				return mergeSuperClassesProperty(ctor, 'STATE', State.mergeState);
+			key: 'mergeState',
+			value: function mergeState(mergedVal, currVal) {
+				return object.mixin({}, currVal, mergedVal);
 			}
 		}]);
 		return State;
@@ -4691,308 +4752,731 @@ babelHelpers;
 'use strict';
 
 (function () {
-	var object = this['metalNamed']['metal']['object'];
+	var core = this['metal']['metal'];
+	var dom = this['metal']['dom'];
 	var State = this['metal']['state'];
 
-
-	var ComponentDataManager = {
-		BLACKLIST: {
-			components: true,
-			context: true,
-			element: true,
-			refs: true,
-			state: true,
-			stateKey: true,
-			wasRendered: true
-		},
-
-		/**
-   * Creates the `State` instance that will handle the main component data.
-   * @param {!Component} component
-   * @param {!Object} data
-   * @protected
-   */
-		createState_: function createState_(component, data) {
-			var state = new State(component.getInitialConfig(), component, component);
-			state.setKeysBlacklist_(this.BLACKLIST);
-			state.configState(object.mixin({}, data, component.constructor.STATE_MERGED));
-			this.getManagerData(component).state_ = state;
-		},
-
-
-		/**
-   * Disposes of any data being used by the manager in this component.
-   * @param {!Component} component
-   */
-		dispose: function dispose(component) {
-			var data = this.getManagerData(component);
-			if (data.state_) {
-				data.state_.dispose();
-			}
-			component.__DATA_MANAGER_DATA__ = null;
-		},
-
-
-		/**
-   * Gets the data with the given name.
-   * @param {!Component} component
-   * @param {string} name
-   * @return {*}
-   */
-		get: function get(component, name) {
-			return this.getManagerData(component).state_.get(name);
-		},
-
-
-		/**
-   * Gets the manager data for the given component.
-   * @param {!Component} component
-   * @return {Object}
-   */
-		getManagerData: function getManagerData(component) {
-			return component.__DATA_MANAGER_DATA__;
-		},
-
-
-		/**
-   * Gets the keys for state data that can be synced via `sync` functions.
-   * @param {!Component} component
-   * @return {!Array<string>}
-   */
-		getSyncKeys: function getSyncKeys(component) {
-			return this.getManagerData(component).state_.getStateKeys();
-		},
-
-
-		/**
-   * Gets the keys for state data.
-   * @param {!Component} component
-   * @return {!Array<string>}
-   */
-		getStateKeys: function getStateKeys(component) {
-			return this.getManagerData(component).state_.getStateKeys();
-		},
-
-
-		/**
-   * Gets the whole state data.
-   * @param {!Component} component
-   * @return {!Object}
-   */
-		getState: function getState(component) {
-			return this.getManagerData(component).state_.getState();
-		},
-
-
-		/**
-   * Gets the `State` instance being used.
-   * @param {!Component} component
-   * @return {!Object}
-   */
-		getStateInstance: function getStateInstance(component) {
-			return this.getManagerData(component).state_;
-		},
-
-
-		/**
-   * Updates all non internal data with the given values (or to the default
-   * value if none is given).
-   * @param {!Component} component
-   * @param {!Object} data
-   * @param {State=} opt_state
-   */
-		replaceNonInternal: function replaceNonInternal(component, data, opt_state) {
-			var state = opt_state || this.getManagerData(component).state_;
-			var keys = state.getStateKeys();
-			for (var i = 0; i < keys.length; i++) {
-				var key = keys[i];
-				if (!state.getStateKeyConfig(key).internal) {
-					if (data.hasOwnProperty(key)) {
-						state.set(key, data[key]);
-					} else {
-						state.setDefaultValue(key);
-					}
-				}
-			}
-		},
-
-
-		/**
-   * Sets the value of all the specified state keys.
-   * @param {!Component} component
-   * @param {!Object.<string,*>} values A map of state keys to the values they
-   *   should be set to.
-   * @param {function()=} opt_callback An optional function that will be run
-   *   after the next batched update is triggered.
-   */
-		setState: function setState(component, state, opt_callback) {
-			this.getManagerData(component).state_.setState(state, opt_callback);
-		},
-
-
-		/**
-   * Sets up the specified component's data.
-   * @param {!Component} component
-   * @param {!Object} data
-   */
-		setUp: function setUp(component, data) {
-			component.__DATA_MANAGER_DATA__ = {};
-			State.mergeStateStatic(component.constructor);
-			this.createState_(component, data);
-		}
-	};
-
-	this['metal']['ComponentDataManager'] = ComponentDataManager;
-}).call(this);
-'use strict';
-
-(function () {
-	var Disposable = this['metalNamed']['metal']['Disposable'];
-
 	/**
-  * Base class that component renderers should extend from. It defines the
-  * required methods all renderers should have.
+  * Clipboard component.
   */
 
-	var ComponentRenderer = function (_Disposable) {
-		babelHelpers.inherits(ComponentRenderer, _Disposable);
+	var Clipboard = function (_State) {
+		babelHelpers.inherits(Clipboard, _State);
 
 		/**
-   * Constructor function for `ComponentRenderer`.
-   * @param {!Component} component The component that this renderer is
-   *     responsible for.
+   * Delegates a click event to the passed selector.
    */
-		function ComponentRenderer(component) {
-			babelHelpers.classCallCheck(this, ComponentRenderer);
+		function Clipboard(opt_config) {
+			babelHelpers.classCallCheck(this, Clipboard);
 
-			var _this = babelHelpers.possibleConstructorReturn(this, (ComponentRenderer.__proto__ || Object.getPrototypeOf(ComponentRenderer)).call(this));
+			var _this = babelHelpers.possibleConstructorReturn(this, (Clipboard.__proto__ || Object.getPrototypeOf(Clipboard)).call(this, opt_config));
 
-			_this.component_ = component;
-
-			if (_this.component_.constructor.SYNC_UPDATES_MERGED) {
-				_this.component_.on('stateKeyChanged', _this.handleRendererStateKeyChanged_.bind(_this));
-			}
+			_this.listener_ = dom.on(_this.selector, 'click', function (e) {
+				return _this.initialize(e);
+			});
 			return _this;
 		}
 
 		/**
-   * Returns this renderer's component.
-   * @return {!Component}
+   * @inheritDoc
    */
 
 
-		babelHelpers.createClass(ComponentRenderer, [{
-			key: 'getComponent',
-			value: function getComponent() {
-				return this.component_;
+		babelHelpers.createClass(Clipboard, [{
+			key: 'disposeInternal',
+			value: function disposeInternal() {
+				this.listener_.dispose();
+				this.listener_ = null;
+				if (this.clipboardAction_) {
+					this.clipboardAction_.dispose();
+					this.clipboardAction_ = null;
+				}
 			}
 
 			/**
-    * Returns extra configuration for data that should be added to the manager.
-    * @return {Object}
+    * Defines a new `ClipboardAction` on each click event.
+    * @param {!Event} e
     */
 
 		}, {
-			key: 'getExtraDataConfig',
-			value: function getExtraDataConfig() {
-				return null;
+			key: 'initialize',
+			value: function initialize(e) {
+				if (this.clipboardAction_) {
+					this.clipboardAction_ = null;
+				}
+
+				this.clipboardAction_ = new ClipboardAction({
+					host: this,
+					action: this.action(e.delegateTarget),
+					target: this.target(e.delegateTarget),
+					text: this.text(e.delegateTarget),
+					trigger: e.delegateTarget
+				});
+			}
+		}]);
+		return Clipboard;
+	}(State);
+
+	/**
+  * State definition.
+  * @type {!Object}
+  * @static
+  */
+
+
+	Clipboard.STATE = {
+		/**
+   * A function that returns the name of the clipboard action that should be done
+   * when for the given element (either 'copy' or 'cut').
+   * @type {!function(!Element)}
+   */
+		action: {
+			validator: core.isFunction,
+			value: function value(delegateTarget) {
+				return delegateTarget.getAttribute('data-action');
+			}
+		},
+
+		/**
+   * The selector for all elements that should be listened for clipboard actions.
+   * @type {string}
+   */
+		selector: {
+			value: '[data-clipboard]',
+			validator: core.isString
+		},
+
+		/**
+   * A function that returns an element that has the content to be copied to the
+   * clipboard.
+   * @type {!function(!Element)}
+   */
+		target: {
+			validator: core.isFunction,
+			value: function value(delegateTarget) {
+				return document.querySelector(delegateTarget.getAttribute('data-target'));
+			}
+		},
+
+		/**
+   * A function that returns the text to be copied to the clipboard.
+   * @type {!function(!Element)}
+   */
+		text: {
+			validator: core.isFunction,
+			value: function value(delegateTarget) {
+				return delegateTarget.getAttribute('data-text');
+			}
+		}
+	};
+
+	/**
+  * ClipboardAction component.
+  */
+
+	var ClipboardAction = function (_State2) {
+		babelHelpers.inherits(ClipboardAction, _State2);
+
+		/**
+   * Initializes selection either from a `text` or `target` state.
+   */
+		function ClipboardAction(opt_config) {
+			babelHelpers.classCallCheck(this, ClipboardAction);
+
+			var _this2 = babelHelpers.possibleConstructorReturn(this, (ClipboardAction.__proto__ || Object.getPrototypeOf(ClipboardAction)).call(this, opt_config));
+
+			if (_this2.text) {
+				_this2.selectValue();
+			} else if (_this2.target) {
+				_this2.selectTarget();
+			}
+			return _this2;
+		}
+
+		/**
+   * Removes current selection and focus from `target` element.
+   */
+
+
+		babelHelpers.createClass(ClipboardAction, [{
+			key: 'clearSelection',
+			value: function clearSelection() {
+				if (this.target) {
+					this.target.blur();
+				}
+
+				window.getSelection().removeAllRanges();
 			}
 
 			/**
-    * Handles the "rendered" event.
-    * @protected
+    * Executes the copy operation based on the current selection.
     */
 
 		}, {
-			key: 'handleRendered_',
-			value: function handleRendered_() {
-				var firstRender = !this.isRendered_;
-				this.isRendered_ = true;
-				this.component_.rendered(firstRender);
-				this.component_.emit('rendered', firstRender);
+			key: 'copyText',
+			value: function copyText() {
+				var succeeded = void 0;
+
+				try {
+					succeeded = document.execCommand(this.action);
+				} catch (err) {
+					succeeded = false;
+				}
+
+				this.handleResult(succeeded);
 			}
 
 			/**
-    * Handles a `dataPropChanged` event from the component's data manager. This
-    * is similar to `handleRendererStateChanged_`, but only called for
-    * components that have requested updates to happen synchronously.
-    * @param {!{key: string, newVal: *, prevVal: *}} data
-    * @protected
+    * @inheritDoc
     */
 
 		}, {
-			key: 'handleRendererStateKeyChanged_',
-			value: function handleRendererStateKeyChanged_(data) {
-				if (this.shouldRerender_()) {
-					this.update({
-						changes: babelHelpers.defineProperty({}, data.key, data)
+			key: 'disposeInternal',
+			value: function disposeInternal() {
+				this.removeFakeElement();
+				babelHelpers.get(ClipboardAction.prototype.__proto__ || Object.getPrototypeOf(ClipboardAction.prototype), 'disposeInternal', this).call(this);
+			}
+
+			/**
+    * Emits an event based on the copy operation result.
+    * @param {boolean} succeeded
+    */
+
+		}, {
+			key: 'handleResult',
+			value: function handleResult(succeeded) {
+				if (succeeded) {
+					this.host.emit('success', {
+						action: this.action,
+						text: this.selectedText,
+						trigger: this.trigger,
+						clearSelection: this.clearSelection.bind(this)
+					});
+				} else {
+					this.host.emit('error', {
+						action: this.action,
+						trigger: this.trigger,
+						clearSelection: this.clearSelection.bind(this)
 					});
 				}
 			}
 
 			/**
-    * Renders the component's whole content (including its main element).
+    * Removes the fake element that was added to the document, as well as its
+    * listener.
+    */
+
+		}, {
+			key: 'removeFakeElement',
+			value: function removeFakeElement() {
+				if (this.fake) {
+					dom.exitDocument(this.fake);
+				}
+
+				if (this.removeFakeHandler) {
+					this.removeFakeHandler.removeListener();
+				}
+			}
+
+			/**
+    * Selects the content from element passed on `target` state.
+    */
+
+		}, {
+			key: 'selectTarget',
+			value: function selectTarget() {
+				if (this.target.nodeName === 'INPUT' || this.target.nodeName === 'TEXTAREA') {
+					this.target.select();
+					this.selectedText = this.target.value;
+				} else {
+					var range = document.createRange();
+					var selection = window.getSelection();
+
+					range.selectNodeContents(this.target);
+					selection.addRange(range);
+					this.selectedText = selection.toString();
+				}
+
+				this.copyText();
+			}
+
+			/**
+    * Selects the content from value passed on `text` state.
+    */
+
+		}, {
+			key: 'selectValue',
+			value: function selectValue() {
+				this.removeFakeElement();
+				this.removeFakeHandler = dom.once(document, 'click', this.removeFakeElement.bind(this));
+
+				this.fake = document.createElement('textarea');
+				this.fake.style.position = 'fixed';
+				this.fake.style.left = '-9999px';
+				this.fake.setAttribute('readonly', '');
+				this.fake.value = this.text;
+				this.selectedText = this.text;
+
+				dom.enterDocument(this.fake);
+
+				this.fake.select();
+				this.copyText();
+			}
+		}]);
+		return ClipboardAction;
+	}(State);
+
+	/**
+  * State definition.
+  * @type {!Object}
+  * @static
+  */
+
+
+	ClipboardAction.STATE = {
+		/**
+   * The action to be performed (either 'copy' or 'cut').
+   * @type {string}
+   * @default 'copy'
+   */
+		action: {
+			value: 'copy',
+			validator: function validator(val) {
+				return val === 'copy' || val === 'cut';
+			}
+		},
+
+		/**
+   * A reference to the `Clipboard` base class.
+   * @type {!Clipboard}
+   */
+		host: {
+			validator: function validator(val) {
+				return val instanceof Clipboard;
+			}
+		},
+
+		/**
+   * The text that is current selected.
+   * @type {string}
+   */
+		selectedText: {
+			validator: core.isString
+		},
+
+		/**
+   * The ID of an element that will be have its content copied.
+   * @type {Element}
+   */
+		target: {
+			validator: core.isElement
+		},
+
+		/**
+   * The text to be copied.
+   * @type {string}
+   */
+		text: {
+			validator: core.isString
+		},
+
+		/**
+   * The element that when clicked initiates a clipboard action.
+   * @type {!Element}
+   */
+		trigger: {
+			validator: core.isElement
+		}
+	};
+
+	this['metal']['Clipboard'] = Clipboard;
+}).call(this);
+'use strict';
+
+(function () {
+	var getFunctionName = this['metalNamed']['metal']['getFunctionName'];
+	var isFunction = this['metalNamed']['metal']['isFunction'];
+	var isObject = this['metalNamed']['metal']['isObject'];
+	var isString = this['metalNamed']['metal']['isString'];
+
+	/**
+  * Adds the listeners specified in the given object.
+  * @param {!Component} component
+  * @param {Object} events
+  * @return {!Array<!EventHandle>} Handles from all subscribed events.
+  */
+
+	function addListenersFromObj(component, events) {
+		var eventNames = Object.keys(events || {});
+		var handles = [];
+		for (var i = 0; i < eventNames.length; i++) {
+			var info = extractListenerInfo_(component, events[eventNames[i]]);
+			if (info.fn) {
+				var handle = void 0;
+				if (info.selector) {
+					handle = component.delegate(eventNames[i], info.selector, info.fn);
+				} else {
+					handle = component.on(eventNames[i], info.fn);
+				}
+				handles.push(handle);
+			}
+		}
+		return handles;
+	}
+
+	this['metalNamed']['events'] = this['metalNamed']['events'] || {};
+	this['metalNamed']['events']['addListenersFromObj'] = addListenersFromObj; /**
+                                                                             * Extracts listener info from the given value.
+                                                                             * @param {!Component} component
+                                                                             * @param {!Component} component
+                                                                             * @param {function()|string|{selector:string,fn:function()|string}} value
+                                                                             * @return {!{selector:string,fn:function()}}
+                                                                             * @protected
+                                                                             */
+
+	function extractListenerInfo_(component, value) {
+		var info = {
+			fn: value
+		};
+		if (isObject(value) && !isFunction(value)) {
+			info.selector = value.selector;
+			info.fn = value.fn;
+		}
+		if (isString(info.fn)) {
+			info.fn = getComponentFn(component, info.fn);
+		}
+		return info;
+	}
+
+	/**
+  * Gets the listener function from its name. Throws an error if none exist.
+  * @param {!Component} component
+  * @param {string} fnName
+  * @return {function()}
+  */
+	function getComponentFn(component, fnName) {
+		if (isFunction(component[fnName])) {
+			return component[fnName].bind(component);
+		} else {
+			console.error('No function named ' + fnName + ' was found in the component\n\t\t\t"' + getFunctionName(component.constructor) + '". Make sure that you specify\n\t\t\tvalid function names when adding inline listeners');
+		}
+	}
+	this['metalNamed']['events']['getComponentFn'] = getComponentFn;
+}).call(this);
+'use strict';
+
+(function () {
+	var isFunction = this['metalNamed']['metal']['isFunction'];
+
+
+	var SYNC_FNS_KEY = '__METAL_SYNC_FNS__';
+
+	/**
+  * Gets the `sync` methods for this component's state. Caches the results in
+  * the component's constructor whenever possible, so that this doesn't need to
+  * be calculated again. It's not possible to cache the results when at least
+  * one sync method is defined in the instance itself instead of in its
+  * prototype, as it may be bound to the instance (not reusable by others).
+  * @param {!Component} component
+  * @return {!Object}
+  * @private
+  */
+	function getSyncFns_(component) {
+		var ctor = component.constructor;
+		if (ctor.hasOwnProperty(SYNC_FNS_KEY)) {
+			return ctor[SYNC_FNS_KEY];
+		}
+
+		var fns = {};
+		var keys = component.getDataManager().getSyncKeys(component);
+		var canCache = true;
+		for (var i = 0; i < keys.length; i++) {
+			var name = 'sync' + keys[i].charAt(0).toUpperCase() + keys[i].slice(1);
+			var fn = component[name];
+			if (fn) {
+				fns[keys[i]] = fn;
+				canCache = canCache && component.constructor.prototype[name];
+			}
+		}
+
+		if (canCache) {
+			ctor[SYNC_FNS_KEY] = fns;
+		}
+		return fns;
+	}
+
+	/**
+  * Calls "sync" functions for the given component's state.
+  * @param {!Component} component
+  * @param {Object=} opt_changes When given, only the properties inside it will
+  *     be synced. Otherwise all state properties will be synced.
+  */
+	function syncState(component, opt_changes) {
+		var syncFns = getSyncFns_(component);
+		var keys = Object.keys(opt_changes || syncFns);
+		for (var i = 0; i < keys.length; i++) {
+			var fn = syncFns[keys[i]];
+			if (isFunction(fn)) {
+				var change = opt_changes && opt_changes[keys[i]];
+				var manager = component.getDataManager();
+				fn.call(component, change ? change.newVal : manager.get(component, keys[i]), change ? change.prevVal : undefined);
+			}
+		}
+	}
+	this['metalNamed']['sync'] = this['metalNamed']['sync'] || {};
+	this['metalNamed']['sync']['syncState'] = syncState;
+}).call(this);
+'use strict';
+
+(function () {
+	var object = this['metalNamed']['metal']['object'];
+	var State = this['metal']['state'];
+
+
+	var BLACKLIST = {
+		components: true,
+		context: true,
+		element: true,
+		refs: true,
+		state: true,
+		stateKey: true,
+		wasRendered: true
+	};
+	var DATA_MANAGER_DATA = '__DATA_MANAGER_DATA__';
+
+	var ComponentDataManager = function () {
+		function ComponentDataManager() {
+			babelHelpers.classCallCheck(this, ComponentDataManager);
+		}
+
+		babelHelpers.createClass(ComponentDataManager, [{
+			key: 'createState_',
+
+			/**
+    * Creates the `State` instance that will handle the main component data.
+    * @param {!Component} component
+    * @param {!Object} data
+    * @protected
+    */
+			value: function createState_(component, data) {
+				var state = new State(component.getInitialConfig(), component, component);
+				state.setKeysBlacklist(BLACKLIST);
+				state.configState(object.mixin({}, data, State.getStateStatic(component.constructor)));
+				this.getManagerData(component).state_ = state;
+			}
+
+			/**
+    * Disposes of any data being used by the manager in this component.
+    * @param {!Component} component
+    */
+
+		}, {
+			key: 'dispose',
+			value: function dispose(component) {
+				var data = this.getManagerData(component);
+				if (data.state_) {
+					data.state_.dispose();
+				}
+				component[DATA_MANAGER_DATA] = null;
+			}
+
+			/**
+    * Gets the data with the given name.
+    * @param {!Component} component
+    * @param {string} name
+    * @return {*}
+    */
+
+		}, {
+			key: 'get',
+			value: function get(component, name) {
+				return this.getManagerData(component).state_.get(name);
+			}
+
+			/**
+    * Gets the manager data for the given component.
+    * @param {!Component} component
+    * @return {Object}
+    */
+
+		}, {
+			key: 'getManagerData',
+			value: function getManagerData(component) {
+				return component[DATA_MANAGER_DATA];
+			}
+
+			/**
+    * Gets the keys for state data that can be synced via `sync` functions.
+    * @param {!Component} component
+    * @return {!Array<string>}
+    */
+
+		}, {
+			key: 'getSyncKeys',
+			value: function getSyncKeys(component) {
+				return this.getManagerData(component).state_.getStateKeys();
+			}
+
+			/**
+    * Gets the keys for state data.
+    * @param {!Component} component
+    * @return {!Array<string>}
+    */
+
+		}, {
+			key: 'getStateKeys',
+			value: function getStateKeys(component) {
+				return this.getManagerData(component).state_.getStateKeys();
+			}
+
+			/**
+    * Gets the whole state data.
+    * @param {!Component} component
+    * @return {!Object}
+    */
+
+		}, {
+			key: 'getState',
+			value: function getState(component) {
+				return this.getManagerData(component).state_.getState();
+			}
+
+			/**
+    * Gets the `State` instance being used.
+    * @param {!Component} component
+    * @return {!Object}
+    */
+
+		}, {
+			key: 'getStateInstance',
+			value: function getStateInstance(component) {
+				return this.getManagerData(component).state_;
+			}
+
+			/**
+    * Updates all non internal data with the given values (or to the default
+    * value if none is given).
+    * @param {!Component} component
+    * @param {!Object} data
+    * @param {State=} opt_state
+    */
+
+		}, {
+			key: 'replaceNonInternal',
+			value: function replaceNonInternal(component, data, opt_state) {
+				var state = opt_state || this.getManagerData(component).state_;
+				var keys = state.getStateKeys();
+				for (var i = 0; i < keys.length; i++) {
+					var key = keys[i];
+					if (!state.getStateKeyConfig(key).internal) {
+						if (data.hasOwnProperty(key)) {
+							state.set(key, data[key]);
+						} else {
+							state.setDefaultValue(key);
+						}
+					}
+				}
+			}
+
+			/**
+    * Sets the value of all the specified state keys.
+    * @param {!Component} component
+    * @param {!Object.<string,*>} values A map of state keys to the values they
+    *   should be set to.
+    * @param {function()=} opt_callback An optional function that will be run
+    *   after the next batched update is triggered.
+    */
+
+		}, {
+			key: 'setState',
+			value: function setState(component, state, opt_callback) {
+				this.getManagerData(component).state_.setState(state, opt_callback);
+			}
+
+			/**
+    * Sets up the specified component's data.
+    * @param {!Component} component
+    * @param {!Object} data
+    */
+
+		}, {
+			key: 'setUp',
+			value: function setUp(component, data) {
+				component[DATA_MANAGER_DATA] = {};
+				this.createState_(component, data);
+			}
+		}]);
+		return ComponentDataManager;
+	}();
+
+	this['metal']['ComponentDataManager'] = new ComponentDataManager();
+}).call(this);
+'use strict';
+
+/**
+ * Base class that component renderers should extend from. It defines the
+ * required methods all renderers should have.
+ */
+
+(function () {
+	var ComponentRenderer = function () {
+		function ComponentRenderer() {
+			babelHelpers.classCallCheck(this, ComponentRenderer);
+		}
+
+		babelHelpers.createClass(ComponentRenderer, [{
+			key: 'dispose',
+
+
+			/**
+    * Disposes of any data specific to the given component.
+    * @param {!Component} component
+    */
+			value: function dispose() {}
+
+			/**
+    * Returns extra configuration for data that should be added to the manager.
+    * Sub classes can override to return `State` config for properties that
+    * should be added to the component.
+    * @param {!Component} component
+    * @return {Object}
+    */
+
+		}, {
+			key: 'getExtraDataConfig',
+			value: function getExtraDataConfig() {}
+
+			/**
+    * Renders the whole content (including its main element) and informs the
+    * component about it. Should be overridden by sub classes.
+    * @param {!Component} component
     */
 
 		}, {
 			key: 'render',
-			value: function render() {
-				if (!this.component_.element) {
-					this.component_.element = document.createElement('div');
+			value: function render(component) {
+				if (!component.element) {
+					component.element = document.createElement('div');
 				}
-				this.handleRendered_();
+				component.informRendered();
 			}
 
 			/**
-    * Checks if changes should cause a rerender right now.
-    * @return {boolean}
-    * @protected
+    * Sets up this component to be used by this renderer. Sub classes should
+    * override as needed for more behavior.
+    * @param {!Component} component
     */
 
 		}, {
-			key: 'shouldRerender_',
-			value: function shouldRerender_() {
-				return this.isRendered_ && !this.skipUpdates_;
-			}
-
-			/**
-    * Rerenders the component according to the given changes.
-    * @param {!Object<string, Object>} changes Object containing the names
-    *     of all changed state keys, each mapped to an object with its new
-    *     (newVal) and previous (prevVal) values.
-    */
-
-		}, {
-			key: 'sync',
-			value: function sync(changes) {
-				if (!this.component_.constructor.SYNC_UPDATES_MERGED && this.shouldRerender_()) {
-					this.update(changes);
-				}
-			}
-
-			/**
-    * Skips updates until `stopSkipUpdates` is called.
-    */
-
-		}, {
-			key: 'startSkipUpdates',
-			value: function startSkipUpdates() {
-				this.skipUpdates_ = true;
-			}
-
-			/**
-    * Stops skipping updates.
-    */
-
-		}, {
-			key: 'stopSkipUpdates',
-			value: function stopSkipUpdates() {
-				this.skipUpdates_ = false;
-			}
+			key: 'setUp',
+			value: function setUp() {}
 
 			/**
     * Updates the component's element html. This is automatically called when
     * the value of at least one of the component's state keys has changed.
+    * Should be implemented by sub classes. Sub classes have to remember to call
+    * "informRendered" on the component when any update rendering is done.
+    * @param {!Component} component
     * @param {Object.<string, Object>} changes Object containing the names
     *     of all changed state keys, each mapped to an object with its new
     *     (newVal) and previous (prevVal) values.
@@ -5003,23 +5487,22 @@ babelHelpers;
 			value: function update() {}
 		}]);
 		return ComponentRenderer;
-	}(Disposable);
+	}();
 
-	this['metal']['ComponentRenderer'] = ComponentRenderer;
+	this['metal']['ComponentRenderer'] = new ComponentRenderer();
 }).call(this);
 'use strict';
 
 (function () {
-	var array = this['metalNamed']['metal']['array'];
-	var getFunctionName = this['metalNamed']['metal']['getFunctionName'];
+	var addListenersFromObj = this['metalNamed']['events']['addListenersFromObj'];
+	var getStaticProperty = this['metalNamed']['metal']['getStaticProperty'];
 	var isBoolean = this['metalNamed']['metal']['isBoolean'];
 	var isDefAndNotNull = this['metalNamed']['metal']['isDefAndNotNull'];
 	var isElement = this['metalNamed']['metal']['isElement'];
-	var isFunction = this['metalNamed']['metal']['isFunction'];
 	var isObject = this['metalNamed']['metal']['isObject'];
 	var isString = this['metalNamed']['metal']['isString'];
-	var mergeSuperClassesProperty = this['metalNamed']['metal']['mergeSuperClassesProperty'];
 	var object = this['metalNamed']['metal']['object'];
+	var syncState = this['metalNamed']['sync']['syncState'];
 	var DomEventEmitterProxy = this['metalNamed']['dom']['DomEventEmitterProxy'];
 	var toElement = this['metalNamed']['dom']['toElement'];
 	var ComponentDataManager = this['metal']['ComponentDataManager'];
@@ -5044,10 +5527,6 @@ babelHelpers;
   *
   * <code>
   * class CustomComponent extends Component {
-  *   constructor(config) {
-  *     super(config);
-  *   }
-  *
   *   created() {
   *   }
   *
@@ -5058,6 +5537,9 @@ babelHelpers;
   *   }
   *
   *   detached() {
+  *   }
+  *
+  *   disposed() {
   *   }
   * }
   *
@@ -5089,19 +5571,13 @@ babelHelpers;
 			babelHelpers.classCallCheck(this, Component);
 
 			/**
-    * Gets all nested components.
-    * @type {!Array<!Component>}
-    */
-			var _this = babelHelpers.possibleConstructorReturn(this, (Component.__proto__ || Object.getPrototypeOf(Component)).call(this));
-
-			_this.components = {};
-
-			/**
     * Instance of `DomEventEmitterProxy` which proxies events from the component's
     * element to the component itself.
     * @type {!DomEventEmitterProxy}
     * @protected
     */
+			var _this = babelHelpers.possibleConstructorReturn(this, (Component.__proto__ || Object.getPrototypeOf(Component)).call(this));
+
 			_this.elementEventProxy_ = new DomEventEmitterProxy(null, _this, proxyBlackList_);
 
 			/**
@@ -5138,26 +5614,21 @@ babelHelpers;
     */
 			_this.DEFAULT_ELEMENT_PARENT = document.body;
 
-			mergeSuperClassesProperty(_this.constructor, 'DATA_MANAGER', array.firstDefinedValue);
-			mergeSuperClassesProperty(_this.constructor, 'ELEMENT_CLASSES', _this.mergeElementClasses_);
-			mergeSuperClassesProperty(_this.constructor, 'RENDERER', array.firstDefinedValue);
-			mergeSuperClassesProperty(_this.constructor, 'SYNC_UPDATES', array.firstDefinedValue);
-
 			_this.setShouldUseFacade(true);
 			_this.element = _this.initialConfig_.element;
 
-			_this.renderer_ = _this.createRenderer();
-			_this.dataManager_ = _this.constructor.DATA_MANAGER_MERGED;
-			_this.dataManager_.setUp(_this, object.mixin({}, Component.DATA, _this.renderer_.getExtraDataConfig()));
+			_this.setUpRenderer_();
+			_this.setUpDataManager_();
+			_this.setUpSyncUpdates_();
 
-			_this.on('stateChanged', _this.handleStateChanged_);
+			_this.on('stateChanged', _this.handleComponentStateChanged_);
 			_this.on('eventsChanged', _this.onEventsChanged_);
 			_this.addListenersFromObj_(_this.dataManager_.get(_this, 'events'));
 
 			_this.created();
 			_this.componentCreated_ = true;
 			if (opt_parentElement !== false) {
-				_this.render_(opt_parentElement);
+				_this.renderComponent(opt_parentElement);
 			}
 			return _this;
 		}
@@ -5174,26 +5645,17 @@ babelHelpers;
 
 			/**
     * Adds the listeners specified in the given object.
-    * @param {Object} events
+    * @param {!Object} obj
     * @protected
     */
-			value: function addListenersFromObj_(events) {
-				var eventNames = Object.keys(events || {});
-				for (var i = 0; i < eventNames.length; i++) {
-					var info = this.extractListenerInfo_(events[eventNames[i]]);
-					if (info.fn) {
-						var handler;
-						if (info.selector) {
-							handler = this.delegate(eventNames[i], info.selector, info.fn);
-						} else {
-							handler = this.on(eventNames[i], info.fn);
-						}
-						if (!this.eventsStateKeyHandler_) {
-							this.eventsStateKeyHandler_ = new EventHandler();
-						}
-						this.eventsStateKeyHandler_.add(handler);
-					}
+			value: function addListenersFromObj_(obj) {
+				var _eventsStateKeyHandle;
+
+				if (!this.eventsStateKeyHandler_) {
+					this.eventsStateKeyHandler_ = new EventHandler();
 				}
+				var handles = addListenersFromObj(this, obj);
+				(_eventsStateKeyHandle = this.eventsStateKeyHandler_).add.apply(_eventsStateKeyHandle, babelHelpers.toConsumableArray(handles));
 			}
 
 			/**
@@ -5214,7 +5676,7 @@ babelHelpers;
 			key: 'attach',
 			value: function attach(opt_parentElement, opt_siblingElement) {
 				if (!this.inDocument) {
-					this.renderElement_(opt_parentElement, opt_siblingElement);
+					this.attachElement(opt_parentElement, opt_siblingElement);
 					this.inDocument = true;
 					this.attachData_ = {
 						parent: opt_parentElement,
@@ -5239,15 +5701,23 @@ babelHelpers;
 			value: function attached() {}
 
 			/**
-    * Adds the given sub component, replacing any existing one with the same ref.
-    * @param {string} ref
-    * @param {!Component} component
+    * Attaches the component element into the DOM.
+    * @param {(string|Element)=} opt_parentElement Optional parent element
+    *     to render the component.
+    * @param {(string|Element)=} opt_siblingElement Optional sibling element
+    *     to render the component before it. Relevant when the component needs
+    *     to be rendered before an existing element in the DOM, e.g.
+    *     `component.attach(null, existingElement)`.
     */
 
 		}, {
-			key: 'addSubComponent',
-			value: function addSubComponent(ref, component) {
-				this.components[ref] = component;
+			key: 'attachElement',
+			value: function attachElement(opt_parentElement, opt_siblingElement) {
+				var element = this.element;
+				if (element && (opt_siblingElement || !element.parentNode)) {
+					var parent = toElement(opt_parentElement) || this.DEFAULT_ELEMENT_PARENT;
+					parent.insertBefore(element, toElement(opt_siblingElement));
+				}
 			}
 
 			/**
@@ -5258,18 +5728,6 @@ babelHelpers;
 		}, {
 			key: 'created',
 			value: function created() {}
-
-			/**
-    * Creates the renderer for this component. Sub classes can override this to
-    * return a custom renderer as needed.
-    * @return {!ComponentRenderer}
-    */
-
-		}, {
-			key: 'createRenderer',
-			value: function createRenderer() {
-				return new this.constructor.RENDERER_MERGED(this);
-			}
 
 			/**
     * Listens to a delegate event on the component's element.
@@ -5337,64 +5795,19 @@ babelHelpers;
 		}, {
 			key: 'disposeInternal',
 			value: function disposeInternal() {
-				this.disposed();
-
 				this.detach();
+				this.disposed();
 
 				this.elementEventProxy_.dispose();
 				this.elementEventProxy_ = null;
 
-				this.disposeSubComponents(Object.keys(this.components));
-				this.components = null;
-
 				this.dataManager_.dispose(this);
 				this.dataManager_ = null;
 
-				this.renderer_.dispose();
+				this.renderer_.dispose(this);
 				this.renderer_ = null;
 
 				babelHelpers.get(Component.prototype.__proto__ || Object.getPrototypeOf(Component.prototype), 'disposeInternal', this).call(this);
-			}
-
-			/**
-    * Calls `dispose` on all subcomponents.
-    * @param {!Array<string>} keys
-    */
-
-		}, {
-			key: 'disposeSubComponents',
-			value: function disposeSubComponents(keys) {
-				for (var i = 0; i < keys.length; i++) {
-					var component = this.components[keys[i]];
-					if (component && !component.isDisposed()) {
-						component.element = null;
-						component.dispose();
-						delete this.components[keys[i]];
-					}
-				}
-			}
-
-			/**
-    * Extracts listener info from the given value.
-    * @param {function()|string|{selector:string,fn:function()|string}} value
-    * @return {!{selector:string,fn:function()}}
-    * @protected
-    */
-
-		}, {
-			key: 'extractListenerInfo_',
-			value: function extractListenerInfo_(value) {
-				var info = {
-					fn: value
-				};
-				if (isObject(value) && !isFunction(value)) {
-					info.selector = value.selector;
-					info.fn = value.fn;
-				}
-				if (isString(info.fn)) {
-					info.fn = this.getListenerFn(info.fn);
-				}
-				return info;
 			}
 
 			/**
@@ -5431,24 +5844,6 @@ babelHelpers;
 			}
 
 			/**
-    * Gets the listener function from its name. If the name is prefixed with a
-    * component id, the function will be called on that specified component. Otherwise
-    * it will be called on this component instead.
-    * @param {string} fnName
-    * @return {function()}
-    */
-
-		}, {
-			key: 'getListenerFn',
-			value: function getListenerFn(fnName) {
-				if (isFunction(this[fnName])) {
-					return this[fnName].bind(this);
-				} else {
-					console.error('No function named "' + fnName + '" was found in the ' + 'component "' + getFunctionName(this.constructor) + '". Make ' + 'sure that you specify valid function names when adding inline listeners.');
-				}
-			}
-
-			/**
     * Gets state data for this component.
     * @return {!Object}
     */
@@ -5471,55 +5866,6 @@ babelHelpers;
 			}
 
 			/**
-    * Gets the `sync` methods for this component's state.
-    * @return {!Object}
-    * @protected
-    */
-
-		}, {
-			key: 'getSyncFns_',
-			value: function getSyncFns_() {
-				var ctor = this.constructor;
-				if (!ctor.hasOwnProperty('__METAL_SYNC_FNS__')) {
-					var fns = {};
-					var keys = this.dataManager_.getSyncKeys(this);
-					for (var i = 0; i < keys.length; i++) {
-						var name = 'sync' + keys[i].charAt(0).toUpperCase() + keys[i].slice(1);
-						var fn = ctor.prototype[name];
-						if (fn) {
-							fns[keys[i]] = fn;
-						}
-					}
-					ctor.__METAL_SYNC_FNS__ = fns;
-				}
-				return ctor.__METAL_SYNC_FNS__;
-			}
-
-			/**
-    * Calls the synchronization function for the state key.
-    * @param {string} key
-    * @param {Object.<string, Object>=} opt_change Object containing newVal and
-    *     prevVal keys.
-    * @protected
-    */
-
-		}, {
-			key: 'fireStateKeyChange_',
-			value: function fireStateKeyChange_(key, opt_change) {
-				var fn = this.getSyncFns_()[key];
-				if (isFunction(fn)) {
-					if (!opt_change) {
-						var manager = this.getDataManager();
-						opt_change = {
-							newVal: manager.get(this, key),
-							prevVal: undefined
-						};
-					}
-					fn.call(this, opt_change.newVal, opt_change.prevVal);
-				}
-			}
-
-			/**
     * Gets the `ComponentRenderer` instance being used.
     * @return {!ComponentRenderer}
     */
@@ -5531,6 +5877,28 @@ babelHelpers;
 			}
 
 			/**
+    * Handles a change in the component's element.
+    * @param {Element} prevVal
+    * @param {Element} newVal
+    * @protected
+    */
+
+		}, {
+			key: 'handleComponentElementChanged_',
+			value: function handleComponentElementChanged_(prevVal, newVal) {
+				this.elementEventProxy_.setOriginEmitter(newVal);
+				if (this.componentCreated_) {
+					this.emit('elementChanged', {
+						prevVal: prevVal,
+						newVal: newVal
+					});
+					if (newVal && this.wasRendered) {
+						this.syncVisible(this.dataManager_.get(this, 'visible'));
+					}
+				}
+			}
+
+			/**
     * Handles state batch changes. Calls any existing `sync` functions that
     * match the changed state keys.
     * @param {Event} event
@@ -5538,11 +5906,54 @@ babelHelpers;
     */
 
 		}, {
-			key: 'handleStateChanged_',
-			value: function handleStateChanged_(event) {
-				this.getRenderer().sync(event);
-				this.syncStateFromChanges_(event.changes);
+			key: 'handleComponentStateChanged_',
+			value: function handleComponentStateChanged_(event) {
+				if (!this.hasSyncUpdates()) {
+					this.updateRenderer_(event);
+				}
+				syncState(this, event.changes);
 				this.emit('stateSynced', event);
+			}
+
+			/**
+    * Handles a `stateKeyChanged` event. This is only called for components that
+    * have requested updates to happen synchronously.
+    * @param {!{key: string, newVal: *, prevVal: *}} data
+    * @protected
+    */
+
+		}, {
+			key: 'handleComponentStateKeyChanged_',
+			value: function handleComponentStateKeyChanged_(data) {
+				this.updateRenderer_({
+					changes: babelHelpers.defineProperty({}, data.key, data)
+				});
+			}
+
+			/**
+    * Checks if this component has sync updates enabled.
+    * @return {boolean}
+    */
+
+		}, {
+			key: 'hasSyncUpdates',
+			value: function hasSyncUpdates() {
+				return this.syncUpdates_;
+			}
+
+			/**
+    * Informs that the component that the rendered has finished rendering it. The
+    * renderer is the one responsible for calling this when appropriate. This
+    * will emit events and run the appropriate lifecycle for the first render.
+    */
+
+		}, {
+			key: 'informRendered',
+			value: function informRendered() {
+				var firstRender = !this.hasRendererRendered_;
+				this.hasRendererRendered_ = true;
+				this.rendered(firstRender);
+				this.emit('rendered', firstRender);
 			}
 
 			/**
@@ -5556,21 +5967,14 @@ babelHelpers;
 
 
 			/**
-    * Merges an array of values for the ELEMENT_CLASSES property into a single object.
-    * @param {!Array.<string>} values The values to be merged.
-    * @return {!string} The merged value.
+    * Merges two values for the ELEMENT_CLASSES property into a single one.
+    * @param {string} class1
+    * @param {string} class2
+    * @return {string} The merged value.
     * @protected
     */
-			value: function mergeElementClasses_(values) {
-				var marked = {};
-				return values.filter(function (val) {
-					if (!val || marked[val]) {
-						return false;
-					} else {
-						marked[val] = true;
-						return true;
-					}
-				}).join(' ');
+			value: function mergeElementClasses_(class1, class2) {
+				return class1 ? class1 + ' ' + (class2 || '') : class2;
 			}
 
 			/**
@@ -5582,9 +5986,7 @@ babelHelpers;
 		}, {
 			key: 'onEventsChanged_',
 			value: function onEventsChanged_(event) {
-				if (this.eventsStateKeyHandler_) {
-					this.eventsStateKeyHandler_.removeAllListeners();
-				}
+				this.eventsStateKeyHandler_.removeAllListeners();
 				this.addListenersFromObj_(event.newVal);
 			}
 
@@ -5600,69 +6002,28 @@ babelHelpers;
     */
 
 		}, {
-			key: 'render_',
+			key: 'renderComponent',
 
 
 			/**
-    * Lifecycle. Renders the component into the DOM.
-    *
-    * Render Lifecycle:
-    *   render event - The "render" event is emitted. Renderers act on this step.
-    *   state synchronization - All synchronization methods are called.
-    *   attach - Attach Lifecycle is called.
-    *
+    * Renders the component into the DOM via its `ComponentRenderer`. Stores the
+    * given parent element to be used when the renderer is done (`informRendered`).
     * @param {(string|Element|boolean)=} opt_parentElement Optional parent element
     *     to render the component. If set to `false`, the element won't be
     *     attached to any element after rendering. In this case, `attach` should
     *     be called manually later to actually attach it to the dom.
-    * @param {boolean=} opt_skipRender Optional flag indicating that the actual
-    *     rendering should be skipped. Only the other render lifecycle logic will
-    *     be run, like syncing state and attaching the element. Should only
-    *     be set if the component has already been rendered, like sub components.
-    * @protected
     */
-			value: function render_(opt_parentElement, opt_skipRender) {
-				if (!opt_skipRender) {
-					this.getRenderer().render();
-					this.emit('render');
+			value: function renderComponent(opt_parentElement) {
+				if (!this.hasRendererRendered_) {
+					if (window.__METAL_DEV_TOOLS_HOOK__) {
+						window.__METAL_DEV_TOOLS_HOOK__(this);
+					}
+					this.getRenderer().render(this);
 				}
-				this.syncState_();
+				this.emit('render');
+				syncState(this);
 				this.attach(opt_parentElement);
 				this.wasRendered = true;
-			}
-
-			/**
-    * Renders this component as a subcomponent, meaning that no actual rendering is
-    * needed since it was already rendered by the parent component. This just handles
-    * other logics from the rendering lifecycle, like calling sync methods for the
-    * state.
-    */
-
-		}, {
-			key: 'renderAsSubComponent',
-			value: function renderAsSubComponent() {
-				this.render_(null, true);
-			}
-
-			/**
-    * Renders the component element into the DOM.
-    * @param {(string|Element)=} opt_parentElement Optional parent element
-    *     to render the component.
-    * @param {(string|Element)=} opt_siblingElement Optional sibling element
-    *     to render the component before it. Relevant when the component needs
-    *     to be rendered before an existing element in the DOM, e.g.
-    *     `component.attach(null, existingElement)`.
-    * @protected
-    */
-
-		}, {
-			key: 'renderElement_',
-			value: function renderElement_(opt_parentElement, opt_siblingElement) {
-				var element = this.element;
-				if (element && (opt_siblingElement || !element.parentNode)) {
-					var parent = toElement(opt_parentElement) || this.DEFAULT_ELEMENT_PARENT;
-					parent.insertBefore(element, toElement(opt_siblingElement));
-				}
 			}
 
 			/**
@@ -5696,39 +6057,69 @@ babelHelpers;
 		}, {
 			key: 'setterElementClassesFn_',
 			value: function setterElementClassesFn_(val) {
-				if (this.constructor.ELEMENT_CLASSES_MERGED) {
-					val += ' ' + this.constructor.ELEMENT_CLASSES_MERGED;
+				var elementClasses = getStaticProperty(this.constructor, 'ELEMENT_CLASSES', this.mergeElementClasses_);
+				if (elementClasses) {
+					val += ' ' + elementClasses;
 				}
 				return val.trim();
 			}
 
 			/**
-    * Fires state synchronization functions.
+    * Sets up the component's data manager.
     * @protected
     */
 
 		}, {
-			key: 'syncState_',
-			value: function syncState_() {
-				var keys = Object.keys(this.getSyncFns_());
-				for (var i = 0; i < keys.length; i++) {
-					this.fireStateKeyChange_(keys[i]);
+			key: 'setUpDataManager_',
+			value: function setUpDataManager_() {
+				this.dataManager_ = getStaticProperty(this.constructor, 'DATA_MANAGER');
+				this.dataManager_.setUp(this, object.mixin({}, this.renderer_.getExtraDataConfig(this), Component.DATA));
+			}
+
+			/**
+    * Sets up the component's renderer.
+    * @protected
+    */
+
+		}, {
+			key: 'setUpRenderer_',
+			value: function setUpRenderer_() {
+				this.renderer_ = getStaticProperty(this.constructor, 'RENDERER');
+				this.renderer_.setUp(this);
+			}
+
+			/**
+    * Sets up the component to use sync updates when `SYNC_UPDATES` is `true`.
+    * @protected
+    */
+
+		}, {
+			key: 'setUpSyncUpdates_',
+			value: function setUpSyncUpdates_() {
+				this.syncUpdates_ = getStaticProperty(this.constructor, 'SYNC_UPDATES');
+				if (this.hasSyncUpdates()) {
+					this.on('stateKeyChanged', this.handleComponentStateKeyChanged_.bind(this));
 				}
 			}
 
 			/**
-    * Fires synchronization changes for state keys.
-    * @param {Object.<string, Object>} changes Object containing the state key
-    *     name as key and an object with newVal and prevVal as value.
-    * @protected
+    * Skips renderer updates until `stopSkipUpdates` is called.
     */
 
 		}, {
-			key: 'syncStateFromChanges_',
-			value: function syncStateFromChanges_(changes) {
-				for (var key in changes) {
-					this.fireStateKeyChange_(key, changes[key]);
-				}
+			key: 'startSkipUpdates',
+			value: function startSkipUpdates() {
+				this.skipUpdates_ = true;
+			}
+
+			/**
+    * Stops skipping renderer updates.
+    */
+
+		}, {
+			key: 'stopSkipUpdates',
+			value: function stopSkipUpdates() {
+				this.skipUpdates_ = false;
 			}
 
 			/**
@@ -5756,6 +6147,20 @@ babelHelpers;
 			value: function rendered() {}
 
 			/**
+    * Calls "update" on the renderer, passing it the changed data.
+    * @param {!{changes: !Object}} data
+    * @protected
+    */
+
+		}, {
+			key: 'updateRenderer_',
+			value: function updateRenderer_(data) {
+				if (!this.skipUpdates_ && this.hasRendererRendered_) {
+					this.getRenderer().update(this, data);
+				}
+			}
+
+			/**
     * Validator logic for the `events` state key.
     * @param {Object} val
     * @return {boolean}
@@ -5770,7 +6175,7 @@ babelHelpers;
 		}, {
 			key: 'element',
 			get: function get() {
-				return this.elementVal_;
+				return this.elementValue_;
 			},
 			set: function set(val) {
 				if (!isElement(val) && !isString(val) && isDefAndNotNull(val)) {
@@ -5778,22 +6183,13 @@ babelHelpers;
 				}
 
 				if (val) {
-					val = toElement(val) || this.elementVal_;
+					val = toElement(val) || this.elementValue_;
 				}
 
-				if (this.elementVal_ !== val) {
-					var prev = this.elementVal_;
-					this.elementVal_ = val;
-					this.elementEventProxy_.setOriginEmitter(val);
-					if (this.componentCreated_) {
-						this.emit('elementChanged', {
-							prevVal: prev,
-							newVal: val
-						});
-						if (val && this.wasRendered) {
-							this.syncVisible(this.dataManager_.get(this, 'visible'));
-						}
-					}
+				if (this.elementValue_ !== val) {
+					var prev = this.elementValue_;
+					this.elementValue_ = val;
+					this.handleComponentElementChanged_(prev, val);
 				}
 			}
 		}], [{
@@ -5811,7 +6207,7 @@ babelHelpers;
 					element = opt_configOrElement;
 				}
 				var instance = new Ctor(config, false);
-				instance.render_(element);
+				instance.renderComponent(element);
 				return instance;
 			}
 		}]);
@@ -5847,9 +6243,9 @@ babelHelpers;
 		},
 
 		/**
-   * Listeners that should be attached to this component. Should be provided as an object,
-   * where the keys are event names and the values are the listener functions (or function
-   * names).
+   * Listeners that should be attached to this component. Should be provided as
+   * an object, where the keys are event names and the values are the listener
+   * functions (or function names).
    * @type {Object<string, (function()|string|{selector: string, fn: function()|string})>}
    */
 		events: {
@@ -5867,20 +6263,23 @@ babelHelpers;
 		}
 	};
 
+	/**
+  * Name of the flag used to identify component constructors via their prototype.
+  * @type {string}
+  */
 	Component.COMPONENT_FLAG = '__metal_component__';
 
 	/**
   * The `ComponentDataManager` class that should be used. This class will be
   * responsible for handling the component's data. Each component may have its
   * own implementation.
+  * @type {!ComponentDataManager}
   */
 	Component.DATA_MANAGER = ComponentDataManager;
 
 	/**
   * CSS classes to be applied to the element.
   * @type {string}
-  * @protected
-  * @static
   */
 	Component.ELEMENT_CLASSES = '';
 
@@ -5889,7 +6288,6 @@ babelHelpers;
   * to a subclass of `ComponentRenderer` that has the rendering logic, like
   * `SoyRenderer`.
   * @type {!ComponentRenderer}
-  * @static
   */
 	Component.RENDERER = ComponentRenderer;
 
@@ -5944,7 +6342,7 @@ babelHelpers;
 			value: function getConstructor(name) {
 				var constructorFn = ComponentRegistry.components_[name];
 				if (!constructorFn) {
-					console.error('There\'s no constructor registered for the component ' + 'named ' + name + '. Components need to be registered via ' + 'ComponentRegistry.register.');
+					console.error('There\'s no constructor registered for the component named ' + name + '.\n\t\t\t\tComponents need to be registered via ComponentRegistry.register.');
 				}
 				return constructorFn;
 			}
@@ -6001,11 +6399,14 @@ babelHelpers;
   this['metalNamed']['component']['ComponentDataManager'] = ComponentDataManager;
   this['metalNamed']['component']['ComponentRegistry'] = ComponentRegistry;
   this['metalNamed']['component']['ComponentRenderer'] = ComponentRenderer;
+  Object.keys(this['metalNamed']['events']).forEach(function (key) {
+    this['metalNamed']['component'][key] = this['metalNamed']['events'][key];
+  });
 }).call(this);
 'use strict';
 
 (function () {
-  /* jshint ignore:start */
+  /*eslint-disable */
 
   /**
    * @license
@@ -6024,9 +6425,11 @@ babelHelpers;
    * limitations under the License.
    */
 
+  var scope = typeof exports !== 'undefined' && typeof global !== 'undefined' ? global : window;
+
   (function (global, factory) {
     factory(global.IncrementalDOM = global.IncrementalDOM || {});
-  })(window, function (exports) {
+  })(scope, function (exports) {
     'use strict';
 
     /**
@@ -6673,7 +7076,9 @@ babelHelpers;
      * @param {?Object<string, !Element>} keyMap
      */
     var removeChild = function removeChild(node, child, keyMap) {
-      node.removeChild(child);
+      if (child.parentNode === node) {
+        node.removeChild(child);
+      }
       context.markDeleted( /** @type {!Node}*/child);
 
       var key = getData(child).key;
@@ -7226,82 +7631,183 @@ babelHelpers;
     exports.importNode = importNode;
   });
 
-  /* jshint ignore:end */
+  /* eslint-enable */
+}).call(this);
+'use strict';
+
+(function () {
+  var RENDERER_DATA = '__METAL_IC_RENDERER_DATA__';
+
+  /**
+   * Removes the incremental dom renderer data object for this component.
+   * @param {!Component} component
+   */
+  function clearData(component) {
+    component[RENDERER_DATA] = null;
+  }
+
+  this['metalNamed']['data'] = this['metalNamed']['data'] || {};
+  this['metalNamed']['data']['clearData'] = clearData; /**
+                                                        * Gets the incremental dom renderer data object for this component, creating
+                                                        * it if it doesn't exist yet.
+                                                        * @param {!Component} component
+                                                        * @return {!Object}
+                                                        */
+
+  function getData(component) {
+    if (!component[RENDERER_DATA]) {
+      component[RENDERER_DATA] = {};
+    }
+    return component[RENDERER_DATA];
+  }
+  this['metalNamed']['data']['getData'] = getData;
+}).call(this);
+'use strict';
+
+(function () {
+  var getData = this['metalNamed']['data']['getData'];
+
+  /**
+   * Clears the changes tracked so far.
+   * @param {!Object} data
+   */
+
+  function clearChanges(data) {
+    data.changes = null;
+  }
+
+  this['metalNamed']['changes'] = this['metalNamed']['changes'] || {};
+  this['metalNamed']['changes']['clearChanges'] = clearChanges; /**
+                                                                 * Handles the `stateKeyChanged` event from a component. Stores change data.
+                                                                 * @param {!Object} data
+                                                                 * @param {!Object} eventData
+                                                                 * @private
+                                                                 */
+
+  function handleStateKeyChanged_(data, eventData) {
+    data.changes = data.changes || {};
+    var type = eventData.type || 'props';
+    data.changes[type] = data.changes[type] || {};
+    data.changes[type][eventData.key] = eventData;
+  }
+
+  /**
+   * Returns an object with changes in the given component since the last time,
+   * or null if there weren't any.
+   * @param {!Component} component
+   * @return {Object}
+   */
+  function getChanges(component) {
+    return getData(component).changes;
+  }
+
+  this['metalNamed']['changes']['getChanges'] = getChanges; /**
+                                                             * Starts tracking changes for the given component
+                                                             * @param {!Component} component
+                                                             */
+
+  function trackChanges(component) {
+    var data = getData(component);
+    component.on('stateKeyChanged', handleStateKeyChanged_.bind(null, data));
+  }
+  this['metalNamed']['changes']['trackChanges'] = trackChanges;
+}).call(this);
+'use strict';
+
+/**
+ * Builds the component config object from its incremental dom call's
+ * arguments.
+ * @param {!Array} args
+ * @return {!Object}
+ */
+
+(function () {
+	function buildConfigFromCall(args) {
+		var config = {};
+		if (args[1]) {
+			config.key = args[1];
+		}
+		var attrsArr = (args[2] || []).concat(args.slice(3));
+		for (var i = 0; i < attrsArr.length; i += 2) {
+			config[attrsArr[i]] = attrsArr[i + 1];
+		}
+		return config;
+	}
+
+	this['metalNamed']['callArgs'] = this['metalNamed']['callArgs'] || {};
+	this['metalNamed']['callArgs']['buildConfigFromCall'] = buildConfigFromCall; /**
+                                                                               * Builds an incremental dom call array from the given tag and config object.
+                                                                               * @param {string} tag
+                                                                               * @param {!Object} config
+                                                                               * @return {!Array}
+                                                                               */
+
+	function buildCallFromConfig(tag, config) {
+		var call = [tag, config.key, []];
+		var keys = Object.keys(config);
+		for (var i = 0; i < keys.length; i++) {
+			if (keys[i] !== 'children') {
+				call.push(keys[i], config[keys[i]]);
+			}
+		}
+		return call;
+	}
+	this['metalNamed']['callArgs']['buildCallFromConfig'] = buildCallFromConfig;
 }).call(this);
 'use strict';
 
 (function () {
 
 	/**
-  * Class responsible for intercepting incremental dom functions through AOP.
+  * Gets the original incremental dom functions.
+  * @return {!Object}
   */
-	var IncrementalDomAop = function () {
-		function IncrementalDomAop() {
-			babelHelpers.classCallCheck(this, IncrementalDomAop);
-		}
+	function getOriginalFns() {
+		return originalFns;
+	}
 
-		babelHelpers.createClass(IncrementalDomAop, null, [{
-			key: 'getOriginalFns',
+	this['metalNamed']['intercept'] = this['metalNamed']['intercept'] || {};
+	this['metalNamed']['intercept']['getOriginalFns'] = getOriginalFns; /**
+                                                                      * Gets the original incremental dom function with the given name.
+                                                                      * @param {string} name
+                                                                      * @return {!Object}
+                                                                      */
 
-			/**
-    * Gets the original functions that are intercepted by `IncrementalDomAop`.
-    * @return {!Object}
-    */
-			value: function getOriginalFns() {
-				return originalFns;
-			}
+	function getOriginalFn(name) {
+		return originalFns[name];
+	}
 
-			/**
-    * Gets the original functions that are intercepted by `IncrementalDomAop`.
-    * @return {!Object}
-    */
+	this['metalNamed']['intercept']['getOriginalFn'] = getOriginalFn; /**
+                                                                    * Starts intercepting calls to incremental dom, replacing them with the given
+                                                                    * functions. Note that `elementVoid`, `elementOpenStart`, `elementOpenEnd`
+                                                                    * and `attr` are the only ones that can't be intercepted, since they'll
+                                                                    * automatically be converted into equivalent calls to `elementOpen` and
+                                                                    * `elementClose`.
+                                                                    * @param {!Object} fns Functions to be called instead of the original ones
+                                                                    *     from incremental DOM. Should be given as a map from the function name
+                                                                    *     to the function that should intercept it. All interceptors will receive
+                                                                    *     the original function as the first argument, the actual arguments from
+                                                                    *     from the original call following it.
+                                                                    */
 
-		}, {
-			key: 'getOriginalFn',
-			value: function getOriginalFn(name) {
-				return originalFns[name];
-			}
+	function startInterception(fns) {
+		fns.attr = fnAttr;
+		fns.elementOpenEnd = fnOpenEnd;
+		fns.elementOpenStart = fnOpenStart;
+		fns.elementVoid = fnVoid;
+		fnStack.push(fns);
+	}
 
-			/**
-    * Starts intercepting calls to incremental dom, replacing them with the given
-    * functions. Note that `elementVoid`, `elementOpenStart`, `elementOpenEnd`
-    * and `attr` are the only ones that can't be intercepted, since they'll
-    * automatically be converted into equivalent calls to `elementOpen` and
-    * `elementClose`.
-    * @param {!Object} fns Functions to be called instead of the original ones
-    *     from incremental DOM. Should be given as a map from the function name
-    *     to the function that should intercept it. All interceptors will receive
-    *     the original function as the first argument, the actual arguments from
-    *     from the original call following it.
-    * @param {Object=} opt_context Optional context that will be used when
-    *     calling the given functions.
-    */
+	this['metalNamed']['intercept']['startInterception'] = startInterception; /**
+                                                                            * Restores the original `elementOpen` function from incremental dom to the
+                                                                            * implementation it used before the last call to `startInterception`.
+                                                                            */
 
-		}, {
-			key: 'startInterception',
-			value: function startInterception(fns, opt_context) {
-				fns.attr = fnAttr;
-				fns.elementOpenEnd = fnOpenEnd;
-				fns.elementOpenStart = fnOpenStart;
-				fns.elementVoid = fnVoid;
-				fns.context = opt_context;
-				fnStack.push(fns);
-			}
+	function stopInterception() {
+		fnStack.pop();
+	}
 
-			/**
-    * Restores the original `elementOpen` function from incremental dom to the
-    * implementation it used before the last call to `startInterception`.
-    */
-
-		}, {
-			key: 'stopInterception',
-			value: function stopInterception() {
-				fnStack.pop();
-			}
-		}]);
-		return IncrementalDomAop;
-	}();
-
+	this['metalNamed']['intercept']['stopInterception'] = stopInterception;
 	var originalFns = {
 		attr: IncrementalDOM.attr,
 		attributes: IncrementalDOM.attributes[IncrementalDOM.symbols.default],
@@ -7341,16 +7847,18 @@ babelHelpers;
 	}
 
 	function buildHandleCall(name) {
-		var data = { name: name };
+		var data = {
+			name: name
+		};
 		var fn = handleCall.bind(data);
 		return fn;
 	}
 
 	function handleCall() {
-		var name = this.name; // jshint ignore:line
+		var name = this.name; // eslint-disable-line
 		var stack = getStack();
 		var fn = stack && stack[name] || originalFns[name];
-		return fn.apply(stack ? stack.context : null, arguments);
+		return fn.apply(null, arguments);
 	}
 
 	IncrementalDOM.attr = buildHandleCall('attr');
@@ -7362,202 +7870,118 @@ babelHelpers;
 	IncrementalDOM.text = buildHandleCall('text');
 
 	IncrementalDOM.attributes[IncrementalDOM.symbols.default] = buildHandleCall('attributes');
-
-	this['metal']['IncrementalDomAop'] = IncrementalDomAop;
 }).call(this);
 'use strict';
 
 (function () {
-	var isString = this['metalNamed']['metal']['isString'];
-
-	/**
-  * Utility functions used to handle incremental dom calls.
-  */
-
-	var IncrementalDomUtils = function () {
-		function IncrementalDomUtils() {
-			babelHelpers.classCallCheck(this, IncrementalDomUtils);
-		}
-
-		babelHelpers.createClass(IncrementalDomUtils, null, [{
-			key: 'buildConfigFromCall',
-
-			/**
-    * Builds the component config object from its incremental dom call's
-    * arguments.
-    * @param {!Array} args
-    * @return {!Object}
-    */
-			value: function buildConfigFromCall(args) {
-				var config = {};
-				if (args[1]) {
-					config.key = args[1];
-				}
-				var attrsArr = (args[2] || []).concat(args.slice(3));
-				for (var i = 0; i < attrsArr.length; i += 2) {
-					config[attrsArr[i]] = attrsArr[i + 1];
-				}
-				return config;
-			}
-
-			/**
-    * Builds an incremental dom call array from the given tag and config object.
-    * @param {string} tag
-    * @param {!Object} config
-    * @return {!Array}
-    */
-
-		}, {
-			key: 'buildCallFromConfig',
-			value: function buildCallFromConfig(tag, config) {
-				var call = [tag, config.key, []];
-				var keys = Object.keys(config);
-				for (var i = 0; i < keys.length; i++) {
-					if (keys[i] !== 'children') {
-						call.push(keys[i], config[keys[i]]);
-					}
-				}
-				return call;
-			}
-
-			/**
-    * Checks if the given tag represents a metal component.
-    * @param {string} tag
-    * @return {boolean}
-    */
-
-		}, {
-			key: 'isComponentTag',
-			value: function isComponentTag(tag) {
-				return !isString(tag) || tag[0] === tag[0].toUpperCase();
-			}
-		}]);
-		return IncrementalDomUtils;
-	}();
-
-	this['metal']['IncrementalDomUtils'] = IncrementalDomUtils;
-}).call(this);
-'use strict';
-
-(function () {
+	var buildCallFromConfig = this['metalNamed']['callArgs']['buildCallFromConfig'];
+	var buildConfigFromCall = this['metalNamed']['callArgs']['buildConfigFromCall'];
 	var isDef = this['metalNamed']['metal']['isDef'];
-	var IncrementalDomAop = this['metal']['IncrementalDomAop'];
-	var IncrementalDomUtils = this['metal']['IncrementalDomUtils'];
+	var startInterception = this['metalNamed']['intercept']['startInterception'];
+	var stopInterception = this['metalNamed']['intercept']['stopInterception'];
 
 	/**
-  * Provides helpers for capturing children elements from incremental dom calls,
-  * as well as actually rendering those captured children via incremental dom
-  * later.
+  * Property identifying a specific object as a Metal.js child node, and
+  * pointing to the component instance that created it.
+  * @type {string}
   */
 
-	var IncrementalDomChildren = function () {
-		function IncrementalDomChildren() {
-			babelHelpers.classCallCheck(this, IncrementalDomChildren);
+	var CHILD_OWNER = '__metalChildOwner';
+
+	this['metalNamed']['children'] = this['metalNamed']['children'] || {};
+	this['metalNamed']['children']['CHILD_OWNER'] = CHILD_OWNER; /**
+                                                               * Captures all child elements from incremental dom calls.
+                                                               * @param {!Component} component The component that is capturing children.
+                                                               * @param {!function()} callback Function to be called when children have all
+                                                               *     been captured.
+                                                               * @param {Object} data Data to pass to the callback function when calling it.
+                                                               */
+
+	function captureChildren(component, callback, data) {
+		owner_ = component;
+		callback_ = callback;
+		callbackData_ = data;
+		tree_ = {
+			props: {
+				children: []
+			}
+		};
+		tree_.config = tree_.props;
+		currentParent_ = tree_;
+		isCapturing_ = true;
+		startInterception({
+			elementClose: handleInterceptedCloseCall_,
+			elementOpen: handleInterceptedOpenCall_,
+			text: handleInterceptedTextCall_
+		});
+	}
+
+	this['metalNamed']['children']['captureChildren'] = captureChildren; /**
+                                                                       * Checks if the given tag was built from a component's children.
+                                                                       * @param {*} tag
+                                                                       * @return {boolean}
+                                                                       */
+
+	function isChildTag(tag) {
+		return isDef(tag.tag);
+	}
+
+	this['metalNamed']['children']['isChildTag'] = isChildTag; /**
+                                                             * Gets the node's original owner.
+                                                             * @param {!Object} node
+                                                             * @return {Component}
+                                                             */
+
+	function getOwner(node) {
+		return node[CHILD_OWNER];
+	}
+
+	this['metalNamed']['children']['getOwner'] = getOwner; /**
+                                                         * Renders a children tree through incremental dom.
+                                                         * @param {!{args: Array, children: !Array, isText: ?boolean}}
+                                                         * @param {function()=} opt_skipNode Optional function that is called for
+                                                         *     each node to be rendered. If it returns true, the node will be skipped.
+                                                         * @protected
+                                                         */
+
+	function renderChildTree(tree, opt_skipNode) {
+		if (isCapturing_) {
+			// If capturing, just add the node directly to the captured tree.
+			addChildToTree(tree);
+			return;
 		}
 
-		babelHelpers.createClass(IncrementalDomChildren, null, [{
-			key: 'capture',
+		if (opt_skipNode && opt_skipNode.call(null, tree)) {
+			return;
+		}
 
-			/**
-    * Captures all child elements from incremental dom calls.
-    * @param {!IncrementalDomRenderer} renderer The renderer that is capturing
-    *   children.
-    * @param {!function()} callback Function to be called when children have all
-    *     been captured.
-   	 */
-			value: function capture(renderer, callback) {
-				renderer_ = renderer;
-				callback_ = callback;
-				tree_ = {
-					props: {
-						children: []
-					}
-				};
-				tree_.config = tree_.props;
-				currentParent_ = tree_;
-				isCapturing_ = true;
-				IncrementalDomAop.startInterception({
-					elementClose: handleInterceptedCloseCall_,
-					elementOpen: handleInterceptedOpenCall_,
-					text: handleInterceptedTextCall_
-				});
-			}
-
-			/**
-    * Returns the owner of the current child node being rendered (or nothing
-    * if there's no child being rendered).
-    * @return {ComponentRenderer}
-    */
-
-		}, {
-			key: 'getCurrentOwner',
-			value: function getCurrentOwner() {
-				return currNodeOwner_;
-			}
-
-			/**
-    * Gets the node's original owner's renderer.
-    * @param {!Object} node
-    * @return {ComponentRenderer}
-    */
-
-		}, {
-			key: 'getOwner',
-			value: function getOwner(node) {
-				return node[IncrementalDomChildren.CHILD_OWNER];
-			}
-
-			/**
-    * Renders a children tree through incremental dom.
-    * @param {!{args: Array, children: !Array, isText: ?boolean}}
-    * @param {function()=} opt_skipNode Optional function that is called for
-    *     each node to be rendered. If it returns true, the node will be skipped.
-    * @param {Object=} opt_context Optional context that will be used when
-    *     calling the given functions.
-    * @protected
-    */
-
-		}, {
-			key: 'render',
-			value: function render(tree, opt_skipNode, opt_context) {
-				if (isCapturing_) {
-					// If capturing, just add the node directly to the captured tree.
-					addChildToTree(tree);
-					return;
+		if (isDef(tree.text)) {
+			var args = tree.args ? tree.args : [];
+			args[0] = tree.text;
+			IncrementalDOM.text.apply(null, args);
+		} else {
+			var _args = buildCallFromConfig(tree.tag, tree.props);
+			_args[0] = {
+				tag: _args[0],
+				owner: getOwner(tree)
+			};
+			IncrementalDOM.elementOpen.apply(null, _args);
+			if (tree.props.children) {
+				for (var i = 0; i < tree.props.children.length; i++) {
+					renderChildTree(tree.props.children[i], opt_skipNode);
 				}
-
-				currNodeOwner_ = IncrementalDomChildren.getOwner(tree);
-				if (opt_skipNode && opt_skipNode.call(opt_context, tree)) {
-					currNodeOwner_ = null;
-					return;
-				}
-
-				if (isDef(tree.text)) {
-					var args = tree.args ? tree.args : [];
-					args[0] = tree.text;
-					IncrementalDOM.text.apply(null, args);
-				} else {
-					var _args = IncrementalDomUtils.buildCallFromConfig(tree.tag, tree.props);
-					IncrementalDOM.elementOpen.apply(null, _args);
-					if (tree.props.children) {
-						for (var i = 0; i < tree.props.children.length; i++) {
-							IncrementalDomChildren.render(tree.props.children[i], opt_skipNode, opt_context);
-						}
-					}
-					IncrementalDOM.elementClose(tree.tag);
-				}
-				currNodeOwner_ = null;
 			}
-		}]);
-		return IncrementalDomChildren;
-	}();
+			IncrementalDOM.elementClose(tree.tag);
+		}
+	}
 
-	var callback_;
-	var currNodeOwner_;
-	var currentParent_;
+	this['metalNamed']['children']['renderChildTree'] = renderChildTree;
+	var callbackData_ = void 0;
+	var callback_ = void 0;
+	var currentParent_ = void 0;
 	var isCapturing_ = false;
-	var renderer_;
-	var tree_;
+	var owner_ = void 0;
+	var tree_ = void 0;
 
 	/**
   * Adds a child element to the tree.
@@ -7569,7 +7993,7 @@ babelHelpers;
 	function addChildCallToTree_(args, opt_isText) {
 		var child = babelHelpers.defineProperty({
 			parent: currentParent_
-		}, IncrementalDomChildren.CHILD_OWNER, renderer_);
+		}, CHILD_OWNER, owner_);
 
 		if (opt_isText) {
 			child.text = args[0];
@@ -7578,7 +8002,7 @@ babelHelpers;
 			}
 		} else {
 			child.tag = args[0];
-			child.props = IncrementalDomUtils.buildConfigFromCall(args);
+			child.props = buildConfigFromCall(args);
 			child.props.children = [];
 			child.config = child.props;
 		}
@@ -7598,15 +8022,18 @@ babelHelpers;
   */
 	function handleInterceptedCloseCall_() {
 		if (currentParent_ === tree_) {
-			IncrementalDomAop.stopInterception();
+			stopInterception();
 			isCapturing_ = false;
-			callback_.call(renderer_, tree_);
+			var node = callback_.call(owner_, tree_, callbackData_);
 			callback_ = null;
+			callbackData_ = null;
 			currentParent_ = null;
-			renderer_ = null;
+			owner_ = null;
 			tree_ = null;
+			return node;
 		} else {
 			currentParent_ = currentParent_.parent;
+			return true;
 		}
 	}
 
@@ -7636,249 +8063,971 @@ babelHelpers;
 
 		addChildCallToTree_(args, true);
 	}
-
-	/**
-  * Property identifying a specific object as a Metal.js child node, and
-  * pointing to the renderer instance that created it.
-  * @type {string}
-  * @static
-  */
-	IncrementalDomChildren.CHILD_OWNER = '__metalChildOwner';
-
-	this['metal']['IncrementalDomChildren'] = IncrementalDomChildren;
 }).call(this);
 'use strict';
 
 (function () {
+  var delegate = this['metalNamed']['dom']['delegate'];
+  var getComponentFn = this['metalNamed']['component']['getComponentFn'];
+  var getOriginalFn = this['metalNamed']['intercept']['getOriginalFn'];
+  var isBoolean = this['metalNamed']['metal']['isBoolean'];
+  var isDefAndNotNull = this['metalNamed']['metal']['isDefAndNotNull'];
+  var isString = this['metalNamed']['metal']['isString'];
+
+
+  var HANDLE_SUFFIX = '__handle__';
+  var LISTENER_REGEX = /^(?:on([A-Z].+))|(?:data-on(.+))$/;
+
+  /**
+   * Applies an attribute to a specified element owned by the given component.
+   * @param {!Component} component
+   * @param {!Element} element
+   * @param {string} name
+   * @param {*} value
+   */
+  function applyAttribute(component, element, name, value) {
+    var eventName = getEventFromListenerAttr_(name);
+    if (eventName) {
+      attachEvent_(component, element, name, eventName, value);
+      return;
+    }
+
+    value = fixCheckedAttr_(name, value);
+    setValueAttrAsProperty_(element, name, value);
+
+    if (isBoolean(value)) {
+      setBooleanAttr_(element, name, value);
+    } else {
+      getOriginalFn('attributes')(element, name, value);
+    }
+  }
+
+  this['metalNamed']['attributes'] = this['metalNamed']['attributes'] || {};
+  this['metalNamed']['attributes']['applyAttribute'] = applyAttribute; /**
+                                                                        * Listens to the specified event, attached via incremental dom calls.
+                                                                        * @param {!Component} component
+                                                                        * @param {!Element} element
+                                                                        * @param {string} attr
+                                                                        * @param {string} eventName
+                                                                        * @param {function()} fn
+                                                                        * @private
+                                                                        */
+
+  function attachEvent_(component, element, attr, eventName, fn) {
+    var handleKey = eventName + HANDLE_SUFFIX;
+    if (element[handleKey]) {
+      element[handleKey].removeListener();
+      element[handleKey] = null;
+    }
+
+    element[attr] = fn;
+    var elementAttrName = 'data-on' + eventName.toLowerCase();
+    if (fn) {
+      if (fn.givenAsName_) {
+        // Listeners given by name should show up in the dom element.
+        element.setAttribute(elementAttrName, fn.givenAsName_);
+      }
+      element[handleKey] = delegate(document, eventName, element, fn);
+    } else {
+      element.removeAttribute(elementAttrName);
+    }
+  }
+
+  /**
+   * Converts all event listener attributes given as function names to actual
+   * function references. It's important to do this before calling the real
+   * incremental dom `elementOpen` function, otherwise if a component passes a
+   * the same function name that an element was already using for another
+   * component, that event won't be reattached as incremental dom will think that
+   * the value hasn't changed. Passing the function references as the value will
+   * guarantee that different functions will cause events to be reattached,
+   * regardless of their original names.
+   * @param {!Component} component
+   * @param {!Object} config
+   */
+  function convertListenerNamesToFns(component, config) {
+    var keys = Object.keys(config);
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      config[key] = convertListenerNameToFn_(component, key, config[key]);
+    }
+  }
+
+  this['metalNamed']['attributes']['convertListenerNamesToFns'] = convertListenerNamesToFns; /**
+                                                                                              * Converts the given attribute's value to a function reference, if it's
+                                                                                              * currently a listener name.
+                                                                                              * @param {!Component} component
+                                                                                              * @param {string} name
+                                                                                              * @param {*} value
+                                                                                              * @return {*}
+                                                                                              * @private
+                                                                                              */
+
+  function convertListenerNameToFn_(component, name, value) {
+    if (isString(value)) {
+      var eventName = getEventFromListenerAttr_(name);
+      if (eventName) {
+        var fn = getComponentFn(component, value);
+        fn.givenAsName_ = name;
+        return fn;
+      }
+    }
+    return value;
+  }
+
+  /**
+   * Changes the value of the `checked` attribute to be a boolean.
+   * NOTE: This is a temporary fix to account for incremental dom setting
+   * "checked" as an attribute only, which can cause bugs since that won't
+   * necessarily check/uncheck the element it's set on. See
+   * https://github.com/google/incremental-dom/issues/198 for more details.
+   * @param {string} name
+   * @param {*} value
+   * @return {*}
+   * @private
+   */
+  function fixCheckedAttr_(name, value) {
+    if (name === 'checked') {
+      value = isDefAndNotNull(value) && value !== false;
+    }
+    return value;
+  }
+
+  /**
+   * Returns the event name if the given attribute is a listener (matching the
+   * `LISTENER_REGEX` regex), or null if it isn't.
+   * @param {string} attr
+   * @return {?string}
+   * @private
+   */
+  function getEventFromListenerAttr_(attr) {
+    var matches = LISTENER_REGEX.exec(attr);
+    var eventName = matches ? matches[1] ? matches[1] : matches[2] : null;
+    return eventName ? eventName.toLowerCase() : null;
+  }
+
+  /**
+   * Sets boolean attributes manually. This is done because incremental dom sets
+   * boolean values as string data attributes by default, which is counter
+   * intuitive. This changes the behavior to use the actual boolean value.
+   * @param {!Element} element
+   * @param {string} name
+   * @param {*} value
+   * @private
+   */
+  function setBooleanAttr_(element, name, value) {
+    element[name] = value;
+    if (value) {
+      element.setAttribute(name, '');
+    } else {
+      element.removeAttribute(name);
+    }
+  }
+
+  /**
+   * Sets the value of the `value` attribute directly in the element.
+   * NOTE: This is a temporary fix to account for incremental dom setting "value"
+   * as an attribute only, which can cause bugs since that won't necessarily
+   * update the input's content it's set on. See
+   * https://github.com/google/incremental-dom/issues/239 for more details. We
+   * only do this if the new value is different though, as otherwise the browser
+   * will automatically move the typing cursor to the end of the field.
+   * @param {!Element} element
+   * @param {string} name
+   * @param {*} value
+   * @private
+   */
+  function setValueAttrAsProperty_(element, name, value) {
+    if (name === 'value' && element.value !== value) {
+      element[name] = value;
+    }
+  }
+}).call(this);
+'use strict';
+
+(function () {
+	var getData = this['metalNamed']['data']['getData'];
+
+
 	var comps_ = [];
 	var disposing_ = false;
 
-	var IncrementalDomUnusedComponents = function () {
-		function IncrementalDomUnusedComponents() {
-			babelHelpers.classCallCheck(this, IncrementalDomUnusedComponents);
+	/**
+  * Disposes all sub components that were not rerendered since the last
+  * time this function was scheduled.
+  */
+	function disposeUnused() {
+		if (disposing_) {
+			return;
 		}
+		disposing_ = true;
 
-		babelHelpers.createClass(IncrementalDomUnusedComponents, null, [{
-			key: 'disposeUnused',
-
-			/**
-    * Disposes all sub components that were not rerendered since the last
-    * time this function was scheduled.
-    */
-			value: function disposeUnused() {
-				if (disposing_) {
-					return;
-				}
-				disposing_ = true;
-
-				for (var i = 0; i < comps_.length; i++) {
-					var comp = comps_[i];
-					if (!comp.isDisposed() && !comp.getRenderer().getParent()) {
-						// Don't let disposing cause the element to be removed, since it may
-						// be currently being reused by another component.
-						comp.element = null;
-						comp.dispose();
-					}
-				}
-				comps_ = [];
-				disposing_ = false;
+		for (var i = 0; i < comps_.length; i++) {
+			var comp = comps_[i];
+			if (!comp.isDisposed() && !getData(comp).parent) {
+				// Don't let disposing cause the element to be removed, since it may
+				// be currently being reused by another component.
+				comp.element = null;
+				comp.dispose();
 			}
+		}
+		comps_ = [];
+		disposing_ = false;
+	}
 
-			/**
-    * Schedules the given components to be checked and disposed if not used
-    * anymore, when `IncrementalDomUnusedComponents.disposeUnused` is called.
-    * @param {!Array<!Component>} comps
-    */
+	this['metalNamed']['unused'] = this['metalNamed']['unused'] || {};
+	this['metalNamed']['unused']['disposeUnused'] = disposeUnused; /**
+                                                                 * Schedules the given components to be checked and disposed if not used
+                                                                 * anymore when `disposeUnused` is called.
+                                                                 * @param {!Array<!Component>} comps
+                                                                 */
 
-		}, {
-			key: 'schedule',
-			value: function schedule(comps) {
-				for (var i = 0; i < comps.length; i++) {
-					if (!comps[i].isDisposed()) {
-						comps[i].getRenderer().parent_ = null;
-						comps_.push(comps[i]);
-					}
-				}
+	function schedule(comps) {
+		for (var i = 0; i < comps.length; i++) {
+			if (!comps[i].isDisposed()) {
+				getData(comps[i]).parent = null;
+				comps_.push(comps[i]);
 			}
-		}]);
-		return IncrementalDomUnusedComponents;
-	}();
-
-	this['metal']['IncrementalDomUnusedComponents'] = IncrementalDomUnusedComponents;
+		}
+	}
+	this['metalNamed']['unused']['schedule'] = schedule;
 }).call(this);
 'use strict';
 
 (function () {
+	var applyAttribute = this['metalNamed']['attributes']['applyAttribute'];
+	var convertListenerNamesToFns = this['metalNamed']['attributes']['convertListenerNamesToFns'];
+	var buildConfigFromCall = this['metalNamed']['callArgs']['buildConfigFromCall'];
+	var buildCallFromConfig = this['metalNamed']['callArgs']['buildCallFromConfig'];
+	var captureChildren = this['metalNamed']['children']['captureChildren'];
+	var getOwner = this['metalNamed']['children']['getOwner'];
+	var isChildTag = this['metalNamed']['children']['isChildTag'];
+	var renderChildTree = this['metalNamed']['children']['renderChildTree'];
+	var clearChanges = this['metalNamed']['changes']['clearChanges'];
+	var domData = this['metalNamed']['dom']['domData'];
+	var getData = this['metalNamed']['data']['getData'];
 	var getCompatibilityModeData = this['metalNamed']['metal']['getCompatibilityModeData'];
 	var getUid = this['metalNamed']['metal']['getUid'];
-	var isBoolean = this['metalNamed']['metal']['isBoolean'];
 	var isDef = this['metalNamed']['metal']['isDef'];
 	var isDefAndNotNull = this['metalNamed']['metal']['isDefAndNotNull'];
+	var isFunction = this['metalNamed']['metal']['isFunction'];
 	var isString = this['metalNamed']['metal']['isString'];
 	var object = this['metalNamed']['metal']['object'];
-	var append = this['metalNamed']['dom']['append'];
-	var delegate = this['metalNamed']['dom']['delegate'];
-	var domData = this['metalNamed']['dom']['domData'];
-	var exitDocument = this['metalNamed']['dom']['exitDocument'];
+	var disposeUnused = this['metalNamed']['unused']['disposeUnused'];
+	var schedule = this['metalNamed']['unused']['schedule'];
+	var getOriginalFn = this['metalNamed']['intercept']['getOriginalFn'];
+	var startInterception = this['metalNamed']['intercept']['startInterception'];
+	var stopInterception = this['metalNamed']['intercept']['stopInterception'];
 	var Component = this['metalNamed']['component']['Component'];
 	var ComponentRegistry = this['metalNamed']['component']['ComponentRegistry'];
-	var ComponentRenderer = this['metalNamed']['component']['ComponentRenderer'];
-	var IncrementalDomAop = this['metal']['IncrementalDomAop'];
-	var IncrementalDomChildren = this['metal']['IncrementalDomChildren'];
-	var IncrementalDomUnusedComponents = this['metal']['IncrementalDomUnusedComponents'];
-	var IncrementalDomUtils = this['metal']['IncrementalDomUtils'];
+
+
+	var renderingComponents_ = [];
+	var emptyChildren_ = [];
 
 	/**
-  * Class responsible for rendering components via incremental dom.
+  * Adds the given css classes to the specified arguments for an incremental
+  * dom call, merging with the existing value if there is one.
+  * @param {string} elementClasses
+  * @param {!Object} config
+  * @private
   */
+	function addElementClasses_(elementClasses, config) {
+		if (config.class) {
+			config.class += ' ' + elementClasses;
+			config.class = removeDuplicateClasses_(config.class);
+		} else {
+			config.class = elementClasses;
+		}
+	}
 
-	var IncrementalDomRenderer = function (_ComponentRenderer) {
-		babelHelpers.inherits(IncrementalDomRenderer, _ComponentRenderer);
+	/**
+  * Builds the "children" array to be passed to the current component.
+  * @param {!Array<!Object>} children
+  * @return {!Array<!Object>}
+  * @private
+  */
+	function buildChildren_(children) {
+		return children.length === 0 ? emptyChildren_ : children;
+	}
 
-		/**
-   * @inheritDoc
-   */
-		function IncrementalDomRenderer(comp) {
-			babelHelpers.classCallCheck(this, IncrementalDomRenderer);
+	/**
+  * Finishes the render operation, doing some cleaups.
+  * @param {!Component} component
+  * @private
+  */
+	function cleanUpRender_(component) {
+		stopInterception();
+		if (!getData(component).rootElementReached) {
+			component.element = null;
+		}
+		component.informRendered();
+		finishedRenderingComponent_();
+	}
 
-			var _this = babelHelpers.possibleConstructorReturn(this, (IncrementalDomRenderer.__proto__ || Object.getPrototypeOf(IncrementalDomRenderer)).call(this, comp));
+	/**
+  * Removes the most recent component from the queue of rendering components.
+  * @private
+  */
+	function finishedRenderingComponent_() {
+		renderingComponents_.pop();
+		if (renderingComponents_.length === 0) {
+			disposeUnused();
+		}
+	}
 
-			comp.context = {};
-			comp.refs = {};
-			_this.config_ = comp.getInitialConfig();
-			_this.clearChanges_();
+	/**
+  * Generates a key for the next element to be rendered.
+  * @param {!Component} component
+  * @param {?string} key The key originally passed to the element.
+  * @return {?string}
+  * @private
+  */
+	function generateKey_(component, key) {
+		var data = getData(component);
+		if (!data.rootElementReached && data.config.key) {
+			key = data.config.key;
+		}
+		return component.getRenderer().generateKey(component, key);
+	}
 
-			// Binds functions that will be used many times, to avoid creating new
-			// functions each time.
-			_this.renderInsidePatchDontSkip_ = _this.renderInsidePatchDontSkip_.bind(_this);
+	/**
+  * Gets the child components stored in the given object.
+  * @param {!Object} data
+  * @return {!Array<!Component>}
+  * @private
+  */
+	function getChildComponents_(data) {
+		data.childComponents = data.childComponents || [];
+		return data.childComponents;
+	}
 
-			if (!_this.component_.constructor.SYNC_UPDATES_MERGED) {
-				// If the component is being updated synchronously we'll just reuse the
-				// `handleRendererStateKeyChanged_` function from `ComponentRenderer`.
-				_this.component_.on('stateKeyChanged', _this.handleStateKeyChanged_.bind(_this));
+	/**
+  * Gets the component being currently rendered.
+  * @return {Component}
+  */
+	function getComponentBeingRendered() {
+		return renderingComponents_[renderingComponents_.length - 1];
+	}
+
+	this['metalNamed']['render'] = this['metalNamed']['render'] || {};
+	this['metalNamed']['render']['getComponentBeingRendered'] = getComponentBeingRendered; /**
+                                                                                         * Gets the data object that should be currently used. This object will either
+                                                                                         * come from the current element being rendered by incremental dom or from
+                                                                                         * the component instance being rendered (only when the current element is the
+                                                                                         * component's direct parent).
+                                                                                         * @return {!Object}
+                                                                                         * @private
+                                                                                         */
+
+	function getCurrentData() {
+		var element = IncrementalDOM.currentElement();
+		var comp = getComponentBeingRendered();
+		var obj = getData(comp);
+		if (obj.rootElementReached && element !== comp.element.parentNode) {
+			obj = domData.get(element);
+		}
+		obj.icComponentsData = obj.icComponentsData || {};
+		return obj.icComponentsData;
+	}
+
+	/**
+  * Returns the "ref" to be used for a component. Uses "key" as "ref" when
+  * compatibility mode is on for the current renderer.
+  * @param {!Component} owner
+  * @param {!Object} config
+  * @return {?string}
+  * @private
+  */
+	function getRef_(owner, config) {
+		var compatData = getCompatibilityModeData();
+		if (compatData) {
+			var ownerRenderer = owner.getRenderer();
+			var renderers = compatData.renderers;
+			var useKey = !renderers || renderers.indexOf(ownerRenderer) !== -1 || renderers.indexOf(ownerRenderer.RENDERER_NAME) !== -1;
+			if (useKey && config.key && !config.ref) {
+				return config.key;
 			}
-			return _this;
+		}
+		return config.ref;
+	}
+
+	/**
+  * Gets the sub component referenced by the given tag and config data,
+  * creating it if it doesn't yet exist.
+  * @param {string|!Function} tagOrCtor The tag name.
+  * @param {!Object} config The config object for the sub component.
+  * @param {!Component} owner
+  * @return {!Component} The sub component.
+  * @protected
+  */
+	function getSubComponent_(tagOrCtor, config, owner) {
+		var Ctor = tagOrCtor;
+		if (isString(Ctor)) {
+			Ctor = ComponentRegistry.getConstructor(tagOrCtor);
 		}
 
-		/**
-   * Adds the given css classes to the specified arguments for an incremental
-   * dom call, merging with the existing value if there is one.
-   * @param {string} elementClasses
-   * @param {!Array} args
-   * @protected
-   */
+		var ref = getRef_(owner, config);
+		var comp = void 0;
+		if (isDef(ref)) {
+			comp = match_(owner.components[ref], Ctor, config, owner);
+			owner.components[ref] = comp;
+			owner.refs[ref] = comp;
+		} else {
+			var data = getCurrentData();
+			var key = config.key;
+			if (!isDef(key)) {
+				var type = getUid(Ctor, true);
+				data.currCount = data.currCount || {};
+				data.currCount[type] = data.currCount[type] || 0;
+				key = '__METAL_IC__' + type + '_' + data.currCount[type]++;
+			}
+			comp = match_(data.prevComps ? data.prevComps[key] : null, Ctor, config, owner);
+			data.currComps = data.currComps || {};
+			data.currComps[key] = comp;
+		}
 
+		return comp;
+	}
+
+	/**
+  * Handles the event of children having finished being captured.
+  * @param {!Object} tree The captured children in tree format.
+  * @private
+  */
+	function handleChildrenCaptured_(tree, _ref) {
+		var props = _ref.props,
+		    tag = _ref.tag;
+
+		props.children = buildChildren_(tree.props.children);
+		return renderFromTag_(tag, props);
+	}
+
+	/**
+  * Handles a child being rendered via `IncrementalDomChildren.render`. Skips
+  * component nodes so that they can be rendered the correct way without
+  * having to recapture both them and their children via incremental dom.
+  * @param {!Object} node
+  * @return {boolean}
+  * @private
+  */
+	function handleChildRender_(node) {
+		if (node.tag && isComponentTag_(node.tag)) {
+			node.props.children = buildChildren_(node.props.children);
+			renderFromTag_(node.tag, node.props, getOwner(node));
+			return true;
+		}
+	}
+
+	/**
+  * Handles an intercepted call to the attributes default handler from
+  * incremental dom.
+  * @param {!Element} element
+  * @param {string} name
+  * @param {*} value
+  * @private
+  */
+	function handleInterceptedAttributesCall_(element, name, value) {
+		applyAttribute(getComponentBeingRendered(), element, name, value);
+	}
+
+	/**
+  * Handles an intercepted call to the `elementOpen` function from incremental
+  * dom.
+  * @param {string} tag
+  * @private
+  */
+	function handleInterceptedOpenCall_(tag) {
+		if (isComponentTag_(tag)) {
+			return handleSubComponentCall_.apply(null, arguments);
+		} else {
+			return handleRegularCall_.apply(null, arguments);
+		}
+	}
+
+	/**
+  * Handles an intercepted call to the `elementOpen` function from incremental
+  * dom, done for a regular element. Among other things, adds any inline
+  * listeners found on the first render and makes sure that component root
+  * elements are always reused.
+  * @param {!Component} owner
+  * @param {!Array} args
+  * @return {!Element} The rendered element.
+  * @private
+  */
+	function handleRegularCall_() {
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
+
+		var config = buildConfigFromCall(args);
+		var tag = args[0];
+
+		var comp = getComponentBeingRendered();
+		var owner = comp;
+		if (isChildTag(tag)) {
+			owner = tag.owner;
+			tag = tag.tag;
+		}
+		config.key = generateKey_(comp, config.key);
+
+		if (!getData(comp).rootElementReached) {
+			var elementClasses = comp.getDataManager().get(comp, 'elementClasses');
+			if (elementClasses) {
+				addElementClasses_(elementClasses, config);
+			}
+		}
+		convertListenerNamesToFns(comp, config);
+
+		var call = buildCallFromConfig(tag, config);
+		var node = getOriginalFn('elementOpen').apply(null, call);
+		resetNodeData_(node);
+		updateElementIfNotReached_(comp, node);
+
+		if (isDefAndNotNull(config.ref)) {
+			owner.refs[config.ref] = node;
+		}
+		owner.getRenderer().handleNodeRendered(node);
+
+		return node;
+	}
+
+	/**
+  * Handles an intercepted call to the `elementOpen` function from incremental
+  * dom, done for a sub component element. Creates and updates the appropriate
+  * sub component.
+  * @private
+  */
+	function handleSubComponentCall_() {
+		for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+			args[_key2] = arguments[_key2];
+		}
+
+		captureChildren(getComponentBeingRendered(), handleChildrenCaptured_, {
+			props: buildConfigFromCall(args),
+			tag: args[0]
+		});
+	}
+
+	/**
+  * Checks if the given tag represents a metal component.
+  * @param {string} tag
+  * @return {boolean}
+  * @private
+  */
+	function isComponentTag_(tag) {
+		return isFunction(tag) || isString(tag) && tag[0] === tag[0].toUpperCase();
+	}
+
+	this['metalNamed']['render']['isComponentTag_'] = isComponentTag_; /**
+                                                                     * Checks if the given component can be a match for a constructor.
+                                                                     * @param {!Component} comp
+                                                                     * @param {!function()} Ctor
+                                                                     * @param {!Component} owner
+                                                                     * @return {boolean}
+                                                                     * @private
+                                                                     */
+
+	function isMatch_(comp, Ctor, owner) {
+		if (!comp || comp.constructor !== Ctor || comp.isDisposed()) {
+			return false;
+		}
+		return getData(comp).owner === owner;
+	}
+
+	/**
+  * Returns the given component if it matches the specified constructor
+  * function. Otherwise, returns a new instance of the given constructor. On
+  * both cases the component's state and config will be updated.
+  * @param {Component} comp
+  * @param {!function()} Ctor
+  * @param {!Object} config
+  * @param {!Component} owner
+  * @return {!Component}
+  * @private
+  */
+	function match_(comp, Ctor, config, owner) {
+		if (isMatch_(comp, Ctor, owner)) {
+			comp.startSkipUpdates();
+			comp.getDataManager().replaceNonInternal(comp, config);
+			comp.stopSkipUpdates();
+		} else {
+			comp = new Ctor(config, false);
+		}
+		getData(comp).config = config;
+		return comp;
+	}
+
+	/**
+  * Prepares the render operation, resetting the component's data and starting
+  * the incremental dom interception.
+  * @param {!Component} component
+  * @private
+  */
+	function prepareRender_(component) {
+		renderingComponents_.push(component);
+
+		var data = getData(component);
+		resetComponentsData_(data.icComponentsData);
+		clearChanges(data);
+		data.rootElementReached = false;
+		component.refs = {};
+
+		if (data.childComponents) {
+			schedule(data.childComponents);
+			data.childComponents = null;
+		}
+
+		startInterception({
+			attributes: handleInterceptedAttributesCall_,
+			elementOpen: handleInterceptedOpenCall_
+		});
+	}
+
+	/**
+  * Removes duplicate css classes from the given string.
+  * @param {string} classString
+  * @return {string}
+  * @private
+  */
+	function removeDuplicateClasses_(classString) {
+		var classes = [];
+		var all = classString.split(/\s+/);
+		var used = {};
+		for (var i = 0; i < all.length; i++) {
+			if (!used[all[i]]) {
+				used[all[i]] = true;
+				classes.push(all[i]);
+			}
+		}
+		return classes.join(' ');
+	}
+
+	/**
+  * Renders the component with incremental dom function calls. This assumes that
+  * an incremental dom `patch` is already running, and that this function has
+  * been called inside it.
+  * @param {!Component} component
+  */
+	function render(component) {
+		prepareRender_(component);
+		component.getRenderer().renderIncDom(component);
+		cleanUpRender_(component);
+	}
+
+	this['metalNamed']['render']['render'] = render; /**
+                                                   * Renders the given child node.
+                                                   * @param {!Object} child
+                                                   */
+
+	function renderChild(child) {
+		renderChildTree(child, handleChildRender_);
+	}
+
+	this['metalNamed']['render']['renderChild'] = renderChild; /**
+                                                             * Renders the contents for the given tag.
+                                                             * @param {!function()|string} tag
+                                                             * @param {!Object} config
+                                                             * @param {Component=} opt_owner
+                                                             * @private
+                                                             */
+
+	function renderFromTag_(tag, config, opt_owner) {
+		if (isString(tag) || tag.prototype.getRenderer) {
+			var comp = renderSubComponent_(tag, config, opt_owner);
+			updateElementIfNotReached_(getComponentBeingRendered(), comp.element);
+			return comp.element;
+		} else {
+			return tag(config);
+		}
+	}
+
+	/**
+  * Creates and renders the given function, which can either be a simple
+  * incremental dom function or a component constructor.
+  * @param {!IncrementalDomRenderer} renderer
+  * @param {!function()} fnOrCtor Either a simple incremental dom function or a
+  *     component constructor.
+  * @param {Object|Element=} opt_dataOrElement Optional config data for the
+  *     function or parent for the rendered content.
+  * @param {Element=} opt_parent Optional parent for the rendered content.
+  * @return {!Component} The rendered component's instance.
+  */
+	function renderFunction(renderer, fnOrCtor, opt_dataOrElement, opt_parent) {
+		if (!Component.isComponentCtor(fnOrCtor)) {
+			(function () {
+				var fn = fnOrCtor;
+
+				var TempComponent = function (_Component) {
+					babelHelpers.inherits(TempComponent, _Component);
+
+					function TempComponent() {
+						babelHelpers.classCallCheck(this, TempComponent);
+						return babelHelpers.possibleConstructorReturn(this, (TempComponent.__proto__ || Object.getPrototypeOf(TempComponent)).apply(this, arguments));
+					}
+
+					babelHelpers.createClass(TempComponent, [{
+						key: 'created',
+						value: function created() {
+							var parent = getComponentBeingRendered();
+							if (parent) {
+								updateContext_(this, parent);
+							}
+						}
+					}, {
+						key: 'render',
+						value: function render() {
+							fn(this.getInitialConfig());
+						}
+					}]);
+					return TempComponent;
+				}(Component);
+
+				TempComponent.RENDERER = renderer;
+				fnOrCtor = TempComponent;
+			})();
+		}
+		return Component.render(fnOrCtor, opt_dataOrElement, opt_parent);
+	}
+
+	this['metalNamed']['render']['renderFunction'] = renderFunction; /**
+                                                                   * This updates the sub component that is represented by the given data.
+                                                                   * The sub component is created, added to its parent and rendered. If it
+                                                                   * had already been rendered before though, it will only have its state
+                                                                   * updated instead.
+                                                                   * @param {string|!function()} tagOrCtor The tag name or constructor function.
+                                                                   * @param {!Object} config The config object for the sub component.
+                                                                   * @param {ComponentRenderer=} opt_owner
+                                                                   * @return {!Component} The updated sub component.
+                                                                   * @private
+                                                                   */
+
+	function renderSubComponent_(tagOrCtor, config, opt_owner) {
+		var parent = getComponentBeingRendered();
+		var owner = opt_owner || parent;
+		var comp = getSubComponent_(tagOrCtor, config, owner);
+		updateContext_(comp, parent);
+
+		var data = getData(comp);
+		data.parent = parent;
+		data.owner = owner;
+
+		var parentData = getData(parent);
+		getChildComponents_(parentData).push(comp);
+		if (!config.key && !parentData.rootElementReached) {
+			config.key = parentData.config.key;
+		}
+
+		comp.getRenderer().renderInsidePatch(comp);
+		if (!comp.wasRendered) {
+			comp.renderComponent();
+		}
+		return comp;
+	}
+
+	/**
+  * Resets the given incremental dom data object, preparing it for the next pass.
+  * @param {Object} data
+  * @private
+  */
+	function resetComponentsData_(data) {
+		if (data) {
+			data.prevComps = data.currComps;
+			data.currComps = null;
+			data.currCount = null;
+		}
+	}
+	/**
+  * Resets all data stored in the given node.
+  * @param {!Element} node
+  * @private
+  */
+	function resetNodeData_(node) {
+		if (domData.has(node)) {
+			resetComponentsData_(domData.get(node).icComponentsData);
+		}
+	}
+
+	/**
+  * Updates the given component's context according to the data from the
+  * component that is currently being rendered.
+  * @param {!Component} comp
+  * @protected
+  */
+	function updateContext_(comp, parent) {
+		var context = comp.context;
+		var childContext = parent.getChildContext ? parent.getChildContext() : null;
+		object.mixin(context, parent.context, childContext);
+		comp.context = context;
+	}
+
+	/**
+  * Updates this renderer's component's element with the given values, unless
+  * it has already been reached by an earlier call.
+  * @param {!Component} component
+  * @param {!Element} node
+  * @private
+  */
+	function updateElementIfNotReached_(component, node) {
+		var data = getData(component);
+		if (!data.rootElementReached) {
+			data.rootElementReached = true;
+			if (component.element !== node) {
+				component.element = node;
+			}
+		}
+	}
+}).call(this);
+'use strict';
+
+(function () {
+	var append = this['metalNamed']['dom']['append'];
+	var exitDocument = this['metalNamed']['dom']['exitDocument'];
+	var getData = this['metalNamed']['data']['getData'];
+	var render = this['metalNamed']['render']['render'];
+
+
+	var patchingComponents_ = [];
+
+	/**
+  * Guarantees that the component's element has a parent. That's necessary
+  * when calling incremental dom's `patchOuter` for now, as otherwise it will
+  * throw an error if the element needs to be replaced.
+  * @return {Element} The parent, in case it was added.
+  * @private
+  */
+	function buildParentIfNecessary_(element) {
+		if (!element || !element.parentNode) {
+			var parent = document.createElement('div');
+			if (element) {
+				append(parent, element);
+			}
+			return parent;
+		}
+	}
+
+	/**
+  * Calls incremental dom's patch function.
+  * @param {!Component} component The component to patch.
+  * @param {!Element} element The element the component should be patched on.
+  * @param {boolean=} opt_outer Flag indicating if `patchOuter` should be used
+  *     instead of `patch`.
+  * @private
+  */
+	function callPatch_(component, element, opt_outer) {
+		patchingComponents_.push(component);
+
+		var data = getData(component);
+		if (!data.render) {
+			// Store reference to avoid binds on every patch.
+			data.render = render.bind(null, component);
+		}
+
+		var patchFn = opt_outer ? IncrementalDOM.patchOuter : IncrementalDOM.patch;
+		patchFn(element, data.render);
+
+		patchingComponents_.pop();
+	}
+
+	/**
+  * Gets the component that triggered the current patch operation.
+  * @return {Component}
+  */
+	function getPatchingComponent() {
+		return patchingComponents_[patchingComponents_.length - 1];
+	}
+
+	this['metalNamed']['patch'] = this['metalNamed']['patch'] || {};
+	this['metalNamed']['patch']['getPatchingComponent'] = getPatchingComponent; /**
+                                                                              * Patches the component with incremental dom function calls.
+                                                                              * @param {!Component} component
+                                                                              */
+
+	function patch(component) {
+		if (!tryPatchEmptyWithParent_(component)) {
+			if (!tryPatchWithNoParent_(component)) {
+				var element = component.element;
+				callPatch_(component, element, true);
+			}
+		}
+	}
+
+	this['metalNamed']['patch']['patch'] = patch; /**
+                                                * Checks if the component has no content but was rendered from another
+                                                * component. If so, we'll need to patch this parent to make sure that any new
+                                                * content will be added in the right position.
+                                                * @param {!Component} component
+                                                * @return {?boolean} True if the patch happened. Nothing otherwise.
+                                                * @private
+                                                */
+
+	function tryPatchEmptyWithParent_(component) {
+		var data = getData(component);
+		if (!component.element && data.parent) {
+			data.parent.getRenderer().patch(data.parent);
+			return true;
+		}
+	}
+
+	/**
+  * Checks if the component's element exists and has a parent. If that's not the
+  * case, a temporary parent will be created and passed to the `patch` function,
+  * since incremental dom requires it. Once the patch is done the temporary
+  * parent is removed and the component's content is reattached to the correct
+  * final position.
+  * @param {!Component} component
+  * @return {?boolean} True if the patch happened. Nothing otherwise.
+  * @private
+  */
+	function tryPatchWithNoParent_(component) {
+		var tempParent = buildParentIfNecessary_(component.element);
+		if (tempParent) {
+			callPatch_(component, tempParent);
+			exitDocument(component.element);
+			if (component.element && component.inDocument) {
+				var attach = component.getAttachData();
+				component.attachElement(attach.parent, attach.sibling);
+			}
+			return true;
+		}
+	}
+}).call(this);
+'use strict';
+
+(function () {
+	var getChanges = this['metalNamed']['changes']['getChanges'];
+	var trackChanges = this['metalNamed']['changes']['trackChanges'];
+	var clearData = this['metalNamed']['data']['clearData'];
+	var _getData = this['metalNamed']['data']['getData'];
+	var getOwner = this['metalNamed']['children']['getOwner'];
+	var _getPatchingComponent = this['metalNamed']['patch']['getPatchingComponent'];
+	var _patch = this['metalNamed']['patch']['patch'];
+	var render = this['metalNamed']['render']['render'];
+	var _renderChild = this['metalNamed']['render']['renderChild'];
+	var renderFunction = this['metalNamed']['render']['renderFunction'];
+	var Component = this['metalNamed']['component']['Component'];
+	var ComponentRenderer = this['metalNamed']['component']['ComponentRenderer'];
+
+	var IncrementalDomRenderer = function (_ComponentRenderer$co) {
+		babelHelpers.inherits(IncrementalDomRenderer, _ComponentRenderer$co);
+
+		function IncrementalDomRenderer() {
+			babelHelpers.classCallCheck(this, IncrementalDomRenderer);
+			return babelHelpers.possibleConstructorReturn(this, (IncrementalDomRenderer.__proto__ || Object.getPrototypeOf(IncrementalDomRenderer)).apply(this, arguments));
+		}
 
 		babelHelpers.createClass(IncrementalDomRenderer, [{
-			key: 'addElementClasses_',
-			value: function addElementClasses_(elementClasses, args) {
-				for (var i = 3; i < args.length; i += 2) {
-					if (args[i] === 'class') {
-						args[i + 1] = this.removeDuplicateClasses_(args[i + 1] + ' ' + elementClasses);
-						return;
-					}
-				}
-				while (args.length < 3) {
-					args.push(null);
-				}
-				args.push('class', elementClasses);
-			}
-
-			/**
-    * Attaches inline listeners found on the first component render, since those
-    * may come from existing elements on the page that already have
-    * data-on[eventname] attributes set to its final value. This won't trigger
-    * `handleInterceptedAttributesCall_`, so we need manual work to guarantee
-    * that projects using progressive enhancement like this will still work.
-    * @param {!Element} node
-    * @param {!Array} args
-    * @protected
-    */
-
-		}, {
-			key: 'attachDecoratedListeners_',
-			value: function attachDecoratedListeners_(node, args) {
-				if (!this.component_.wasRendered) {
-					var attrs = (args[2] || []).concat(args.slice(3));
-					for (var i = 0; i < attrs.length; i += 2) {
-						var eventName = this.getEventFromListenerAttr_(attrs[i]);
-						if (eventName && !node[eventName + '__handle__']) {
-							this.attachEvent_(node, attrs[i], eventName, attrs[i + 1]);
-						}
-					}
-				}
-			}
-
-			/**
-    * Listens to the specified event, attached via incremental dom calls.
-    * @param {!Element} element
-    * @param {string} key
-    * @param {string} eventName
-    * @param {function()|string} fn
-    * @protected
-    */
-
-		}, {
-			key: 'attachEvent_',
-			value: function attachEvent_(element, key, eventName, fn) {
-				var handleKey = eventName + '__handle__';
-				if (element[handleKey]) {
-					element[handleKey].removeListener();
-					element[handleKey] = null;
-				}
-
-				element[key] = fn;
-				if (fn) {
-					if (isString(fn)) {
-						if (key[0] === 'd') {
-							// Allow data-on[eventkey] listeners to stay in the dom, as they
-							// won't cause conflicts.
-							element.setAttribute(key, fn);
-						}
-						fn = this.component_.getListenerFn(fn);
-					}
-					element[handleKey] = delegate(document, eventName, element, fn);
-				} else {
-					element.removeAttribute(key);
-				}
-			}
-
-			/**
-    * Builds the "children" array to be passed to the current component.
-    * @param {!Array<!Object>} children
-    * @return {!Array<!Object>}
-    * @protected
-    */
-
-		}, {
-			key: 'buildChildren_',
-			value: function buildChildren_(children) {
-				return children.length === 0 ? emptyChildren_ : children;
-			}
+			key: 'buildShouldUpdateArgs',
 
 			/**
     * Returns an array with the args that should be passed to the component's
     * `shouldUpdate` method. This can be overridden by sub classes to change
     * what the method should receive.
+    * @param {Object} changes
     * @return {!Array}
-    * @protected
     */
-
-		}, {
-			key: 'buildShouldUpdateArgs_',
-			value: function buildShouldUpdateArgs_() {
-				return [this.changes_ || {}];
-			}
-
-			/**
-    * Clears the changes object.
-    * @protected;
-    */
-
-		}, {
-			key: 'clearChanges_',
-			value: function clearChanges_() {
-				this.changes_ = null;
+			value: function buildShouldUpdateArgs(changes) {
+				return [changes.props];
 			}
 
 			/**
@@ -7886,415 +9035,86 @@ babelHelpers;
     */
 
 		}, {
-			key: 'disposeInternal',
-			value: function disposeInternal() {
-				babelHelpers.get(IncrementalDomRenderer.prototype.__proto__ || Object.getPrototypeOf(IncrementalDomRenderer.prototype), 'disposeInternal', this).call(this);
-
-				var comp = this.component_;
-				var ref = this.config_.ref;
-				var owner = this.getOwner();
-				if (owner && owner.components && owner.components[ref] === comp) {
+			key: 'dispose',
+			value: function dispose(component) {
+				var data = _getData(component);
+				var ref = data.config.ref;
+				var owner = data.owner;
+				if (owner && owner.components && owner.components[ref] === component) {
 					delete owner.components[ref];
 				}
 
-				if (this.childComponents_) {
-					for (var i = 0; i < this.childComponents_.length; i++) {
-						var child = this.childComponents_[i];
+				if (data.childComponents) {
+					for (var i = 0; i < data.childComponents.length; i++) {
+						var child = data.childComponents[i];
 						if (!child.isDisposed()) {
 							child.element = null;
 							child.dispose();
 						}
 					}
-					this.childComponents_ = null;
 				}
+
+				clearData(component);
 			}
 
 			/**
-    * Removes the most recent component from the queue of rendering components.
+    * Generates a key for the element currently being rendered in the given
+    * component. By default, just returns the original key. Sub classes can
+    * override this to change the behavior.
+    * @param {!Component} component
+    * @param {string} key
+    * @return {?string}
     */
 
 		}, {
-			key: 'generateKey_',
-
-
-			/**
-    * Generates a key for the next element to be rendered.
-    * @param {?string} The key originally passed to the element.
-    * @return {?string}
-    * @protected
-    */
-			value: function generateKey_(key) {
-				var currComp = IncrementalDomRenderer.getComponentBeingRendered();
-				var currRenderer = currComp.getRenderer();
-				if (!currRenderer.rootElementReached_ && currRenderer.config_.key) {
-					return currRenderer.config_.key;
-				}
+			key: 'generateKey',
+			value: function generateKey(component, key) {
 				return key;
 			}
 
 			/**
-    * Gets this renderer's current child components.
-    * @return {!Array<!Component>}
+    * Get the component's config data.
+    * @param {!Component} component
+    * @return {!Object}
     */
 
 		}, {
-			key: 'getChildComponents',
-			value: function getChildComponents() {
-				this.childComponents_ = this.childComponents_ || [];
-				return this.childComponents_;
+			key: 'getConfig',
+			value: function getConfig(component) {
+				return _getData(component).config;
 			}
 
 			/**
-    * Gets the component being currently rendered via `IncrementalDomRenderer`.
+    * Get the component's incremental dom renderer data.
+    * @param {!Component} component
+    * @return {!Object}
+    */
+
+		}, {
+			key: 'getData',
+			value: function getData(component) {
+				return _getData(component);
+			}
+
+			/**
+    * Gets the component that triggered the current patch operation.
     * @return {Component}
     */
 
 		}, {
-			key: 'getEventFromListenerAttr_',
-
-
-			/**
-    * Returns the event name if the given attribute is a listener (of the form
-    * "on<EventName>"), or null if it isn't.
-    * @param {string} attr
-    * @return {?string}
-    * @protected
-    */
-			value: function getEventFromListenerAttr_(attr) {
-				var matches = IncrementalDomRenderer.LISTENER_REGEX.exec(attr);
-				var eventName = matches ? matches[1] ? matches[1] : matches[2] : null;
-				return eventName ? eventName.toLowerCase() : null;
+			key: 'getPatchingComponent',
+			value: function getPatchingComponent() {
+				return _getPatchingComponent();
 			}
 
 			/**
-    * Gets the component that is this component's owner (that is, the one that
-    * passed its data and holds its ref), or null if there's none.
-    * @return {Component}
+    * Handles a node having just been rendered. Sub classes should override this
+    * for custom behavior.
     */
 
 		}, {
-			key: 'getOwner',
-			value: function getOwner() {
-				return this.owner_;
-			}
-
-			/**
-    * Gets the component that is this component's parent (that is, the one that
-    * actually rendered it), or null if there's no parent.
-    * @return {Component}
-    */
-
-		}, {
-			key: 'getParent',
-			value: function getParent() {
-				return this.parent_;
-			}
-
-			/**
-    * Returns the "ref" to be used for a component. Uses "key" as "ref" when
-    * compatibility mode is on for the current renderer.
-    * @param {!Object} config
-    * @param {?string} ref
-    * @protected
-    */
-
-		}, {
-			key: 'getRef_',
-			value: function getRef_(config) {
-				var compatData = getCompatibilityModeData();
-				if (compatData) {
-					var renderers = compatData.renderers;
-					var useKey = !renderers || renderers.indexOf(this.constructor) !== -1 || renderers.indexOf(this.constructor.RENDERER_NAME) !== -1;
-					if (useKey && config.key && !config.ref) {
-						return config.key;
-					}
-				}
-				return config.ref;
-			}
-
-			/**
-    * Gets the sub component referenced by the given tag and config data,
-    * creating it if it doesn't yet exist.
-    * @param {string|!Function} tagOrCtor The tag name.
-    * @param {!Object} config The config object for the sub component.
-    * @param {!Component} owner
-    * @return {!Component} The sub component.
-    * @protected
-    */
-
-		}, {
-			key: 'getSubComponent_',
-			value: function getSubComponent_(tagOrCtor, config, owner) {
-				var Ctor = tagOrCtor;
-				if (isString(Ctor)) {
-					Ctor = ComponentRegistry.getConstructor(tagOrCtor);
-				}
-
-				var ref = this.getRef_(config);
-				var comp = void 0;
-				if (isDef(ref)) {
-					comp = this.match_(owner.components[ref], Ctor, config);
-					owner.addSubComponent(ref, comp);
-					owner.refs[ref] = comp;
-				} else {
-					var data = IncrementalDomRenderer.getCurrentData();
-					var key = config.key;
-					if (!isDef(key)) {
-						var type = getUid(Ctor, true);
-						data.currCount = data.currCount || {};
-						data.currCount[type] = data.currCount[type] || 0;
-						key = '__METAL_IC__' + type + '_' + data.currCount[type];
-						data.currCount[type]++;
-					}
-					comp = this.match_(data.prevComps ? data.prevComps[key] : null, Ctor, config);
-					data.currComps = data.currComps || {};
-					data.currComps[key] = comp;
-				}
-
-				return comp;
-			}
-
-			/**
-    * Guarantees that the component's element has a parent. That's necessary
-    * when calling incremental dom's `patchOuter` for now, as otherwise it will
-    * throw an error if the element needs to be replaced.
-    * @return {Element} The parent, in case it was added.
-    * @protected
-    */
-
-		}, {
-			key: 'guaranteeParent_',
-			value: function guaranteeParent_() {
-				var element = this.component_.element;
-				if (!element || !element.parentNode) {
-					var parent = document.createElement('div');
-					if (element) {
-						append(parent, element);
-					}
-					return parent;
-				}
-			}
-
-			/**
-    * Handles the event of children having finished being captured.
-    * @param {!Object} The captured children in tree format.
-    * @protected
-    */
-
-		}, {
-			key: 'handleChildrenCaptured_',
-			value: function handleChildrenCaptured_(tree) {
-				var _componentToRender_ = this.componentToRender_,
-				    props = _componentToRender_.props,
-				    tag = _componentToRender_.tag;
-
-				props.children = this.buildChildren_(tree.props.children);
-				this.componentToRender_ = null;
-				this.renderFromTag_(tag, props);
-			}
-
-			/**
-    * Handles a child being rendered via `IncrementalDomChildren.render`. Skips
-    * component nodes so that they can be rendered the correct way without
-    * having to recapture both them and their children via incremental dom.
-    * @param {!Object} node
-    * @return {boolean}
-    * @protected
-    */
-
-		}, {
-			key: 'handleChildRender_',
-			value: function handleChildRender_(node) {
-				if (node.tag && IncrementalDomUtils.isComponentTag(node.tag)) {
-					node.props.children = this.buildChildren_(node.props.children);
-					this.renderFromTag_(node.tag, node.props);
-					return true;
-				}
-			}
-
-			/**
-    * Handles an intercepted call to the attributes default handler from
-    * incremental dom.
-    * @param {!Element} element
-    * @param {string} name
-    * @param {*} value
-    * @protected
-    */
-
-		}, {
-			key: 'handleInterceptedAttributesCall_',
-			value: function handleInterceptedAttributesCall_(element, name, value) {
-				var eventName = this.getEventFromListenerAttr_(name);
-				if (eventName) {
-					this.attachEvent_(element, name, eventName, value);
-					return;
-				}
-
-				if (name === 'checked') {
-					// This is a temporary fix to account for incremental dom setting
-					// "checked" as an attribute only, which can cause bugs since that won't
-					// necessarily check/uncheck the element it's set on. See
-					// https://github.com/google/incremental-dom/issues/198 for more details.
-					value = isDefAndNotNull(value) && value !== false;
-				}
-
-				if (name === 'value' && element.value !== value) {
-					// This is a temporary fix to account for incremental dom setting
-					// "value" as an attribute only, which can cause bugs since that won't
-					// necessarily update the input's content it's set on. See
-					// https://github.com/google/incremental-dom/issues/239 for more details.
-					// We only do this if the new value is different though, as otherwise the
-					// browser will automatically move the typing cursor to the end of the
-					// field.
-					element[name] = value;
-				}
-
-				if (isBoolean(value)) {
-					// Incremental dom sets boolean values as string data attributes, which
-					// is counter intuitive. This changes the behavior to use the actual
-					// boolean value.
-					element[name] = value;
-					if (value) {
-						element.setAttribute(name, '');
-					} else {
-						element.removeAttribute(name);
-					}
-				} else {
-					IncrementalDomAop.getOriginalFn('attributes')(element, name, value);
-				}
-			}
-
-			/**
-    * Handles an intercepted call to the `elementOpen` function from incremental
-    * dom.
-    * @param {string} tag
-    * @protected
-    */
-
-		}, {
-			key: 'handleInterceptedOpenCall_',
-			value: function handleInterceptedOpenCall_(tag) {
-				if (IncrementalDomUtils.isComponentTag(tag)) {
-					return this.handleSubComponentCall_.apply(this, arguments);
-				} else {
-					return this.handleRegularCall_.apply(this, arguments);
-				}
-			}
-
-			/**
-    * Handles the `dataPropChanged` event. Overrides original method from
-    * `ComponentRenderer` to guarantee that `IncrementalDomRenderer`'s logic
-    * will run first.
-    * @param {!Object} data
-    * @override
-    * @protected
-    */
-
-		}, {
-			key: 'handleRendererStateKeyChanged_',
-			value: function handleRendererStateKeyChanged_(data) {
-				this.handleStateKeyChanged_(data);
-				babelHelpers.get(IncrementalDomRenderer.prototype.__proto__ || Object.getPrototypeOf(IncrementalDomRenderer.prototype), 'handleRendererStateKeyChanged_', this).call(this, data);
-			}
-
-			/**
-    * Handles an intercepted call to the `elementOpen` function from incremental
-    * dom, done for a regular element. Adds any inline listeners found on the
-    * first render and makes sure that component root elements are always reused.
-    * @protected
-    */
-
-		}, {
-			key: 'handleRegularCall_',
-			value: function handleRegularCall_() {
-				for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-					args[_key] = arguments[_key];
-				}
-
-				args[1] = this.generateKey_(args[1]);
-				var currComp = IncrementalDomRenderer.getComponentBeingRendered();
-				var currRenderer = currComp.getRenderer();
-				if (!currRenderer.rootElementReached_) {
-					var elementClasses = currComp.getDataManager().get(currComp, 'elementClasses');
-					if (elementClasses) {
-						this.addElementClasses_(elementClasses, args);
-					}
-				}
-
-				var node = IncrementalDomAop.getOriginalFn('elementOpen').apply(null, args);
-				this.resetNodeData_(node);
-				this.attachDecoratedListeners_(node, args);
-				this.updateElementIfNotReached_(node);
-
-				var ref = node.getAttribute('ref');
-				if (isDefAndNotNull(ref)) {
-					var owner = IncrementalDomChildren.getCurrentOwner() || this;
-					owner.getComponent().refs[ref] = node;
-				}
-				return node;
-			}
-
-			/**
-    * Handles the `stateKeyChanged` event. Stores data that has changed since the
-    * last render.
-    * @param {!Object} data
-    * @protected
-    */
-
-		}, {
-			key: 'handleStateKeyChanged_',
-			value: function handleStateKeyChanged_(data) {
-				this.changes_ = this.changes_ || {};
-				this.changes_[data.key] = data;
-			}
-
-			/**
-    * Handles an intercepted call to the `elementOpen` function from incremental
-    * dom, done for a sub component element. Creates and updates the appropriate
-    * sub component.
-    * @protected
-    */
-
-		}, {
-			key: 'handleSubComponentCall_',
-			value: function handleSubComponentCall_() {
-				for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-					args[_key2] = arguments[_key2];
-				}
-
-				var props = IncrementalDomUtils.buildConfigFromCall(args);
-				this.componentToRender_ = {
-					props: props,
-					tag: args[0]
-				};
-				IncrementalDomChildren.capture(this, this.handleChildrenCaptured_);
-			}
-
-			/**
-    * Checks if the component's data has changed.
-    * @return {boolean}
-    * @protected
-    */
-
-		}, {
-			key: 'hasDataChanged_',
-			value: function hasDataChanged_() {
-				return this.changes_ && Object.keys(this.changes_).length > 0;
-			}
-
-			/**
-    * Intercepts incremental dom calls from this component.
-    * @protected
-    */
-
-		}, {
-			key: 'intercept_',
-			value: function intercept_() {
-				IncrementalDomAop.startInterception({
-					attributes: this.handleInterceptedAttributesCall_,
-					elementOpen: this.handleInterceptedOpenCall_
-				}, this);
-			}
+			key: 'handleNodeRendered',
+			value: function handleNodeRendered() {}
 
 			/**
     * Checks if the given object is an incremental dom node.
@@ -8303,124 +9123,44 @@ babelHelpers;
     */
 
 		}, {
-			key: 'isMatch_',
-
-
-			/**
-    * Checks if the given component can be a match for a constructor.
-    * @param {!Component} comp
-    * @param {!function()} Ctor
-    * @return {boolean}
-    * @protected
-    */
-			value: function isMatch_(comp, Ctor) {
-				if (!comp || comp.constructor !== Ctor || comp.isDisposed()) {
-					return false;
-				}
-				return comp.getRenderer().getOwner() === this.component_;
+			key: 'isIncDomNode',
+			value: function isIncDomNode(node) {
+				return !!getOwner(node);
 			}
 
 			/**
-    * Returns the given component if it matches the specified constructor
-    * function. Otherwise, returns a new instance of the given constructor. On
-    * both cases the component's state and config will be updated.
-    * @param {Component} comp
-    * @param {!function()} Ctor
-    * @param {!Object} config
-    * @return {!Component}
-    * @protected
-    */
-
-		}, {
-			key: 'match_',
-			value: function match_(comp, Ctor, config) {
-				if (!this.isMatch_(comp, Ctor)) {
-					comp = new Ctor(config, false);
-				}
-				if (comp.wasRendered) {
-					comp.getRenderer().startSkipUpdates();
-					comp.getDataManager().replaceNonInternal(comp, config);
-					comp.getRenderer().stopSkipUpdates();
-				}
-				comp.getRenderer().config_ = config;
-				return comp;
-			}
-
-			/**
-    * Patches the component's element with the incremental dom function calls
-    * done by `renderInsidePatchDontSkip_`.
+    * Calls incremental dom's patch function to render the component.
+    * @param {!Component} component
     */
 
 		}, {
 			key: 'patch',
-			value: function patch() {
-				this.isPatching_ = true;
-				if (!this.component_.element && this.parent_) {
-					// If the component has no content but was rendered from another component,
-					// we'll need to patch this parent to make sure that any new content will
-					// be added in the right place.
-					this.parent_.getRenderer().patch();
-					return;
-				}
-
-				var tempParent = this.guaranteeParent_();
-				if (tempParent) {
-					IncrementalDOM.patch(tempParent, this.renderInsidePatchDontSkip_);
-					exitDocument(this.component_.element);
-					if (this.component_.element && this.component_.inDocument) {
-						var attachData = this.component_.getAttachData();
-						this.component_.renderElement_(attachData.parent, attachData.sibling);
-					}
-				} else {
-					var element = this.component_.element;
-					IncrementalDOM.patchOuter(element, this.renderInsidePatchDontSkip_);
-				}
-				this.isPatching_ = false;
+			value: function patch(component) {
+				_patch(component);
 			}
 
 			/**
-    * Removes duplicate css classes from the given string.
-    * @param {string} cssClasses
-    * @return {string}
-    * @protected
-    */
-
-		}, {
-			key: 'removeDuplicateClasses_',
-			value: function removeDuplicateClasses_(cssClasses) {
-				var noDuplicates = [];
-				var all = cssClasses.split(/\s+/);
-				var used = {};
-				for (var i = 0; i < all.length; i++) {
-					if (!used[all[i]]) {
-						used[all[i]] = true;
-						noDuplicates.push(all[i]);
-					}
-				}
-				return noDuplicates.join(' ');
-			}
-
-			/**
-    * Creates and renders the given function, which can either be a simple
-    * incremental dom function or a component constructor.
-    * @param {!function()} fnOrCtor Either be a simple incremental dom function
-    or a component constructor.
+    * Renders the renderer's component for the first time, patching its element
+    * through incremental dom function calls. If the first arg is a function
+    * instead of a component instance, creates and renders this function, which
+    * can either be a simple incremental dom function or a component constructor.
+    * @param {!Component} component
+    * @param {!Component|function()} component Can be a component instance, a
+    *     simple incremental dom function or a component constructor.
     * @param {Object|Element=} opt_dataOrElement Optional config data for the
-    *     function or parent for the rendered content.
+    *     function, or parent for the rendered content.
     * @param {Element=} opt_parent Optional parent for the rendered content.
     * @return {!Component} The rendered component's instance.
     */
 
 		}, {
 			key: 'render',
-
-
-			/**
-    * Renders the renderer's component for the first time, patching its element
-    * through the incremental dom function calls done by `renderIncDom`.
-    */
-			value: function render() {
-				this.patch();
+			value: function render(component, opt_dataOrElement, opt_parent) {
+				if (component instanceof Component) {
+					this.patch(component);
+				} else {
+					return renderFunction(this, component, opt_dataOrElement, opt_parent);
+				}
 			}
 
 			/**
@@ -8430,186 +9170,76 @@ babelHelpers;
 
 		}, {
 			key: 'renderChild',
-
-
-			/**
-    * Renders the given child node.
-    * @param {!Object} child
-    */
 			value: function renderChild(child) {
-				this.intercept_();
-				IncrementalDomChildren.render(child, this.handleChildRender_, this);
-				IncrementalDomAop.stopInterception();
-			}
-
-			/**
-    * Renders the contents for the given tag.
-    * @param {!function()|string} tag
-    * @param {!Object} config
-    * @protected
-    */
-
-		}, {
-			key: 'renderFromTag_',
-			value: function renderFromTag_(tag, config) {
-				if (isString(tag) || tag.prototype.getRenderer) {
-					var comp = this.renderSubComponent_(tag, config);
-					this.updateElementIfNotReached_(comp.element);
-					return comp.element;
-				} else {
-					return tag(config);
-				}
+				_renderChild(child);
 			}
 
 			/**
     * Calls functions from `IncrementalDOM` to build the component element's
     * content. Can be overriden by subclasses (for integration with template
     * engines for example).
+    * @param {!Component} component
     */
 
 		}, {
 			key: 'renderIncDom',
-			value: function renderIncDom() {
-				if (this.component_.render) {
-					this.component_.render();
+			value: function renderIncDom(component) {
+				if (component.render) {
+					component.render();
 				} else {
 					IncrementalDOM.elementVoid('div');
 				}
 			}
 
 			/**
-    * Runs the incremental dom functions for rendering this component, but
-    * doesn't call `patch` yet. Rather, this will be the function that should be
-    * called by `patch`.
+    * Runs the incremental dom functions for rendering this component, without
+    * calling `patch`. This function needs to be called inside a `patch`.
+    * @param {!Component} component
     */
 
 		}, {
 			key: 'renderInsidePatch',
-			value: function renderInsidePatch() {
-				if (this.component_.wasRendered && !this.shouldUpdate() && IncrementalDOM.currentPointer() === this.component_.element) {
-					if (this.component_.element) {
-						IncrementalDOM.skipNode();
-					}
-					return;
-				}
-				this.renderInsidePatchDontSkip_();
-			}
-
-			/**
-    * The same as `renderInsidePatch`, but without the check that may skip the
-    * render action.
-    * @protected
-    */
-
-		}, {
-			key: 'renderInsidePatchDontSkip_',
-			value: function renderInsidePatchDontSkip_() {
-				IncrementalDomRenderer.startedRenderingComponent(this.component_);
-				this.clearChanges_();
-				this.rootElementReached_ = false;
-				if (this.childComponents_) {
-					IncrementalDomUnusedComponents.schedule(this.childComponents_);
-					this.childComponents_ = null;
-				}
-				this.component_.refs = {};
-				this.intercept_();
-				this.renderIncDom();
-				IncrementalDomAop.stopInterception();
-				if (!this.rootElementReached_) {
-					this.component_.element = null;
-				}
-				this.handleRendered_();
-				IncrementalDomRenderer.finishedRenderingComponent();
-				this.resetData_(this.incDomData_);
-			}
-
-			/**
-    * This updates the sub component that is represented by the given data.
-    * The sub component is created, added to its parent and rendered. If it
-    * had already been rendered before though, it will only have its state
-    * updated instead.
-    * @param {string|!function()} tagOrCtor The tag name or constructor function.
-    * @param {!Object} config The config object for the sub component.
-    * @return {!Component} The updated sub component.
-    * @protected
-    */
-
-		}, {
-			key: 'renderSubComponent_',
-			value: function renderSubComponent_(tagOrCtor, config) {
-				var ownerRenderer = IncrementalDomChildren.getCurrentOwner() || this;
-				var owner = ownerRenderer.getComponent();
-				var comp = this.getSubComponent_(tagOrCtor, config, owner);
-				this.updateContext_(comp);
-				var renderer = comp.getRenderer();
-				if (renderer instanceof IncrementalDomRenderer) {
-					var parentComp = IncrementalDomRenderer.getComponentBeingRendered();
-					var parentRenderer = parentComp.getRenderer();
-					parentRenderer.getChildComponents().push(comp);
-					renderer.parent_ = parentComp;
-					renderer.owner_ = owner;
-					if (!config.key && !parentRenderer.rootElementReached_) {
-						config.key = parentRenderer.config_.key;
-					}
-					renderer.renderInsidePatch();
-				} else {
-					console.warn('IncrementalDomRenderer doesn\'t support rendering sub components ' + 'that don\'t use IncrementalDomRenderer as well, like:', comp);
-				}
-				if (!comp.wasRendered) {
-					comp.renderAsSubComponent();
-				}
-				return comp;
-			}
-
-			/**
-    * Resets the given incremental dom data object, preparing it for the next
-    * pass.
-    * @param {Object} data
-    * @protected
-    */
-
-		}, {
-			key: 'resetData_',
-			value: function resetData_(data) {
-				if (data) {
-					data.prevComps = data.currComps;
-					data.currComps = null;
-					data.currCount = null;
+			value: function renderInsidePatch(component) {
+				var shouldRender = !component.wasRendered || this.shouldUpdate(component, getChanges(component)) || IncrementalDOM.currentPointer() !== component.element;
+				if (shouldRender) {
+					render(component);
+				} else if (component.element) {
+					this.skipRender();
 				}
 			}
 
 			/**
-    * Resets all data stored in the given node.
-    * @param {!Element} node
-    * @protected
+    * Sets up this component to be used by this renderer.
+    * @param {!Component} component
     */
 
 		}, {
-			key: 'resetNodeData_',
-			value: function resetNodeData_(node) {
-				if (domData.has(node)) {
-					this.resetData_(domData.get(node).incDomData_);
-				}
+			key: 'setUp',
+			value: function setUp(component) {
+				component.context = {};
+				component.components = {};
+				component.refs = {};
+
+				var data = _getData(component);
+				data.config = component.getInitialConfig();
+				trackChanges(component);
 			}
 
 			/**
     * Checks if the component should be updated with the current state changes.
-    * Can be overridden by subclasses or implemented by components to provide
-    * customized behavior (only updating when a state property used by the
-    * template changes, for example).
+    * @param {!Component} component
+    * @param {Object} changes
     * @return {boolean}
     */
 
 		}, {
 			key: 'shouldUpdate',
-			value: function shouldUpdate() {
-				if (!this.hasDataChanged_()) {
+			value: function shouldUpdate(component, changes) {
+				if (!changes) {
 					return false;
 				}
-				if (this.component_.shouldUpdate) {
-					var _component_;
-
-					return (_component_ = this.component_).shouldUpdate.apply(_component_, babelHelpers.toConsumableArray(this.buildShouldUpdateArgs_()));
+				if (component.shouldUpdate) {
+					return component.shouldUpdate.apply(component, babelHelpers.toConsumableArray(this.buildShouldUpdateArgs(changes)));
 				}
 				return true;
 			}
@@ -8619,172 +9249,50 @@ babelHelpers;
     * if there were no children rendered the last time. This can be useful for
     * allowing components to be reused by other parent components in separate
     * render update cycles.
+    * @param {!Component} component
     */
 
 		}, {
 			key: 'skipNextChildrenDisposal',
-			value: function skipNextChildrenDisposal() {
-				this.childComponents_ = null;
+			value: function skipNextChildrenDisposal(component) {
+				_getData(component).childComponents = null;
 			}
 
 			/**
-    * Stores the component that has just started being rendered.
-    * @param {!Component} comp
+    * Skips rendering the current node.
+    */
+
+		}, {
+			key: 'skipRender',
+			value: function skipRender() {
+				IncrementalDOM.skipNode();
+			}
+
+			/**
+    * Updates the renderer's component when state changes, patching its element
+    * through incremental dom function calls.
+    * @param {!Component} component
     */
 
 		}, {
 			key: 'update',
-
-
-			/**
-    * Updates the renderer's component when state changes, patching its element
-    * through the incremental dom function calls done by `renderIncDom`. Makes
-    * sure that it won't cause a rerender if the only change was for the
-    * "element" property.
-    */
-			value: function update() {
-				if (this.shouldUpdate()) {
-					this.patch();
+			value: function update(component) {
+				if (this.shouldUpdate(component, getChanges(component))) {
+					this.patch(component);
 				}
-			}
-
-			/**
-    * Updates this renderer's component's element with the given values, unless
-    * it has already been reached by an earlier call.
-    * @param {!Element} node
-    * @protected
-    */
-
-		}, {
-			key: 'updateElementIfNotReached_',
-			value: function updateElementIfNotReached_(node) {
-				var currComp = IncrementalDomRenderer.getComponentBeingRendered();
-				var currRenderer = currComp.getRenderer();
-				if (!currRenderer.rootElementReached_) {
-					currRenderer.rootElementReached_ = true;
-					if (currComp.element !== node) {
-						currComp.element = node;
-					}
-				}
-			}
-
-			/**
-    * Updates the given component's context according to the data from the
-    * component that is currently being rendered.
-    * @param {!Component} comp
-    * @protected
-    */
-
-		}, {
-			key: 'updateContext_',
-			value: function updateContext_(comp) {
-				var context = comp.context;
-				var parent = IncrementalDomRenderer.getComponentBeingRendered();
-				var childContext = parent.getChildContext ? parent.getChildContext() : null;
-				object.mixin(context, parent.context, childContext);
-				comp.context = context;
-			}
-		}], [{
-			key: 'finishedRenderingComponent',
-			value: function finishedRenderingComponent() {
-				renderingComponents_.pop();
-				if (renderingComponents_.length === 0) {
-					IncrementalDomUnusedComponents.disposeUnused();
-				}
-			}
-		}, {
-			key: 'getComponentBeingRendered',
-			value: function getComponentBeingRendered() {
-				return renderingComponents_[renderingComponents_.length - 1];
-			}
-
-			/**
-    * Gets the data object that should be currently used. This object will either
-    * come from the current element being rendered by incremental dom or from
-    * the component instance being rendered (only when the current element is the
-    * component's direct parent).
-    * @return {!Object}
-    */
-
-		}, {
-			key: 'getCurrentData',
-			value: function getCurrentData() {
-				var element = IncrementalDOM.currentElement();
-				var comp = IncrementalDomRenderer.getComponentBeingRendered();
-				var renderer = comp.getRenderer();
-				var obj = renderer;
-				if (renderer.rootElementReached_ && element !== comp.element.parentNode) {
-					obj = domData.get(element);
-				}
-				obj.incDomData_ = obj.incDomData_ || {};
-				return obj.incDomData_;
-			}
-		}, {
-			key: 'isIncDomNode',
-			value: function isIncDomNode(node) {
-				return !!node[IncrementalDomChildren.CHILD_OWNER];
-			}
-		}, {
-			key: 'render',
-			value: function render(fnOrCtor, opt_dataOrElement, opt_parent) {
-				if (!Component.isComponentCtor(fnOrCtor)) {
-					var fn = fnOrCtor;
-
-					var TempComponent = function (_Component) {
-						babelHelpers.inherits(TempComponent, _Component);
-
-						function TempComponent() {
-							babelHelpers.classCallCheck(this, TempComponent);
-							return babelHelpers.possibleConstructorReturn(this, (TempComponent.__proto__ || Object.getPrototypeOf(TempComponent)).apply(this, arguments));
-						}
-
-						babelHelpers.createClass(TempComponent, [{
-							key: 'created',
-							value: function created() {
-								if (IncrementalDomRenderer.getComponentBeingRendered()) {
-									this.getRenderer().updateContext_(this);
-								}
-							}
-						}, {
-							key: 'render',
-							value: function render() {
-								fn(this.getRenderer().config_);
-							}
-						}]);
-						return TempComponent;
-					}(Component);
-
-					TempComponent.RENDERER = IncrementalDomRenderer;
-					fnOrCtor = TempComponent;
-				}
-				return Component.render(fnOrCtor, opt_dataOrElement, opt_parent);
-			}
-		}, {
-			key: 'renderChild',
-			value: function renderChild(child) {
-				child[IncrementalDomChildren.CHILD_OWNER].renderChild(child);
-			}
-		}, {
-			key: 'startedRenderingComponent',
-			value: function startedRenderingComponent(comp) {
-				renderingComponents_.push(comp);
 			}
 		}]);
 		return IncrementalDomRenderer;
-	}(ComponentRenderer);
+	}(ComponentRenderer.constructor);
 
-	var renderingComponents_ = [];
-	var emptyChildren_ = [];
-
-	// Regex pattern used to find inline listeners.
-	IncrementalDomRenderer.LISTENER_REGEX = /^(?:on([A-Z]\w+))|(?:data-on(\w+))$/;
+	var renderer = new IncrementalDomRenderer();
 
 	// Name of this renderer. Renderers should provide this as a way to identify
 	// them via a simple string (when calling enableCompatibilityMode to add
 	// support to old features for specific renderers for example).
-	IncrementalDomRenderer.RENDERER_NAME = 'incremental-dom';
+	renderer.RENDERER_NAME = 'incremental-dom';
 
-	this['metal']['IncrementalDomRenderer'] = IncrementalDomRenderer;
+	this['metal']['IncrementalDomRenderer'] = renderer;
 }).call(this);
 'use strict';
 
@@ -13294,7 +13802,7 @@ babelHelpers;
       goog.module('incrementaldom');
       return IncrementalDOM;
     });
-  }).call(window);
+  }).call(typeof exports !== 'undefined' && typeof global !== 'undefined' ? global : window);
 }).call(this);
 "use strict";
 
@@ -13829,10 +14337,11 @@ babelHelpers;
 
 			/**
     * Adds the template params to the component's state, if they don't exist yet.
-    * @protected
+    * @param {!Component} component
+    * @return {Object}
     */
-			value: function getExtraDataConfig() {
-				var elementTemplate = this.component_.constructor.TEMPLATE;
+			value: function getExtraDataConfig(component) {
+				var elementTemplate = component.constructor.TEMPLATE;
 				if (!isFunction(elementTemplate)) {
 					return;
 				}
@@ -13841,7 +14350,6 @@ babelHelpers;
 				this.soyParamTypes_ = elementTemplate.types || {};
 
 				var keys = elementTemplate.params || [];
-				var component = this.component_;
 				var configs = {};
 				for (var i = 0; i < keys.length; i++) {
 					if (!component[keys[i]]) {
@@ -13856,6 +14364,9 @@ babelHelpers;
     * template call's data. The copying needs to be done because, if the component
     * itself is passed directly, some problems occur when soy tries to merge it
     * with other data, due to property getters and setters. This is safer.
+    * Also calls the component's "prepareStateForRender" to let it change the
+    * data passed to the template.
+    * @param {!Component} component
     * @param {!Array<string>} params The params used by this template.
     * @return {!Object}
     * @protected
@@ -13863,24 +14374,29 @@ babelHelpers;
 
 		}, {
 			key: 'buildTemplateData_',
-			value: function buildTemplateData_(params) {
+			value: function buildTemplateData_(component, params) {
 				var _this2 = this;
 
-				var component = this.component_;
-				var data = object.mixin({}, this.config_);
+				var data = object.mixin({}, this.getConfig(component));
 				component.getStateKeys().forEach(function (key) {
 					var value = component[key];
-					if (_this2.isHtmlParam_(key)) {
-						value = Soy.toIncDom(value);
+					if (_this2.isHtmlParam_(component, key)) {
+						value = soyRenderer_.toIncDom(value);
 					}
 					data[key] = value;
 				});
+
 				for (var i = 0; i < params.length; i++) {
 					if (!data[params[i]] && isFunction(component[params[i]])) {
 						data[params[i]] = component[params[i]].bind(component);
 					}
 				}
-				return data;
+
+				if (isFunction(component.prepareStateForRender)) {
+					return component.prepareStateForRender(data) || data;
+				} else {
+					return data;
+				}
 			}
 
 			/**
@@ -13893,92 +14409,6 @@ babelHelpers;
     */
 
 		}, {
-			key: 'isHtmlParam_',
-
-
-			/**
-    * Checks if the given param type is html.
-    * @param {string} name
-    * @protected
-    */
-			value: function isHtmlParam_(name) {
-				var state = this.component_.getDataManager().getStateInstance(this.component_);
-				if (state.getStateKeyConfig(name).isHtml) {
-					return true;
-				}
-				var type = this.soyParamTypes_[name] || '';
-				return type.split('|').indexOf('html') !== -1;
-			}
-
-			/**
-    * Registers the given templates to be used by `Soy` for the specified
-    * component constructor.
-    * @param {!Function} componentCtor The constructor of the component that
-    *     should use the given templates.
-    * @param {!Object} templates Object containing soy template functions.
-    * @param {string=} mainTemplate The name of the main template that should be
-    *     used to render the component. Defaults to "render".
-    */
-
-		}, {
-			key: 'renderIncDom',
-
-
-			/**
-    * Overrides the default method from `IncrementalDomRenderer` so the component's
-    * soy template can be used for rendering.
-    * @param {!Object} data Data passed to the component when rendering it.
-    * @override
-    */
-			value: function renderIncDom() {
-				var elementTemplate = this.component_.constructor.TEMPLATE;
-				if (isFunction(elementTemplate) && !this.component_.render) {
-					elementTemplate = SoyAop.getOriginalFn(elementTemplate);
-					SoyAop.startInterception(Soy.handleInterceptedCall_);
-					elementTemplate(this.buildTemplateData_(elementTemplate.params || []), null, ijData);
-					SoyAop.stopInterception();
-				} else {
-					babelHelpers.get(Soy.prototype.__proto__ || Object.getPrototypeOf(Soy.prototype), 'renderIncDom', this).call(this);
-				}
-			}
-
-			/**
-    * Sets the injected data object that should be passed to templates.
-    * @param {Object} data
-    */
-
-		}, {
-			key: 'shouldUpdate',
-
-
-			/**
-    * Overrides the original `IncrementalDomRenderer` method so that only
-    * state keys used by the main template can cause updates.
-    * @return {boolean}
-    */
-			value: function shouldUpdate() {
-				var should = babelHelpers.get(Soy.prototype.__proto__ || Object.getPrototypeOf(Soy.prototype), 'shouldUpdate', this).call(this);
-				if (!should || this.component_.shouldUpdate) {
-					return should;
-				}
-
-				var fn = this.component_.constructor.TEMPLATE;
-				var params = fn ? SoyAop.getOriginalFn(fn).params : [];
-				for (var i = 0; i < params.length; i++) {
-					if (this.changes_[params[i]]) {
-						return true;
-					}
-				}
-				return false;
-			}
-
-			/**
-    * Converts the given incremental dom function into an html string.
-    * @param {!function()} incDomFn
-    * @return {string}
-    */
-
-		}], [{
 			key: 'getTemplate',
 			value: function getTemplate(namespace, templateName) {
 				return function (opt_data, opt_ignored, opt_ijData) {
@@ -14010,22 +14440,115 @@ babelHelpers;
 				}
 				IncrementalDOM.elementVoid.apply(null, args);
 			}
+
+			/**
+    * Checks if the given param type is html.
+    * @param {!Component} component
+    * @param {string} name
+    * @protected
+    */
+
+		}, {
+			key: 'isHtmlParam_',
+			value: function isHtmlParam_(component, name) {
+				var state = component.getDataManager().getStateInstance(component);
+				if (state.getStateKeyConfig(name).isHtml) {
+					return true;
+				}
+
+				var elementTemplate = SoyAop.getOriginalFn(component.constructor.TEMPLATE);
+				var type = (elementTemplate.types || {})[name] || '';
+				return type.split('|').indexOf('html') !== -1;
+			}
+
+			/**
+    * Registers the given templates to be used by `Soy` for the specified
+    * component constructor.
+    * @param {!Function} componentCtor The constructor of the component that
+    *     should use the given templates.
+    * @param {!Object} templates Object containing soy template functions.
+    * @param {string=} mainTemplate The name of the main template that should be
+    *     used to render the component. Defaults to "render".
+    */
+
 		}, {
 			key: 'register',
 			value: function register(componentCtor, templates) {
 				var mainTemplate = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'render';
 
-				componentCtor.RENDERER = Soy;
+				componentCtor.RENDERER = soyRenderer_;
 				componentCtor.TEMPLATE = SoyAop.getOriginalFn(templates[mainTemplate]);
 				componentCtor.TEMPLATE.componentCtor = componentCtor;
 				SoyAop.registerForInterception(templates, mainTemplate);
 				ComponentRegistry.register(componentCtor);
 			}
+
+			/**
+    * Overrides the default method from `IncrementalDomRenderer` so the component's
+    * soy template can be used for rendering.
+    * @param {!Component} component
+    * @param {!Object} data Data passed to the component when rendering it.
+    * @override
+    */
+
+		}, {
+			key: 'renderIncDom',
+			value: function renderIncDom(component) {
+				var elementTemplate = component.constructor.TEMPLATE;
+				if (isFunction(elementTemplate) && !component.render) {
+					elementTemplate = SoyAop.getOriginalFn(elementTemplate);
+					SoyAop.startInterception(this.handleInterceptedCall_);
+					var data = this.buildTemplateData_(component, elementTemplate.params || []);
+					elementTemplate(data, null, ijData);
+					SoyAop.stopInterception();
+				} else {
+					babelHelpers.get(Soy.prototype.__proto__ || Object.getPrototypeOf(Soy.prototype), 'renderIncDom', this).call(this, component);
+				}
+			}
+
+			/**
+    * Sets the injected data object that should be passed to templates.
+    * @param {Object} data
+    */
+
 		}, {
 			key: 'setInjectedData',
 			value: function setInjectedData(data) {
 				ijData = data || {};
 			}
+
+			/**
+    * Overrides the original `IncrementalDomRenderer` method so that only
+    * state keys used by the main template can cause updates.
+    * @param {!Component} component
+    * @param {Object} changes
+    * @return {boolean}
+    */
+
+		}, {
+			key: 'shouldUpdate',
+			value: function shouldUpdate(component, changes) {
+				var should = babelHelpers.get(Soy.prototype.__proto__ || Object.getPrototypeOf(Soy.prototype), 'shouldUpdate', this).call(this, component, changes);
+				if (!should || component.shouldUpdate) {
+					return should;
+				}
+
+				var fn = component.constructor.TEMPLATE;
+				var params = fn ? SoyAop.getOriginalFn(fn).params : [];
+				for (var i = 0; i < params.length; i++) {
+					if (changes.props[params[i]]) {
+						return true;
+					}
+				}
+				return false;
+			}
+
+			/**
+    * Converts the given incremental dom function into an html string.
+    * @param {!function()} incDomFn
+    * @return {string}
+    */
+
 		}, {
 			key: 'toHtmlString',
 			value: function toHtmlString(incDomFn) {
@@ -14053,171 +14576,15 @@ babelHelpers;
 			}
 		}]);
 		return Soy;
-	}(IncrementalDomRenderer);
+	}(IncrementalDomRenderer.constructor);
 
-	Soy.RENDERER_NAME = 'soy';
+	var soyRenderer_ = new Soy();
+	soyRenderer_.RENDERER_NAME = 'soy';
 
-	this['metal']['Soy'] = Soy;
+	this['metal']['Soy'] = soyRenderer_;
 	this['metalNamed']['Soy'] = this['metalNamed']['Soy'] || {};
-	this['metalNamed']['Soy']['Soy'] = Soy;
+	this['metalNamed']['Soy']['Soy'] = soyRenderer_;
 	this['metalNamed']['Soy']['SoyAop'] = SoyAop;
-}).call(this);
-'use strict';
-
-(function () {
-  /* jshint ignore:start */
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-
-  var templates;
-  goog.loadModule(function (exports) {
-
-    // This file was automatically generated from ElectricNavigation.soy.
-    // Please don't edit this file by hand.
-
-    /**
-     * @fileoverview Templates in namespace ElectricNavigation.
-     * @hassoydeltemplate {ElectricNavigation.anchor.idom}
-     * @hassoydelcall {ElectricNavigation.anchor.idom}
-     * @public
-     */
-
-    goog.module('ElectricNavigation.incrementaldom');
-
-    /** @suppress {extraRequire} */
-    var soy = goog.require('soy');
-    /** @suppress {extraRequire} */
-    var soydata = goog.require('soydata');
-    /** @suppress {extraRequire} */
-    goog.require('goog.i18n.bidi');
-    /** @suppress {extraRequire} */
-    goog.require('goog.asserts');
-    /** @suppress {extraRequire} */
-    goog.require('goog.string');
-    var IncrementalDom = goog.require('incrementaldom');
-    var ie_open = IncrementalDom.elementOpen;
-    var ie_close = IncrementalDom.elementClose;
-    var ie_void = IncrementalDom.elementVoid;
-    var ie_open_start = IncrementalDom.elementOpenStart;
-    var ie_open_end = IncrementalDom.elementOpenEnd;
-    var itext = IncrementalDom.text;
-    var iattr = IncrementalDom.attr;
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $render(opt_data, opt_ignored, opt_ijData) {
-      var $$temp;
-      var localAnchorVariant__soy3 = ($$temp = opt_data.anchorVariant) == null ? 'basic' : $$temp;
-      var localCurrentDepth__soy4 = ($$temp = opt_data.currentDepth) == null ? 0 : $$temp;
-      var localListItemActiveClasses__soy5 = ($$temp = opt_data.listItemActiveClasses) == null ? 'active' : $$temp;
-      if (opt_data.section.children) {
-        ie_open('ul', null, null, 'class', ($$temp = opt_data.elementClasses) == null ? '' : $$temp);
-        var pageList32 = opt_data.section.children;
-        var pageListLen32 = pageList32.length;
-        for (var pageIndex32 = 0; pageIndex32 < pageListLen32; pageIndex32++) {
-          var pageData32 = pageList32[pageIndex32];
-          if (!pageData32.hidden) {
-            ie_open('li', null, null, 'class', (($$temp = opt_data.listItemClasses) == null ? '' : $$temp) + (pageData32.active ? ' ' + localListItemActiveClasses__soy5 : ''));
-            soy.$$getDelegateFn(soy.$$getDelTemplateId('ElectricNavigation.anchor.idom'), localAnchorVariant__soy3, false)(soy.$$assignDefaults({ page: pageData32 }, opt_data), null, opt_ijData);
-            if (!opt_data.depth || localCurrentDepth__soy4 + 1 < opt_data.depth) {
-              $render({ anchorVariant: localAnchorVariant__soy3, currentDepth: localCurrentDepth__soy4 + 1, currentURL: opt_data.currentURL, depth: opt_data.depth, elementClasses: opt_data.elementClasses, linkClasses: opt_data.linkClasses, listItemActiveClasses: opt_data.listItemActiveClasses, listItemClasses: opt_data.listItemClasses, section: pageData32 }, null, opt_ijData);
-            }
-            ie_close('li');
-          }
-        }
-        ie_close('ul');
-      }
-    }
-    exports.render = $render;
-    if (goog.DEBUG) {
-      $render.soyTemplateName = 'ElectricNavigation.render';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function __deltemplate_s35_b83841ac(opt_data, opt_ignored, opt_ijData) {
-      var $$temp;
-      if (opt_data.page.url) {
-        ie_open('a', null, null, 'class', ($$temp = opt_data.linkClasses) == null ? '' : $$temp, 'href', opt_data.page.url);
-        ie_open('span');
-        var dyn0 = ($$temp = opt_data.page.title) == null ? 'Missing' : $$temp;
-        if (typeof dyn0 == 'function') dyn0();else if (dyn0 != null) itext(dyn0);
-        ie_close('span');
-        ie_close('a');
-      } else {
-        ie_open('span', null, null, 'class', ($$temp = opt_data.linkClasses) == null ? '' : $$temp);
-        var dyn1 = ($$temp = opt_data.page.title) == null ? 'Missing' : $$temp;
-        if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
-        ie_close('span');
-      }
-    }
-    exports.__deltemplate_s35_b83841ac = __deltemplate_s35_b83841ac;
-    if (goog.DEBUG) {
-      __deltemplate_s35_b83841ac.soyTemplateName = 'ElectricNavigation.__deltemplate_s35_b83841ac';
-    }
-    soy.$$registerDelegateFn(soy.$$getDelTemplateId('ElectricNavigation.anchor.idom'), 'basic', 0, __deltemplate_s35_b83841ac);
-
-    exports.render.params = ["section", "anchorVariant", "currentDepth", "currentURL", "depth", "elementClasses", "linkClasses", "listItemActiveClasses", "listItemClasses"];
-    exports.render.types = { "section": "any", "anchorVariant": "any", "currentDepth": "any", "currentURL": "any", "depth": "any", "elementClasses": "any", "linkClasses": "any", "listItemActiveClasses": "any", "listItemClasses": "any" };
-    templates = exports;
-    return exports;
-  });
-
-  var ElectricNavigation = function (_Component) {
-    babelHelpers.inherits(ElectricNavigation, _Component);
-
-    function ElectricNavigation() {
-      babelHelpers.classCallCheck(this, ElectricNavigation);
-      return babelHelpers.possibleConstructorReturn(this, (ElectricNavigation.__proto__ || Object.getPrototypeOf(ElectricNavigation)).apply(this, arguments));
-    }
-
-    return ElectricNavigation;
-  }(Component);
-
-  Soy.register(ElectricNavigation, templates);
-  this['metalNamed']['ElectricNavigation'] = this['metalNamed']['ElectricNavigation'] || {};
-  this['metalNamed']['ElectricNavigation']['ElectricNavigation'] = ElectricNavigation;
-  this['metalNamed']['ElectricNavigation']['templates'] = templates;
-  this['metal']['ElectricNavigation'] = templates;
-  /* jshint ignore:end */
-}).call(this);
-'use strict';
-
-(function () {
-	var Component = this['metal']['component'];
-	var Soy = this['metal']['Soy'];
-	var templates = this['metal']['ElectricNavigation'];
-
-	var ElectricNavigation = function (_Component) {
-		babelHelpers.inherits(ElectricNavigation, _Component);
-
-		function ElectricNavigation() {
-			babelHelpers.classCallCheck(this, ElectricNavigation);
-			return babelHelpers.possibleConstructorReturn(this, (ElectricNavigation.__proto__ || Object.getPrototypeOf(ElectricNavigation)).apply(this, arguments));
-		}
-
-		babelHelpers.createClass(ElectricNavigation, [{
-			key: 'attached',
-			value: function attached() {}
-		}]);
-		return ElectricNavigation;
-	}(Component);
-
-	;
-
-	Soy.register(ElectricNavigation, templates);
-
-	this['metal']['ElectricNavigation'] = ElectricNavigation;
 }).call(this);
 'use strict';
 
@@ -14893,6 +15260,844 @@ babelHelpers;
   this['metalNamed']['position']['Align'] = Align;
   this['metalNamed']['position']['Geometry'] = Geometry;
   this['metalNamed']['position']['Position'] = Position;
+}).call(this);
+'use strict';
+
+(function () {
+	var core = this['metal']['metal'];
+	var dom = this['metal']['dom'];
+	var Align = this['metalNamed']['position']['Align'];
+	var Component = this['metal']['component'];
+	var EventHandler = this['metalNamed']['events']['EventHandler'];
+
+	/**
+  * The base class to be shared between components that have tooltip behavior.
+  * This helps decouple this behavior logic from the UI, which may be different
+  * between components. The Tooltip component itself extends from this, as does
+  * the crystal Popover component, which can be accessed at metal/crystal-popover.
+  */
+
+	var TooltipBase = function (_Component) {
+		babelHelpers.inherits(TooltipBase, _Component);
+
+		function TooltipBase() {
+			babelHelpers.classCallCheck(this, TooltipBase);
+			return babelHelpers.possibleConstructorReturn(this, (TooltipBase.__proto__ || Object.getPrototypeOf(TooltipBase)).apply(this, arguments));
+		}
+
+		babelHelpers.createClass(TooltipBase, [{
+			key: 'attached',
+
+			/**
+    * @inheritDoc
+    */
+			value: function attached() {
+				this.align();
+				this.syncTriggerEvents(this.triggerEvents);
+			}
+
+			/**
+    * @inheritDoc
+    */
+
+		}, {
+			key: 'created',
+			value: function created() {
+				this.currentAlignElement = this.alignElement;
+				this.eventHandler_ = new EventHandler();
+			}
+
+			/**
+    * @inheritDoc
+    */
+
+		}, {
+			key: 'detached',
+			value: function detached() {
+				this.eventHandler_.removeAllListeners();
+			}
+
+			/**
+    * @inheritDoc
+    */
+
+		}, {
+			key: 'disposeInternal',
+			value: function disposeInternal() {
+				babelHelpers.get(TooltipBase.prototype.__proto__ || Object.getPrototypeOf(TooltipBase.prototype), 'disposeInternal', this).call(this);
+				clearTimeout(this.delay_);
+			}
+
+			/**
+    * Aligns the tooltip with the best region around alignElement. The best
+    * region is defined by clockwise rotation starting from the specified
+    * `position`. The element is always aligned in the middle of alignElement
+    * axis.
+    * @param {Element=} opt_alignElement Optional element to align with.
+    */
+
+		}, {
+			key: 'align',
+			value: function align(opt_alignElement) {
+				this.syncCurrentAlignElement(opt_alignElement || this.currentAlignElement);
+			}
+
+			/**
+    * @param {!function()} fn
+    * @param {number} delay
+    * @private
+    */
+
+		}, {
+			key: 'callAsync_',
+			value: function callAsync_(fn, delay) {
+				clearTimeout(this.delay_);
+				this.delay_ = setTimeout(fn.bind(this), delay);
+			}
+
+			/**
+    * Handles hide event triggered by `events`.
+    * @param {!Event} event
+    * @protected
+    */
+
+		}, {
+			key: 'handleHide',
+			value: function handleHide(event) {
+				var delegateTarget = event.delegateTarget;
+				var interactingWithDifferentTarget = delegateTarget && delegateTarget !== this.currentAlignElement;
+				this.callAsync_(function () {
+					if (this.locked_) {
+						return;
+					}
+					if (interactingWithDifferentTarget) {
+						this.currentAlignElement = delegateTarget;
+					} else {
+						this.visible = false;
+						this.syncVisible(false);
+					}
+				}, this.delay[1]);
+			}
+
+			/**
+    * Handles show event triggered by `events`.
+    * @param {!Event} event
+    * @protected
+    */
+
+		}, {
+			key: 'handleShow',
+			value: function handleShow(event) {
+				var delegateTarget = event.delegateTarget;
+				babelHelpers.get(TooltipBase.prototype.__proto__ || Object.getPrototypeOf(TooltipBase.prototype), 'syncVisible', this).call(this, true);
+				this.callAsync_(function () {
+					this.currentAlignElement = delegateTarget;
+					this.visible = true;
+				}, this.delay[0]);
+			}
+
+			/**
+    * Handles toggle event triggered by `events`.
+    * @param {!Event} event
+    * @protected
+    */
+
+		}, {
+			key: 'handleToggle',
+			value: function handleToggle(event) {
+				if (this.visible) {
+					this.handleHide(event);
+				} else {
+					this.handleShow(event);
+				}
+			}
+
+			/**
+    * Locks tooltip visibility.
+    * @param {!Event} event
+    */
+
+		}, {
+			key: 'lock',
+			value: function lock() {
+				this.locked_ = true;
+			}
+
+			/**
+    * Unlocks tooltip visibility.
+    * @param {!Event} event
+    */
+
+		}, {
+			key: 'unlock',
+			value: function unlock(event) {
+				this.locked_ = false;
+				this.handleHide(event);
+			}
+
+			/**
+    * Synchronizes the value of the `currentAlignElement` internal state
+    * with the `alignElement`.
+    * @param {Element} alignElement
+    */
+
+		}, {
+			key: 'syncAlignElement',
+			value: function syncAlignElement(alignElement) {
+				this.currentAlignElement = alignElement;
+			}
+
+			/**
+    * State synchronization logic for `currentAlignElement`.
+    * @param {Element} alignElement
+    * @param {Element} prevAlignElement
+    */
+
+		}, {
+			key: 'syncCurrentAlignElement',
+			value: function syncCurrentAlignElement(alignElement, prevAlignElement) {
+				if (prevAlignElement) {
+					alignElement.removeAttribute('aria-describedby');
+				}
+				if (alignElement) {
+					var dataTitle = alignElement.getAttribute('data-title');
+					if (dataTitle) {
+						this.title = dataTitle;
+					}
+					if (this.inDocument) {
+						this.alignedPosition = TooltipBase.Align.align(this.element, alignElement, this.position);
+					}
+				}
+			}
+
+			/**
+    * State synchronization logic for `position`.
+    */
+
+		}, {
+			key: 'syncPosition',
+			value: function syncPosition() {
+				this.syncCurrentAlignElement(this.currentAlignElement);
+			}
+
+			/**
+    * State synchronization logic for `selector`.
+    */
+
+		}, {
+			key: 'syncSelector',
+			value: function syncSelector() {
+				this.syncTriggerEvents(this.triggerEvents);
+			}
+
+			/**
+    * State synchronization logic for `triggerEvents`.
+    * @param {!Array<string>} triggerEvents
+    */
+
+		}, {
+			key: 'syncTriggerEvents',
+			value: function syncTriggerEvents(triggerEvents) {
+				if (!this.inDocument) {
+					return;
+				}
+				this.eventHandler_.removeAllListeners();
+				var selector = this.selector;
+				if (!selector) {
+					return;
+				}
+
+				this.eventHandler_.add(this.on('mouseenter', this.lock), this.on('mouseleave', this.unlock));
+
+				if (triggerEvents[0] === triggerEvents[1]) {
+					this.eventHandler_.add(dom.delegate(document, triggerEvents[0], selector, this.handleToggle.bind(this)));
+				} else {
+					this.eventHandler_.add(dom.delegate(document, triggerEvents[0], selector, this.handleShow.bind(this)), dom.delegate(document, triggerEvents[1], selector, this.handleHide.bind(this)));
+				}
+			}
+
+			/**
+    * State synchronization logic for `visible`. Realigns the tooltip.
+    */
+
+		}, {
+			key: 'syncVisible',
+			value: function syncVisible() {
+				this.align();
+			}
+		}]);
+		return TooltipBase;
+	}(Component);
+
+	/**
+  * @inheritDoc
+  * @see `Align` class.
+  * @static
+  */
+
+
+	TooltipBase.Align = Align;
+
+	/**
+  * TooltipBase state definition.
+  * @type {!Object}
+  * @static
+  */
+	TooltipBase.STATE = {
+		/**
+   * The current position of the tooltip after being aligned via `Align.align`.
+   * @type {number}
+   */
+		alignedPosition: {
+			validator: TooltipBase.Align.isValidPosition
+		},
+
+		/**
+   * Element to align tooltip with.
+   * @type {Element}
+   */
+		alignElement: {
+			setter: dom.toElement
+		},
+
+		/**
+   * The current element aligned tooltip with.
+   * @type {Element}
+   */
+		currentAlignElement: {
+			internal: true,
+			setter: dom.toElement
+		},
+
+		/**
+   * Delay showing and hiding the tooltip (ms).
+   * @type {!Array<number>}
+   * @default [ 500, 250 ]
+   */
+		delay: {
+			validator: Array.isArray,
+			value: [500, 250]
+		},
+
+		/**
+   * Trigger events used to bind handlers to show and hide tooltip.
+   * @type {!Array<string>}
+   * @default ['mouseenter', 'mouseleave']
+   */
+		triggerEvents: {
+			validator: Array.isArray,
+			value: ['mouseenter', 'mouseleave']
+		},
+
+		/**
+   * If a selector is provided, tooltip objects will be delegated to the
+   * specified targets by setting the `alignElement`.
+   * @type {?string}
+   */
+		selector: {
+			validator: core.isString
+		},
+
+		/**
+   * The position to try alignment. If not possible the best position will be
+   * found.
+   * @type {number}
+   * @default Align.Bottom
+   */
+		position: {
+			validator: TooltipBase.Align.isValidPosition,
+			value: TooltipBase.Align.Bottom
+		},
+
+		/**
+   * Content to be placed inside tooltip.
+   * @type {string}
+   */
+		title: {}
+	};
+
+	/**
+  * CSS classes used for each align position.
+  * @type {!Array}
+  * @static
+  */
+	TooltipBase.PositionClasses = ['top', 'right', 'bottom', 'left'];
+
+	this['metal']['TooltipBase'] = TooltipBase;
+}).call(this);
+'use strict';
+
+(function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
+    // This file was automatically generated from Tooltip.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace Tooltip.
+     * @public
+     */
+
+    goog.module('Tooltip.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('soy.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    /**
+     * @param {{
+     *    alignedPosition: (?),
+     *    elementClasses: (?),
+     *    position: (?),
+     *    title: (?soydata.SanitizedHtml|string|undefined)
+     * }} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      opt_data = opt_data || {};
+      soy.asserts.assertType(opt_data.title == null || opt_data.title instanceof Function || opt_data.title instanceof goog.soy.data.SanitizedContent || opt_data.title instanceof soydata.UnsanitizedText || goog.isString(opt_data.title), 'title', opt_data.title, '?soydata.SanitizedHtml|string|undefined');
+      var title = /** @type {?soydata.SanitizedHtml|string|undefined} */opt_data.title;
+      var positionClasses__soy3 = ['top', 'top', 'right', 'bottom', 'bottom', 'bottom', 'left', 'top'];
+      var currentPosition__soy4 = opt_data.alignedPosition != null ? opt_data.alignedPosition : opt_data.position;
+      var positionClass__soy5 = currentPosition__soy4 != null ? positionClasses__soy3[currentPosition__soy4] : 'bottom';
+      ie_open('div', null, null, 'class', 'tooltip ' + positionClass__soy5 + (opt_data.elementClasses ? ' ' + opt_data.elementClasses : ''), 'role', 'tooltip');
+      ie_void('div', null, null, 'class', 'tooltip-arrow');
+      ie_open('section', null, null, 'class', 'tooltip-inner');
+      if (title) {
+        var dyn0 = title;
+        if (typeof dyn0 == 'function') dyn0();else if (dyn0 != null) itext(dyn0);
+      }
+      ie_close('section');
+      ie_close('div');
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'Tooltip.render';
+    }
+
+    exports.render.params = ["title", "alignedPosition", "elementClasses", "position"];
+    exports.render.types = { "title": "html|string", "alignedPosition": "any", "elementClasses": "any", "position": "any" };
+    templates = exports;
+    return exports;
+  });
+
+  var Tooltip = function (_Component) {
+    babelHelpers.inherits(Tooltip, _Component);
+
+    function Tooltip() {
+      babelHelpers.classCallCheck(this, Tooltip);
+      return babelHelpers.possibleConstructorReturn(this, (Tooltip.__proto__ || Object.getPrototypeOf(Tooltip)).apply(this, arguments));
+    }
+
+    return Tooltip;
+  }(Component);
+
+  Soy.register(Tooltip, templates);
+  this['metalNamed']['Tooltip'] = this['metalNamed']['Tooltip'] || {};
+  this['metalNamed']['Tooltip']['Tooltip'] = Tooltip;
+  this['metalNamed']['Tooltip']['templates'] = templates;
+  this['metal']['Tooltip'] = templates;
+  /* jshint ignore:end */
+}).call(this);
+'use strict';
+
+(function () {
+	var dom = this['metal']['dom'];
+	var Soy = this['metal']['Soy'];
+	var TooltipBase = this['metal']['TooltipBase'];
+	var templates = this['metal']['Tooltip'];
+
+	/**
+  * Tooltip component.
+  */
+
+	var Tooltip = function (_TooltipBase) {
+		babelHelpers.inherits(Tooltip, _TooltipBase);
+
+		function Tooltip() {
+			babelHelpers.classCallCheck(this, Tooltip);
+			return babelHelpers.possibleConstructorReturn(this, (Tooltip.__proto__ || Object.getPrototypeOf(Tooltip)).apply(this, arguments));
+		}
+
+		babelHelpers.createClass(Tooltip, [{
+			key: 'hideCompletely_',
+
+			/**
+    * Hides the alert completely (with display "none"). This is called after the
+    * hiding animation is done.
+    * @protected
+    */
+			value: function hideCompletely_() {
+				if (!this.isDisposed() && this.element && !this.visible) {
+					this.element.style.display = 'none';
+				}
+			}
+
+			/**
+    * State synchronization logic for `visible`. Updates the element's opacity,
+    * since bootstrap uses opacity instead of display for tooltip visibility.
+    * @param {boolean} visible
+    */
+
+		}, {
+			key: 'syncVisible',
+			value: function syncVisible(visible) {
+				if (!visible) {
+					dom.once(this.element, 'animationend', this.hideCompletely_.bind(this));
+					dom.once(this.element, 'transitionend', this.hideCompletely_.bind(this));
+				} else {
+					this.element.style.display = '';
+				}
+
+				this.element.style.opacity = visible ? 1 : '';
+				babelHelpers.get(Tooltip.prototype.__proto__ || Object.getPrototypeOf(Tooltip.prototype), 'syncVisible', this).call(this, visible);
+			}
+		}]);
+		return Tooltip;
+	}(TooltipBase);
+
+	Soy.register(Tooltip, templates);
+
+	/**
+  * @inheritDoc
+  * @see `Align` class.
+  * @static
+  */
+	Tooltip.Align = TooltipBase.Align;
+
+	this['metal']['Tooltip'] = Tooltip;
+	this['metalNamed']['Tooltip'] = this['metalNamed']['Tooltip'] || {};
+	this['metalNamed']['Tooltip']['Tooltip'] = Tooltip;
+	this['metalNamed']['Tooltip']['TooltipBase'] = TooltipBase;
+}).call(this);
+'use strict';
+
+(function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
+    // This file was automatically generated from ElectricCode.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace ElectricCode.
+     * @public
+     */
+
+    goog.module('ElectricCode.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      ie_open('div', null, null, 'class', 'code-container' + (opt_data.elementClasses ? ' ' + opt_data.elementClasses : ''));
+      ie_open('button', null, null, 'class', 'btn btn-sm btn-copy');
+      ie_void('span', null, null, 'class', 'icon-12-overlap');
+      ie_close('button');
+      ie_open('pre');
+      ie_open('code', null, null, 'class', 'code', 'data-mode', opt_data.mode, 'ref', 'code');
+      var dyn0 = opt_data.code;
+      if (typeof dyn0 == 'function') dyn0();else if (dyn0 != null) itext(dyn0);
+      ie_close('code');
+      ie_close('pre');
+      ie_close('div');
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'ElectricCode.render';
+    }
+
+    exports.render.params = ["code", "mode", "elementClasses"];
+    exports.render.types = { "code": "any", "mode": "any", "elementClasses": "any" };
+    templates = exports;
+    return exports;
+  });
+
+  var ElectricCode = function (_Component) {
+    babelHelpers.inherits(ElectricCode, _Component);
+
+    function ElectricCode() {
+      babelHelpers.classCallCheck(this, ElectricCode);
+      return babelHelpers.possibleConstructorReturn(this, (ElectricCode.__proto__ || Object.getPrototypeOf(ElectricCode)).apply(this, arguments));
+    }
+
+    return ElectricCode;
+  }(Component);
+
+  Soy.register(ElectricCode, templates);
+  this['metalNamed']['ElectricCode'] = this['metalNamed']['ElectricCode'] || {};
+  this['metalNamed']['ElectricCode']['ElectricCode'] = ElectricCode;
+  this['metalNamed']['ElectricCode']['templates'] = templates;
+  this['metal']['ElectricCode'] = templates;
+  /* jshint ignore:end */
+}).call(this);
+'use strict';
+
+(function () {
+	var Clipboard = this['metal']['Clipboard'];
+	var Component = this['metal']['component'];
+	var Tooltip = this['metal']['Tooltip'];
+	var Soy = this['metal']['Soy'];
+	var templates = this['metal']['ElectricCode'];
+
+	var ElectricCode = function (_Component) {
+		babelHelpers.inherits(ElectricCode, _Component);
+
+		function ElectricCode() {
+			babelHelpers.classCallCheck(this, ElectricCode);
+			return babelHelpers.possibleConstructorReturn(this, (ElectricCode.__proto__ || Object.getPrototypeOf(ElectricCode)).apply(this, arguments));
+		}
+
+		babelHelpers.createClass(ElectricCode, [{
+			key: 'attached',
+			value: function attached() {
+				var selector = '.code-container .btn-copy';
+
+				if (!window.electricClipboardTooltip) {
+					window.electricClipboardTooltip = new Tooltip({
+						delay: [300, 150],
+						elementClasses: 'fade',
+						events: {
+							visibleChanged: function visibleChanged(event) {
+								if (event.newVal) {
+									this.title = 'Copy';
+								}
+							}
+						},
+						selector: selector,
+						title: 'Copy',
+						visible: false
+					});
+				}
+
+				if (!window.electricClipboard) {
+					window.electricClipboard = new Clipboard({
+						selector: selector,
+						text: function text(delegateTarget) {
+							window.electricClipboardTooltip.title = 'Copied';
+							return delegateTarget.parentNode.querySelector('pre .code').innerText;
+						}
+					});
+				}
+			}
+		}]);
+		return ElectricCode;
+	}(Component);
+
+	;
+
+	Soy.register(ElectricCode, templates);
+
+	this['metal']['ElectricCode'] = ElectricCode;
+}).call(this);
+'use strict';
+
+(function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
+    // This file was automatically generated from ElectricNavigation.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace ElectricNavigation.
+     * @hassoydeltemplate {ElectricNavigation.anchor.idom}
+     * @hassoydelcall {ElectricNavigation.anchor.idom}
+     * @public
+     */
+
+    goog.module('ElectricNavigation.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      var $$temp;
+      var localAnchorVariant__soy12 = ($$temp = opt_data.anchorVariant) == null ? 'basic' : $$temp;
+      var localCurrentDepth__soy13 = ($$temp = opt_data.currentDepth) == null ? 0 : $$temp;
+      var localListItemActiveClasses__soy14 = ($$temp = opt_data.listItemActiveClasses) == null ? 'active' : $$temp;
+      if (opt_data.section.children) {
+        ie_open('ul', null, null, 'class', ($$temp = opt_data.elementClasses) == null ? '' : $$temp);
+        var pageList41 = opt_data.section.children;
+        var pageListLen41 = pageList41.length;
+        for (var pageIndex41 = 0; pageIndex41 < pageListLen41; pageIndex41++) {
+          var pageData41 = pageList41[pageIndex41];
+          if (!pageData41.hidden) {
+            ie_open('li', null, null, 'class', (($$temp = opt_data.listItemClasses) == null ? '' : $$temp) + (pageData41.active ? ' ' + localListItemActiveClasses__soy14 : ''));
+            soy.$$getDelegateFn(soy.$$getDelTemplateId('ElectricNavigation.anchor.idom'), localAnchorVariant__soy12, false)(soy.$$assignDefaults({ page: pageData41 }, opt_data), null, opt_ijData);
+            if (!opt_data.depth || localCurrentDepth__soy13 + 1 < opt_data.depth) {
+              $render({ anchorVariant: localAnchorVariant__soy12, currentDepth: localCurrentDepth__soy13 + 1, currentURL: opt_data.currentURL, depth: opt_data.depth, elementClasses: opt_data.elementClasses, linkClasses: opt_data.linkClasses, listItemActiveClasses: opt_data.listItemActiveClasses, listItemClasses: opt_data.listItemClasses, section: pageData41 }, null, opt_ijData);
+            }
+            ie_close('li');
+          }
+        }
+        ie_close('ul');
+      }
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'ElectricNavigation.render';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function __deltemplate_s44_b83841ac(opt_data, opt_ignored, opt_ijData) {
+      var $$temp;
+      if (opt_data.page.url || opt_data.page.redirect) {
+        ie_open('a', null, null, 'class', ($$temp = opt_data.linkClasses) == null ? '' : $$temp, 'href', ($$temp = opt_data.page.redirect) == null ? opt_data.page.url : $$temp);
+        ie_open('span');
+        var dyn1 = ($$temp = opt_data.page.title) == null ? 'Missing' : $$temp;
+        if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
+        ie_close('span');
+        ie_close('a');
+      } else {
+        ie_open('span', null, null, 'class', ($$temp = opt_data.linkClasses) == null ? '' : $$temp);
+        var dyn2 = ($$temp = opt_data.page.title) == null ? 'Missing' : $$temp;
+        if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
+        ie_close('span');
+      }
+    }
+    exports.__deltemplate_s44_b83841ac = __deltemplate_s44_b83841ac;
+    if (goog.DEBUG) {
+      __deltemplate_s44_b83841ac.soyTemplateName = 'ElectricNavigation.__deltemplate_s44_b83841ac';
+    }
+    soy.$$registerDelegateFn(soy.$$getDelTemplateId('ElectricNavigation.anchor.idom'), 'basic', 0, __deltemplate_s44_b83841ac);
+
+    exports.render.params = ["section", "anchorVariant", "currentDepth", "currentURL", "depth", "elementClasses", "linkClasses", "listItemActiveClasses", "listItemClasses"];
+    exports.render.types = { "section": "any", "anchorVariant": "any", "currentDepth": "any", "currentURL": "any", "depth": "any", "elementClasses": "any", "linkClasses": "any", "listItemActiveClasses": "any", "listItemClasses": "any" };
+    templates = exports;
+    return exports;
+  });
+
+  var ElectricNavigation = function (_Component) {
+    babelHelpers.inherits(ElectricNavigation, _Component);
+
+    function ElectricNavigation() {
+      babelHelpers.classCallCheck(this, ElectricNavigation);
+      return babelHelpers.possibleConstructorReturn(this, (ElectricNavigation.__proto__ || Object.getPrototypeOf(ElectricNavigation)).apply(this, arguments));
+    }
+
+    return ElectricNavigation;
+  }(Component);
+
+  Soy.register(ElectricNavigation, templates);
+  this['metalNamed']['ElectricNavigation'] = this['metalNamed']['ElectricNavigation'] || {};
+  this['metalNamed']['ElectricNavigation']['ElectricNavigation'] = ElectricNavigation;
+  this['metalNamed']['ElectricNavigation']['templates'] = templates;
+  this['metal']['ElectricNavigation'] = templates;
+  /* jshint ignore:end */
+}).call(this);
+'use strict';
+
+(function () {
+	var Component = this['metal']['component'];
+	var Soy = this['metal']['Soy'];
+	var templates = this['metal']['ElectricNavigation'];
+
+	var ElectricNavigation = function (_Component) {
+		babelHelpers.inherits(ElectricNavigation, _Component);
+
+		function ElectricNavigation() {
+			babelHelpers.classCallCheck(this, ElectricNavigation);
+			return babelHelpers.possibleConstructorReturn(this, (ElectricNavigation.__proto__ || Object.getPrototypeOf(ElectricNavigation)).apply(this, arguments));
+		}
+
+		babelHelpers.createClass(ElectricNavigation, [{
+			key: 'attached',
+			value: function attached() {}
+		}]);
+		return ElectricNavigation;
+	}(Component);
+
+	;
+
+	Soy.register(ElectricNavigation, templates);
+
+	this['metal']['ElectricNavigation'] = ElectricNavigation;
 }).call(this);
 'use strict';
 
@@ -18451,35 +19656,35 @@ babelHelpers;
       if (opt_data.query) {
         ie_open('p', null, null, 'class', 'search-result-summary');
         itext('Showing ');
-        var dyn2 = opt_data.results.length;
-        if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
+        var dyn3 = opt_data.results.length;
+        if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
         itext(' results for ');
         ie_open('strong');
         itext('"');
-        var dyn3 = opt_data.query;
-        if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
+        var dyn4 = opt_data.query;
+        if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
         itext('"');
         ie_close('strong');
         ie_close('p');
       }
       if (opt_data.results) {
-        var resultList94 = opt_data.results;
-        var resultListLen94 = resultList94.length;
-        for (var resultIndex94 = 0; resultIndex94 < resultListLen94; resultIndex94++) {
-          var resultData94 = resultList94[resultIndex94];
+        var resultList103 = opt_data.results;
+        var resultListLen103 = resultList103.length;
+        for (var resultIndex103 = 0; resultIndex103 < resultListLen103; resultIndex103++) {
+          var resultData103 = resultList103[resultIndex103];
           ie_open('div', null, null, 'class', 'search-result');
-          if (resultData94.icon) {
+          if (resultData103.icon) {
             ie_open('div', null, null, 'class', 'search-result-icon');
-            ie_void('span', null, null, 'class', 'icon-16-' + resultData94.icon);
+            ie_void('span', null, null, 'class', 'icon-16-' + resultData103.icon);
             ie_close('div');
           }
-          ie_open('a', null, null, 'class', 'search-result-link', 'href', resultData94.url);
-          var dyn4 = resultData94.title;
-          if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
+          ie_open('a', null, null, 'class', 'search-result-link', 'href', resultData103.url);
+          var dyn5 = resultData103.title;
+          if (typeof dyn5 == 'function') dyn5();else if (dyn5 != null) itext(dyn5);
           ie_close('a');
           ie_open('p', null, null, 'class', 'search-result-text');
-          var dyn5 = resultData94.description;
-          if (typeof dyn5 == 'function') dyn5();else if (dyn5 != null) itext(dyn5);
+          var dyn6 = resultData103.description;
+          if (typeof dyn6 == 'function') dyn6();else if (dyn6 != null) itext(dyn6);
           ie_close('p');
           ie_close('div');
         }
@@ -19924,20 +21129,20 @@ babelHelpers;
       ie_open('div', null, null, 'class', 'row');
       ie_open('div', null, null, 'class', 'col-lg-10 col-lg-offset-3 col-md-16 col-md-offset-0');
       if (opt_data.updates) {
-        var updateList119 = opt_data.updates;
-        var updateListLen119 = updateList119.length;
-        for (var updateIndex119 = 0; updateIndex119 < updateListLen119; updateIndex119++) {
-          var updateData119 = updateList119[updateIndex119];
+        var updateList128 = opt_data.updates;
+        var updateListLen128 = updateList128.length;
+        for (var updateIndex128 = 0; updateIndex128 < updateListLen128; updateIndex128++) {
+          var updateData128 = updateList128[updateIndex128];
           ie_open('section', null, null, 'class', 'update');
           ie_open('div', null, null, 'class', 'row update-row');
-          ie_open('div', null, null, 'class', 'col-sm-3 ' + (updateData119.major ? 'major' : 'minor') + '-update update-timeline');
+          ie_open('div', null, null, 'class', 'col-sm-3 ' + (updateData128.major ? 'major' : 'minor') + '-update update-timeline');
           ie_open('div', null, null, 'class', 'update-point');
-          var dyn6 = updateData119.version;
-          if (typeof dyn6 == 'function') dyn6();else if (dyn6 != null) itext(dyn6);
+          var dyn7 = updateData128.version;
+          if (typeof dyn7 == 'function') dyn7();else if (dyn7 != null) itext(dyn7);
           ie_close('div');
           ie_close('div');
           ie_open('div', null, null, 'class', 'col-sm-13 update-features');
-          $features(soy.$$assignDefaults({ features: updateData119.features }, opt_data), null, opt_ijData);
+          $features(soy.$$assignDefaults({ features: updateData128.features }, opt_data), null, opt_ijData);
           ie_close('div');
           ie_close('div');
           ie_close('section');
@@ -19960,13 +21165,13 @@ babelHelpers;
      */
     function $features(opt_data, opt_ignored, opt_ijData) {
       var $$temp;
-      var localFeatureVariant__soy123 = ($$temp = opt_data.featureVariant) == null ? 'basic' : $$temp;
+      var localFeatureVariant__soy132 = ($$temp = opt_data.featureVariant) == null ? 'basic' : $$temp;
       ie_open('div', null, null, 'class', 'row');
-      var featureList127 = opt_data.features;
-      var featureListLen127 = featureList127.length;
-      for (var featureIndex127 = 0; featureIndex127 < featureListLen127; featureIndex127++) {
-        var featureData127 = featureList127[featureIndex127];
-        soy.$$getDelegateFn(soy.$$getDelTemplateId('ElectricUpdates.feature.idom'), localFeatureVariant__soy123, false)(soy.$$assignDefaults({ feature: featureData127 }, opt_data), null, opt_ijData);
+      var featureList136 = opt_data.features;
+      var featureListLen136 = featureList136.length;
+      for (var featureIndex136 = 0; featureIndex136 < featureListLen136; featureIndex136++) {
+        var featureData136 = featureList136[featureIndex136];
+        soy.$$getDelegateFn(soy.$$getDelTemplateId('ElectricUpdates.feature.idom'), localFeatureVariant__soy132, false)(soy.$$assignDefaults({ feature: featureData136 }, opt_data), null, opt_ijData);
       }
       ie_close('div');
     }
@@ -19982,19 +21187,19 @@ babelHelpers;
      * @return {void}
      * @suppress {checkTypes}
      */
-    function __deltemplate_s130_5080d024(opt_data, opt_ignored, opt_ijData) {
+    function __deltemplate_s139_5080d024(opt_data, opt_ignored, opt_ijData) {
       ie_open('div', null, null, 'class', 'col-xs-16 col-sm-8 update-feature');
       ie_open('div', null, null, 'class', 'feature-topper');
       ie_void('span', null, null, 'class', 'feature-icon icon-16-' + opt_data.feature.icon);
       ie_open('h1', null, null, 'class', 'feature-header');
-      var dyn7 = opt_data.feature.title;
-      if (typeof dyn7 == 'function') dyn7();else if (dyn7 != null) itext(dyn7);
+      var dyn8 = opt_data.feature.title;
+      if (typeof dyn8 == 'function') dyn8();else if (dyn8 != null) itext(dyn8);
       ie_close('h1');
       ie_close('div');
       ie_open('div', null, null, 'class', 'feature-content');
       ie_open('p', null, null, 'class', 'feature-lead');
-      var dyn8 = opt_data.feature.description;
-      if (typeof dyn8 == 'function') dyn8();else if (dyn8 != null) itext(dyn8);
+      var dyn9 = opt_data.feature.description;
+      if (typeof dyn9 == 'function') dyn9();else if (dyn9 != null) itext(dyn9);
       ie_close('p');
       ie_open('div', null, null, 'class', 'read-more');
       ie_open('a', null, null, 'href', opt_data.feature.url);
@@ -20004,11 +21209,11 @@ babelHelpers;
       ie_close('div');
       ie_close('div');
     }
-    exports.__deltemplate_s130_5080d024 = __deltemplate_s130_5080d024;
+    exports.__deltemplate_s139_5080d024 = __deltemplate_s139_5080d024;
     if (goog.DEBUG) {
-      __deltemplate_s130_5080d024.soyTemplateName = 'ElectricUpdates.__deltemplate_s130_5080d024';
+      __deltemplate_s139_5080d024.soyTemplateName = 'ElectricUpdates.__deltemplate_s139_5080d024';
     }
-    soy.$$registerDelegateFn(soy.$$getDelTemplateId('ElectricUpdates.feature.idom'), 'basic', 0, __deltemplate_s130_5080d024);
+    soy.$$registerDelegateFn(soy.$$getDelTemplateId('ElectricUpdates.feature.idom'), 'basic', 0, __deltemplate_s139_5080d024);
 
     exports.render.params = ["featureVariant", "updates"];
     exports.render.types = { "featureVariant": "any", "updates": "any" };
@@ -20077,6 +21282,7 @@ babelHelpers;
 'use strict';
 
 (function () {
+	var ElectricCode = this['metal']['ElectricCode'];
 	var ElectricNavigation = this['metal']['ElectricNavigation'];
 	var ElectricReadingProgress = this['metal']['ElectricReadingProgress'];
 	var ElectricSearch = this['metal']['ElectricSearch'];
@@ -20084,6 +21290,7 @@ babelHelpers;
 	var ElectricSearchBase = this['metal']['ElectricSearchBase'];
 	var ElectricUpdates = this['metal']['ElectricUpdates'];
 	this['metalNamed']['components'] = this['metalNamed']['components'] || {};
+	this['metalNamed']['components']['ElectricCode'] = ElectricCode;
 	this['metalNamed']['components']['ElectricNavigation'] = ElectricNavigation;
 	this['metalNamed']['components']['ElectricReadingProgress'] = ElectricReadingProgress;
 	this['metalNamed']['components']['ElectricSearch'] = ElectricSearch;
@@ -20458,6 +21665,366 @@ babelHelpers;
   var templates;
   goog.loadModule(function (exports) {
 
+    // This file was automatically generated from docs.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace docs.
+     * @public
+     */
+
+    goog.module('docs.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    var $templateAlias3 = Soy.getTemplate('ElectricReadingProgress.incrementaldom', 'render');
+
+    var $templateAlias2 = Soy.getTemplate('SideBar.incrementaldom', 'render');
+
+    var $templateAlias1 = Soy.getTemplate('main.incrementaldom', 'render');
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      var param27 = function param27() {
+        $templateAlias2(soy.$$assignDefaults({ section: opt_data.site.index.children[0] }, opt_data), null, opt_ijData);
+        $guide(opt_data, null, opt_ijData);
+      };
+      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param27 }, opt_data), null, opt_ijData);
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'docs.render';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $guide(opt_data, opt_ignored, opt_ijData) {
+      ie_open('div', null, null, 'class', 'sidebar-offset');
+      ie_open('header', null, null, 'class', 'guide-header');
+      ie_open('div', null, null, 'class', 'container-hybrid');
+      ie_open('h1', null, null, 'class', 'guide-header-title');
+      var dyn1 = opt_data.page.title;
+      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
+      ie_close('h1');
+      ie_close('div');
+      ie_close('header');
+      ie_open('div', null, null, 'class', 'container-hybrid');
+      ie_open('div', null, null, 'class', 'docs-guide row');
+      ie_open('div', null, null, 'class', 'docs-content col-xs-16 col-md-9');
+      var dyn2 = opt_data.content;
+      if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
+      $feedback(opt_data, null, opt_ijData);
+      ie_close('div');
+      ie_open('nav', null, null, 'class', 'col-xs-16 col-md-offset-2 col-md-5');
+      ie_open('div', null, null, 'class', 'docs-nav-container');
+      $templateAlias3({ elementClasses: 'docs-nav' }, null, opt_ijData);
+      ie_close('div');
+      ie_close('nav');
+      ie_close('div');
+      ie_close('div');
+      ie_close('div');
+    }
+    exports.guide = $guide;
+    if (goog.DEBUG) {
+      $guide.soyTemplateName = 'docs.guide';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $feedback(opt_data, opt_ignored, opt_ijData) {
+      var $$temp;
+      ie_open('div');
+      ie_open('div', null, null, 'class', 'guide-github');
+      ie_open('div', null, null, 'class', 'guide-github-img');
+      ie_void('span', null, null, 'class', 'icon-16-github');
+      ie_close('div');
+      ie_open('div', null, null, 'class', 'guide-github-text');
+      ie_open('p');
+      itext('Contribute to this Doc on Github! ');
+      ie_open('a', null, null, 'href', (($$temp = opt_data.site.repo) == null ? '' : $$temp) + '/tree/master/' + opt_data.page.srcFilePath, 'class', 'docs-github-link', 'target', '_blank');
+      itext('Edit this section');
+      ie_close('a');
+      itext('.');
+      ie_close('p');
+      ie_close('div');
+      ie_close('div');
+      ie_close('div');
+    }
+    exports.feedback = $feedback;
+    if (goog.DEBUG) {
+      $feedback.soyTemplateName = 'docs.feedback';
+    }
+
+    exports.render.params = ["page", "site"];
+    exports.render.types = { "page": "any", "site": "any" };
+    exports.guide.params = ["page", "content"];
+    exports.guide.types = { "page": "any", "content": "any" };
+    exports.feedback.params = ["page", "site"];
+    exports.feedback.types = { "page": "any", "site": "any" };
+    templates = exports;
+    return exports;
+  });
+
+  var docs = function (_Component) {
+    babelHelpers.inherits(docs, _Component);
+
+    function docs() {
+      babelHelpers.classCallCheck(this, docs);
+      return babelHelpers.possibleConstructorReturn(this, (docs.__proto__ || Object.getPrototypeOf(docs)).apply(this, arguments));
+    }
+
+    return docs;
+  }(Component);
+
+  Soy.register(docs, templates);
+  this['metalNamed']['docs'] = this['metalNamed']['docs'] || {};
+  this['metalNamed']['docs']['docs'] = docs;
+  this['metalNamed']['docs']['templates'] = templates;
+  this['metal']['docs'] = templates;
+  /* jshint ignore:end */
+}).call(this);
+'use strict';
+
+(function () {
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+  var templates = this['metal']['docs'];
+
+  var docs = function (_Component) {
+    babelHelpers.inherits(docs, _Component);
+
+    function docs() {
+      babelHelpers.classCallCheck(this, docs);
+      return babelHelpers.possibleConstructorReturn(this, (docs.__proto__ || Object.getPrototypeOf(docs)).apply(this, arguments));
+    }
+
+    return docs;
+  }(Component);
+
+  ;
+
+  Soy.register(docs, templates);
+
+  this['metal']['docs'] = docs;
+}).call(this);
+'use strict';
+
+(function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
+    // This file was automatically generated from main.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace main.
+     * @public
+     */
+
+    goog.module('main.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    var $templateAlias1 = Soy.getTemplate('ElectricNavigation.incrementaldom', 'render');
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      var $$temp;
+      ie_open('div', null, null, 'class', ($$temp = opt_data.elementClasses) == null ? 'main' : $$temp);
+      ie_open('main', null, null, 'class', 'content');
+      $topbar(opt_data, null, opt_ijData);
+      var dyn3 = opt_data.content;
+      if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
+      ie_close('main');
+      ie_close('div');
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'main.render';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $topbar(opt_data, opt_ignored, opt_ijData) {
+      ie_open('nav', null, null, 'class', 'topbar topbar-fixed');
+      $logo(opt_data, null, opt_ijData);
+      $menu(opt_data, null, opt_ijData);
+      ie_close('nav');
+    }
+    exports.topbar = $topbar;
+    if (goog.DEBUG) {
+      $topbar.soyTemplateName = 'main.topbar';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $logo(opt_data, opt_ignored, opt_ijData) {
+      ie_open('div', null, null, 'class', 'topbar-logo');
+      ie_open('a', null, null, 'class', 'topbar-logo-link', 'href', '/');
+      ie_void('span', null, null, 'class', 'icon icon-16-flash');
+      ie_open('span', null, null, 'class', 'name');
+      itext('Electric');
+      ie_close('span');
+      ie_open('span', null, null, 'class', 'by');
+      itext('by Liferay');
+      ie_close('span');
+      ie_close('a');
+      ie_close('div');
+    }
+    exports.logo = $logo;
+    if (goog.DEBUG) {
+      $logo.soyTemplateName = 'main.logo';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $menu(opt_data, opt_ignored, opt_ijData) {
+      $templateAlias1({ depth: 1, elementClasses: 'topbar-list', linkClasses: 'topbar-link', listItemClasses: 'topbar-item', section: opt_data.site.index }, null, opt_ijData);
+    }
+    exports.menu = $menu;
+    if (goog.DEBUG) {
+      $menu.soyTemplateName = 'main.menu';
+    }
+
+    exports.render.params = ["content", "elementClasses"];
+    exports.render.types = { "content": "any", "elementClasses": "any" };
+    exports.topbar.params = ["site"];
+    exports.topbar.types = { "site": "any" };
+    exports.logo.params = [];
+    exports.logo.types = {};
+    exports.menu.params = ["site"];
+    exports.menu.types = { "site": "any" };
+    templates = exports;
+    return exports;
+  });
+
+  var main = function (_Component) {
+    babelHelpers.inherits(main, _Component);
+
+    function main() {
+      babelHelpers.classCallCheck(this, main);
+      return babelHelpers.possibleConstructorReturn(this, (main.__proto__ || Object.getPrototypeOf(main)).apply(this, arguments));
+    }
+
+    return main;
+  }(Component);
+
+  Soy.register(main, templates);
+  this['metalNamed']['main'] = this['metalNamed']['main'] || {};
+  this['metalNamed']['main']['main'] = main;
+  this['metalNamed']['main']['templates'] = templates;
+  this['metal']['main'] = templates;
+  /* jshint ignore:end */
+}).call(this);
+'use strict';
+
+(function () {
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+  var templates = this['metal']['main'];
+
+  var main = function (_Component) {
+    babelHelpers.inherits(main, _Component);
+
+    function main() {
+      babelHelpers.classCallCheck(this, main);
+      return babelHelpers.possibleConstructorReturn(this, (main.__proto__ || Object.getPrototypeOf(main)).apply(this, arguments));
+    }
+
+    return main;
+  }(Component);
+
+  ;
+
+  Soy.register(main, templates);
+
+  this['metal']['main'] = main;
+}).call(this);
+'use strict';
+
+(function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
     // This file was automatically generated from index.soy.
     // Please don't edit this file by hand.
 
@@ -20610,7 +22177,7 @@ babelHelpers;
       itext('Focus on the content.');
       ie_close('h4');
       ie_open('p', null, null, 'class', 'highlight-description');
-      itext('No more databases or server-side logic. Transform plain text into dynamic sites using the latest web technologies.');
+      itext('No more databases or server-side logic. Transform plain text into fully functional sites using the latest web technologies.');
       ie_close('p');
       ie_close('div');
       ie_open('div', null, null, 'class', 'col-md-5 col-md-offset-2 col-md-pull-6');
@@ -20860,15 +22427,15 @@ babelHelpers;
   var templates;
   goog.loadModule(function (exports) {
 
-    // This file was automatically generated from docs.soy.
+    // This file was automatically generated from configuration.soy.
     // Please don't edit this file by hand.
 
     /**
-     * @fileoverview Templates in namespace docs.
+     * @fileoverview Templates in namespace docsConfigurationHtml.
      * @public
      */
 
-    goog.module('docs.incrementaldom');
+    goog.module('docsConfigurationHtml.incrementaldom');
 
     /** @suppress {extraRequire} */
     var soy = goog.require('soy');
@@ -20889,11 +22456,9 @@ babelHelpers;
     var itext = IncrementalDom.text;
     var iattr = IncrementalDom.attr;
 
-    var $templateAlias3 = Soy.getTemplate('ElectricReadingProgress.incrementaldom', 'render');
+    var $templateAlias2 = Soy.getTemplate('ElectricCode.incrementaldom', 'render');
 
-    var $templateAlias2 = Soy.getTemplate('SideBar.incrementaldom', 'render');
-
-    var $templateAlias1 = Soy.getTemplate('main.incrementaldom', 'render');
+    var $templateAlias1 = Soy.getTemplate('docs.incrementaldom', 'render');
 
     /**
      * @param {Object<string, *>=} opt_data
@@ -20903,112 +22468,352 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param27 = function param27() {
-        $templateAlias2(soy.$$assignDefaults({ section: opt_data.site.index.children[0] }, opt_data), null, opt_ijData);
-        $guide(opt_data, null, opt_ijData);
+      opt_data = opt_data || {};
+      var param96 = function param96() {
+        ie_open('article', null, null, 'id', 'registering');
+        ie_open('h2');
+        itext('Registering');
+        ie_close('h2');
+        ie_open('p');
+        itext('All tasks are registered in the project\'s ');
+        ie_open('code');
+        itext('gulpfile.js');
+        ie_close('code');
+        itext('.');
+        ie_close('p');
+        $templateAlias2({ code: 'const gulp = require(\'gulp\');\nconst electric = require(\'electric\');\n\nelectric.registerTasks({\n    gulp: gulp\n});', mode: 'javascript' }, null, opt_ijData);
+        ie_close('article');
+        ie_open('article', null, null, 'id', 'options');
+        ie_open('h2');
+        itext('Options');
+        ie_close('h2');
+        ie_open('h3');
+        ie_open('code');
+        itext('registerTasks');
+        ie_close('code');
+        ie_close('h3');
+        ie_open('h4');
+        itext('gulp');
+        ie_close('h4');
+        ie_open('ul');
+        ie_open('li');
+        itext('Required: ');
+        ie_open('code');
+        itext('true');
+        ie_close('code');
+        ie_close('li');
+        ie_open('li');
+        itext('Type: Gulp instance');
+        ie_close('li');
+        ie_close('ul');
+        ie_open('p');
+        itext('An instance of ');
+        ie_open('a', null, null, 'href', 'http://gulpjs.com/');
+        itext('gulp');
+        ie_close('a');
+        itext('.');
+        ie_close('p');
+        ie_open('h4');
+        itext('codeMirrorLanguages');
+        ie_close('h4');
+        ie_open('ul');
+        ie_open('li');
+        itext('Required: ');
+        ie_open('code');
+        itext('false');
+        ie_close('code');
+        ie_close('li');
+        ie_open('li');
+        itext('Type: ');
+        ie_open('code');
+        itext('Array<languageName>');
+        ie_close('code');
+        ie_close('li');
+        ie_open('li');
+        itext('Default: ');
+        ie_open('code');
+        itext('[\'xml\', \'css\', \'javascript\']');
+        ie_close('code');
+        ie_close('li');
+        ie_close('ul');
+        ie_open('p');
+        itext('An Array of langauge names for syntax highlighting. See ');
+        ie_open('a', null, null, 'href', 'https://codemirror.net/mode/index.html');
+        itext('CodeMirror');
+        ie_close('a');
+        itext(' for a list of available languages.');
+        ie_close('p');
+        ie_open('h4');
+        itext('codeMirrorTheme');
+        ie_close('h4');
+        ie_open('ul');
+        ie_open('li');
+        itext('Required: ');
+        ie_open('code');
+        itext('false');
+        ie_close('code');
+        ie_close('li');
+        ie_open('li');
+        itext('Type: ');
+        ie_open('code');
+        itext('String');
+        ie_close('code');
+        ie_close('li');
+        ie_open('li');
+        itext('Default: ');
+        ie_open('code');
+        itext('\'dracula\'');
+        ie_close('code');
+        ie_close('li');
+        ie_close('ul');
+        ie_open('p');
+        itext('Theme to be used by CodeMirror. See ');
+        ie_open('a', null, null, 'href', 'https://codemirror.net/demo/theme.html');
+        itext('CodeMirror');
+        ie_close('a');
+        itext(' for a list of available themes.');
+        ie_close('p');
+        ie_open('h4');
+        itext('markdownOptions');
+        ie_close('h4');
+        ie_open('ul');
+        ie_open('li');
+        itext('Required: ');
+        ie_open('code');
+        itext('false');
+        ie_close('code');
+        ie_close('li');
+        ie_open('li');
+        itext('Type: ');
+        ie_open('code');
+        itext('Object');
+        ie_close('code');
+        ie_close('li');
+        ie_close('ul');
+        ie_open('p');
+        itext('An Object Literal containing configuration options for ');
+        ie_open('a', null, null, 'href', 'https://github.com/jonschlinkert/remarkable');
+        itext('Remarkable');
+        ie_close('a');
+        itext(' which is used to render Markdown files.');
+        ie_close('p');
+        ie_open('p');
+        itext('Example:');
+        ie_close('p');
+        $templateAlias2({ code: 'ssg.registerTasks({\n    gulp: gulp,\n    markdownOptions: {\n        breaks: true\n    }\n});', mode: 'javascript' }, null, opt_ijData);
+        ie_open('p');
+        itext('See ');
+        ie_open('a', null, null, 'href', 'https://github.com/jonschlinkert/remarkable#options');
+        itext('Remarkable\'s documentation');
+        ie_close('a');
+        itext(' for list of options.');
+        ie_close('p');
+        ie_open('h4');
+        itext('pathDest');
+        ie_close('h4');
+        ie_open('ul');
+        ie_open('li');
+        itext('Required: ');
+        ie_open('code');
+        itext('false');
+        ie_close('code');
+        ie_close('li');
+        ie_open('li');
+        itext('Type: ');
+        ie_open('code');
+        itext('String');
+        ie_close('code');
+        ie_close('li');
+        ie_open('li');
+        itext('Default: ');
+        ie_open('code');
+        itext('dist');
+        ie_close('code');
+        ie_close('li');
+        ie_close('ul');
+        ie_open('p');
+        itext('The path that generated files are placed in.');
+        ie_close('p');
+        ie_open('p');
+        itext('Example:');
+        ie_close('p');
+        $templateAlias2({ code: 'ssg.registerTasks({\n    gulp: gulp,\n    pathDest: \'build\'\n});', mode: 'javascript' }, null, opt_ijData);
+        ie_open('p');
+        itext('Now all generated files will be placed in the ');
+        ie_open('code');
+        itext('build');
+        ie_close('code');
+        itext(' directory.');
+        ie_close('p');
+        ie_open('h4');
+        itext('pathSrc');
+        ie_close('h4');
+        ie_open('ul');
+        ie_open('li');
+        itext('Required: ');
+        ie_open('code');
+        itext('false');
+        ie_close('code');
+        ie_close('li');
+        ie_open('li');
+        itext('Type: ');
+        ie_open('code');
+        itext('String');
+        ie_close('code');
+        ie_close('li');
+        ie_open('li');
+        itext('Default: ');
+        ie_open('code');
+        itext('src');
+        ie_close('code');
+        ie_close('li');
+        ie_close('ul');
+        ie_open('p');
+        itext('The path where all source files are located.');
+        ie_close('p');
+        ie_open('p');
+        itext('Example:');
+        ie_close('p');
+        $templateAlias2({ code: 'ssg.registerTasks({\n    gulp: gulp,\n    pathSrc: \'web\'\n});', mode: 'javascript' }, null, opt_ijData);
+        ie_open('p');
+        itext('Now ');
+        ie_open('code');
+        itext('electric');
+        ie_close('code');
+        itext(' will look inside the ');
+        ie_open('code');
+        itext('web');
+        ie_close('code');
+        itext(' directory for all source files.');
+        ie_close('p');
+        ie_open('h4');
+        itext('plugins');
+        ie_close('h4');
+        ie_open('ul');
+        ie_open('li');
+        itext('Required: ');
+        ie_open('code');
+        itext('false');
+        ie_close('code');
+        ie_close('li');
+        ie_open('li');
+        itext('Type: ');
+        ie_open('code');
+        itext('Array<String>');
+        ie_close('code');
+        ie_close('li');
+        ie_close('ul');
+        ie_open('p');
+        itext('Array of ');
+        ie_open('code');
+        itext('npm');
+        ie_close('code');
+        itext(' modules that expose Metal components.');
+        ie_close('p');
+        ie_open('p');
+        itext('Example:');
+        ie_close('p');
+        $templateAlias2({ code: 'electric.registerTasks({\n    gulp: gulp,\n    plugins: [\'electric-components\']\n});', mode: 'javascript' }, null, opt_ijData);
+        ie_open('p');
+        itext('The components found in the ');
+        ie_open('code');
+        itext('electric-components');
+        ie_close('code');
+        itext(' package will now be available to all ');
+        ie_open('code');
+        itext('soy');
+        ie_close('code');
+        itext(' files in your project.');
+        ie_close('p');
+        ie_open('p');
+        itext('Note that every package listed in ');
+        ie_open('code');
+        itext('plugins');
+        ie_close('code');
+        itext(' must also be listed as a dependency in the project\'s ');
+        ie_open('code');
+        itext('package.json');
+        ie_close('code');
+        itext('.');
+        ie_close('p');
+        ie_open('h4');
+        itext('taskPrefix');
+        ie_close('h4');
+        ie_open('ul');
+        ie_open('li');
+        itext('Required: ');
+        ie_open('code');
+        itext('false');
+        ie_close('code');
+        ie_close('li');
+        ie_open('li');
+        itext('Type: ');
+        ie_open('code');
+        itext('String');
+        ie_close('code');
+        ie_close('li');
+        ie_close('ul');
+        ie_open('p');
+        itext('String that is prefixed to every task exposed by ');
+        ie_open('code');
+        itext('electric');
+        ie_close('code');
+        itext('.');
+        ie_close('p');
+        ie_open('p');
+        itext('Example:');
+        ie_close('p');
+        $templateAlias2({ code: 'ssg.registerTasks({\n    gulp: gulp,\n    taskPrefix: \'ssg:\'\n});', mode: 'javascript' }, null, opt_ijData);
+        ie_open('p');
+        itext('The ');
+        ie_open('code');
+        itext('generate');
+        ie_close('code');
+        itext(' task will now be exposed as ');
+        ie_open('code');
+        itext('ssg:generate');
+        ie_close('code');
+        itext('. This option allows you to implement ');
+        ie_open('code');
+        itext('electric');
+        ie_close('code');
+        itext(' in conjunction with other packages that expose ');
+        ie_open('code');
+        itext('gulp');
+        ie_close('code');
+        itext(' tasks without the risk of overwriting previously defined tasks.');
+        ie_close('p');
+        ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param27 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param96 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
-      $render.soyTemplateName = 'docs.render';
+      $render.soyTemplateName = 'docsConfigurationHtml.render';
     }
 
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $guide(opt_data, opt_ignored, opt_ijData) {
-      ie_open('div', null, null, 'class', 'sidebar-offset');
-      ie_open('header', null, null, 'class', 'guide-header');
-      ie_open('div', null, null, 'class', 'container-hybrid');
-      ie_open('h1', null, null, 'class', 'guide-header-title');
-      var dyn1 = opt_data.page.title;
-      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
-      ie_close('h1');
-      ie_close('div');
-      ie_close('header');
-      ie_open('div', null, null, 'class', 'container-hybrid');
-      ie_open('div', null, null, 'class', 'docs-guide row');
-      ie_open('div', null, null, 'class', 'docs-content col-xs-16 col-md-9');
-      var dyn2 = opt_data.content;
-      if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
-      $feedback(opt_data, null, opt_ijData);
-      ie_close('div');
-      ie_open('nav', null, null, 'class', 'col-xs-16 col-md-offset-2 col-md-5');
-      ie_open('div', null, null, 'class', 'docs-nav-container');
-      $templateAlias3({ elementClasses: 'docs-nav' }, null, opt_ijData);
-      ie_close('div');
-      ie_close('nav');
-      ie_close('div');
-      ie_close('div');
-      ie_close('div');
-    }
-    exports.guide = $guide;
-    if (goog.DEBUG) {
-      $guide.soyTemplateName = 'docs.guide';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $feedback(opt_data, opt_ignored, opt_ijData) {
-      var $$temp;
-      ie_open('div');
-      ie_open('div', null, null, 'class', 'guide-github');
-      ie_open('div', null, null, 'class', 'guide-github-img');
-      ie_void('span', null, null, 'class', 'icon-16-github');
-      ie_close('div');
-      ie_open('div', null, null, 'class', 'guide-github-text');
-      ie_open('p');
-      itext('Contribute to this Doc on Github! ');
-      ie_open('a', null, null, 'href', (($$temp = opt_data.site.repo) == null ? '' : $$temp) + '/tree/master/' + opt_data.page.srcFilePath, 'class', 'docs-github-link', 'target', '_blank');
-      itext('Edit this section');
-      ie_close('a');
-      itext('.');
-      ie_close('p');
-      ie_close('div');
-      ie_close('div');
-      ie_close('div');
-    }
-    exports.feedback = $feedback;
-    if (goog.DEBUG) {
-      $feedback.soyTemplateName = 'docs.feedback';
-    }
-
-    exports.render.params = ["page", "site"];
-    exports.render.types = { "page": "any", "site": "any" };
-    exports.guide.params = ["page", "content"];
-    exports.guide.types = { "page": "any", "content": "any" };
-    exports.feedback.params = ["page", "site"];
-    exports.feedback.types = { "page": "any", "site": "any" };
+    exports.render.params = [];
+    exports.render.types = {};
     templates = exports;
     return exports;
   });
 
-  var docs = function (_Component) {
-    babelHelpers.inherits(docs, _Component);
+  var docsConfigurationHtml = function (_Component) {
+    babelHelpers.inherits(docsConfigurationHtml, _Component);
 
-    function docs() {
-      babelHelpers.classCallCheck(this, docs);
-      return babelHelpers.possibleConstructorReturn(this, (docs.__proto__ || Object.getPrototypeOf(docs)).apply(this, arguments));
+    function docsConfigurationHtml() {
+      babelHelpers.classCallCheck(this, docsConfigurationHtml);
+      return babelHelpers.possibleConstructorReturn(this, (docsConfigurationHtml.__proto__ || Object.getPrototypeOf(docsConfigurationHtml)).apply(this, arguments));
     }
 
-    return docs;
+    return docsConfigurationHtml;
   }(Component);
 
-  Soy.register(docs, templates);
-  this['metalNamed']['docs'] = this['metalNamed']['docs'] || {};
-  this['metalNamed']['docs']['docs'] = docs;
-  this['metalNamed']['docs']['templates'] = templates;
-  this['metal']['docs'] = templates;
+  Soy.register(docsConfigurationHtml, templates);
+  this['metalNamed']['configuration'] = this['metalNamed']['configuration'] || {};
+  this['metalNamed']['configuration']['docsConfigurationHtml'] = docsConfigurationHtml;
+  this['metalNamed']['configuration']['templates'] = templates;
+  this['metal']['configuration'] = templates;
   /* jshint ignore:end */
 }).call(this);
 'use strict';
@@ -21016,199 +22821,24 @@ babelHelpers;
 (function () {
   var Component = this['metal']['component'];
   var Soy = this['metal']['Soy'];
-  var templates = this['metal']['docs'];
+  var templates = this['metal']['configuration'];
 
-  var docs = function (_Component) {
-    babelHelpers.inherits(docs, _Component);
+  var docsConfigurationHtml = function (_Component) {
+    babelHelpers.inherits(docsConfigurationHtml, _Component);
 
-    function docs() {
-      babelHelpers.classCallCheck(this, docs);
-      return babelHelpers.possibleConstructorReturn(this, (docs.__proto__ || Object.getPrototypeOf(docs)).apply(this, arguments));
+    function docsConfigurationHtml() {
+      babelHelpers.classCallCheck(this, docsConfigurationHtml);
+      return babelHelpers.possibleConstructorReturn(this, (docsConfigurationHtml.__proto__ || Object.getPrototypeOf(docsConfigurationHtml)).apply(this, arguments));
     }
 
-    return docs;
+    return docsConfigurationHtml;
   }(Component);
 
   ;
 
-  Soy.register(docs, templates);
+  Soy.register(docsConfigurationHtml, templates);
 
-  this['metal']['docs'] = docs;
-}).call(this);
-'use strict';
-
-(function () {
-  /* jshint ignore:start */
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-
-  var templates;
-  goog.loadModule(function (exports) {
-
-    // This file was automatically generated from main.soy.
-    // Please don't edit this file by hand.
-
-    /**
-     * @fileoverview Templates in namespace main.
-     * @public
-     */
-
-    goog.module('main.incrementaldom');
-
-    /** @suppress {extraRequire} */
-    var soy = goog.require('soy');
-    /** @suppress {extraRequire} */
-    var soydata = goog.require('soydata');
-    /** @suppress {extraRequire} */
-    goog.require('goog.i18n.bidi');
-    /** @suppress {extraRequire} */
-    goog.require('goog.asserts');
-    /** @suppress {extraRequire} */
-    goog.require('goog.string');
-    var IncrementalDom = goog.require('incrementaldom');
-    var ie_open = IncrementalDom.elementOpen;
-    var ie_close = IncrementalDom.elementClose;
-    var ie_void = IncrementalDom.elementVoid;
-    var ie_open_start = IncrementalDom.elementOpenStart;
-    var ie_open_end = IncrementalDom.elementOpenEnd;
-    var itext = IncrementalDom.text;
-    var iattr = IncrementalDom.attr;
-
-    var $templateAlias1 = Soy.getTemplate('ElectricNavigation.incrementaldom', 'render');
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $render(opt_data, opt_ignored, opt_ijData) {
-      var $$temp;
-      ie_open('div', null, null, 'class', ($$temp = opt_data.elementClasses) == null ? 'main' : $$temp);
-      ie_open('main', null, null, 'class', 'content');
-      $topbar(opt_data, null, opt_ijData);
-      var dyn3 = opt_data.content;
-      if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
-      ie_close('main');
-      ie_close('div');
-    }
-    exports.render = $render;
-    if (goog.DEBUG) {
-      $render.soyTemplateName = 'main.render';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $topbar(opt_data, opt_ignored, opt_ijData) {
-      ie_open('nav', null, null, 'class', 'topbar');
-      $logo(opt_data, null, opt_ijData);
-      $menu(opt_data, null, opt_ijData);
-      ie_close('nav');
-    }
-    exports.topbar = $topbar;
-    if (goog.DEBUG) {
-      $topbar.soyTemplateName = 'main.topbar';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $logo(opt_data, opt_ignored, opt_ijData) {
-      ie_open('div', null, null, 'class', 'topbar-logo');
-      ie_open('a', null, null, 'class', 'topbar-logo-link', 'href', '/');
-      ie_void('span', null, null, 'class', 'icon icon-16-flash');
-      ie_open('span', null, null, 'class', 'name');
-      itext('Electric');
-      ie_close('span');
-      ie_open('span', null, null, 'class', 'by');
-      itext('by Liferay');
-      ie_close('span');
-      ie_close('a');
-      ie_close('div');
-    }
-    exports.logo = $logo;
-    if (goog.DEBUG) {
-      $logo.soyTemplateName = 'main.logo';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $menu(opt_data, opt_ignored, opt_ijData) {
-      $templateAlias1({ depth: 1, elementClasses: 'topbar-list', linkClasses: 'topbar-link', listItemClasses: 'topbar-item', section: opt_data.site.index }, null, opt_ijData);
-    }
-    exports.menu = $menu;
-    if (goog.DEBUG) {
-      $menu.soyTemplateName = 'main.menu';
-    }
-
-    exports.render.params = ["content", "elementClasses"];
-    exports.render.types = { "content": "any", "elementClasses": "any" };
-    exports.topbar.params = ["site"];
-    exports.topbar.types = { "site": "any" };
-    exports.logo.params = [];
-    exports.logo.types = {};
-    exports.menu.params = ["site"];
-    exports.menu.types = { "site": "any" };
-    templates = exports;
-    return exports;
-  });
-
-  var main = function (_Component) {
-    babelHelpers.inherits(main, _Component);
-
-    function main() {
-      babelHelpers.classCallCheck(this, main);
-      return babelHelpers.possibleConstructorReturn(this, (main.__proto__ || Object.getPrototypeOf(main)).apply(this, arguments));
-    }
-
-    return main;
-  }(Component);
-
-  Soy.register(main, templates);
-  this['metalNamed']['main'] = this['metalNamed']['main'] || {};
-  this['metalNamed']['main']['main'] = main;
-  this['metalNamed']['main']['templates'] = templates;
-  this['metal']['main'] = templates;
-  /* jshint ignore:end */
-}).call(this);
-'use strict';
-
-(function () {
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-  var templates = this['metal']['main'];
-
-  var main = function (_Component) {
-    babelHelpers.inherits(main, _Component);
-
-    function main() {
-      babelHelpers.classCallCheck(this, main);
-      return babelHelpers.possibleConstructorReturn(this, (main.__proto__ || Object.getPrototypeOf(main)).apply(this, arguments));
-    }
-
-    return main;
-  }(Component);
-
-  ;
-
-  Soy.register(main, templates);
-
-  this['metal']['main'] = main;
+  this['metal']['docsConfigurationHtml'] = docsConfigurationHtml;
 }).call(this);
 'use strict';
 
@@ -21249,6 +22879,8 @@ babelHelpers;
     var itext = IncrementalDom.text;
     var iattr = IncrementalDom.attr;
 
+    var $templateAlias2 = Soy.getTemplate('ElectricCode.incrementaldom', 'render');
+
     var $templateAlias1 = Soy.getTemplate('docs.incrementaldom', 'render');
 
     /**
@@ -21260,7 +22892,7 @@ babelHelpers;
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
       opt_data = opt_data || {};
-      var param96 = function param96() {
+      var param131 = function param131() {
         ie_open('article', null, null, 'id', 'yeoman');
         ie_open('h2');
         itext('Yeoman Generator');
@@ -21276,36 +22908,20 @@ babelHelpers;
         ie_close('code');
         itext(' project up and running.');
         ie_close('p');
+        ie_open('h3');
+        itext('Install dependencies');
+        ie_close('h3');
+        $templateAlias2({ code: 'npm i -g gulp yo', mode: 'shell' }, null, opt_ijData);
+        ie_open('h3');
+        itext('Install generator');
+        ie_close('h3');
+        $templateAlias2({ code: 'npm i -g generator-electric', mode: 'shell' }, null, opt_ijData);
+        ie_open('h3');
+        itext('Run generator');
+        ie_close('h3');
+        $templateAlias2({ code: 'yo electric', mode: 'shell' }, null, opt_ijData);
         ie_open('p');
-        itext('Install dependencies.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code');
-        itext('npm ');
-        ie_open('span', null, null, 'class', 'hljs-selector-tag');
-        itext('i');
-        ie_close('span');
-        itext(' -g gulp yo\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('Install generator.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code');
-        itext('npm ');
-        ie_open('span', null, null, 'class', 'hljs-selector-tag');
-        itext('i');
-        ie_close('span');
-        itext(' -g generator-electric\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('Run the generator with ');
-        ie_open('code');
-        itext('yo electric');
-        ie_close('code');
-        itext(' in the command line. This will prompt you for a project id and name, then it creates a folder in your current directory with your new ');
+        itext('This will prompt you for a project id and name, then it creates a folder in your current directory with your new ');
         ie_open('code');
         itext('electric');
         ie_close('code');
@@ -21318,1761 +22934,25 @@ babelHelpers;
         ie_close('a');
         itext(' for troubleshooting tips.');
         ie_close('p');
-        ie_close('article');
-        ie_open('article', null, null, 'id', 'dependencies');
-        ie_open('h2');
-        itext('Project Dependencies');
-        ie_close('h2');
         ie_open('p');
-        itext('All dependencies are adding automatically when using the Yeoman Generator, but when creating a project from scratch, the following dependencies must be added to the project.');
+        itext('Build the site.');
         ie_close('p');
-        ie_open('pre');
-        ie_open('code');
-        itext('npm ');
-        ie_open('span', null, null, 'class', 'hljs-selector-tag');
-        itext('i');
-        ie_close('span');
-        itext(' --save gulp electric\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_close('article');
-        ie_open('article', null, null, 'id', 'projects');
-        ie_open('h2');
-        itext('Projects Using Electric');
-        ie_close('h2');
-        ie_open('ul');
-        ie_open('li');
-        ie_open('a', null, null, 'href', 'https://github.com/liferay/electricjs.com');
-        itext('Electricjs.com');
-        ie_close('a');
-        ie_close('li');
-        ie_close('ul');
-        ie_close('article');
-      };
-      $templateAlias1(soy.$$assignDefaults({ content: param96 }, opt_data), null, opt_ijData);
-    }
-    exports.render = $render;
-    if (goog.DEBUG) {
-      $render.soyTemplateName = 'docsGettingStartedHtml.render';
-    }
-
-    exports.render.params = [];
-    exports.render.types = {};
-    templates = exports;
-    return exports;
-  });
-
-  var docsGettingStartedHtml = function (_Component) {
-    babelHelpers.inherits(docsGettingStartedHtml, _Component);
-
-    function docsGettingStartedHtml() {
-      babelHelpers.classCallCheck(this, docsGettingStartedHtml);
-      return babelHelpers.possibleConstructorReturn(this, (docsGettingStartedHtml.__proto__ || Object.getPrototypeOf(docsGettingStartedHtml)).apply(this, arguments));
-    }
-
-    return docsGettingStartedHtml;
-  }(Component);
-
-  Soy.register(docsGettingStartedHtml, templates);
-  this['metalNamed']['getting-started'] = this['metalNamed']['getting-started'] || {};
-  this['metalNamed']['getting-started']['docsGettingStartedHtml'] = docsGettingStartedHtml;
-  this['metalNamed']['getting-started']['templates'] = templates;
-  this['metal']['getting-started'] = templates;
-  /* jshint ignore:end */
-}).call(this);
-'use strict';
-
-(function () {
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-  var templates = this['metal']['getting-started'];
-
-  var docsGettingStartedHtml = function (_Component) {
-    babelHelpers.inherits(docsGettingStartedHtml, _Component);
-
-    function docsGettingStartedHtml() {
-      babelHelpers.classCallCheck(this, docsGettingStartedHtml);
-      return babelHelpers.possibleConstructorReturn(this, (docsGettingStartedHtml.__proto__ || Object.getPrototypeOf(docsGettingStartedHtml)).apply(this, arguments));
-    }
-
-    return docsGettingStartedHtml;
-  }(Component);
-
-  ;
-
-  Soy.register(docsGettingStartedHtml, templates);
-
-  this['metal']['docsGettingStartedHtml'] = docsGettingStartedHtml;
-}).call(this);
-'use strict';
-
-(function () {
-  /* jshint ignore:start */
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-
-  var templates;
-  goog.loadModule(function (exports) {
-
-    // This file was automatically generated from layouts.soy.
-    // Please don't edit this file by hand.
-
-    /**
-     * @fileoverview Templates in namespace docsLayoutsHtml.
-     * @public
-     */
-
-    goog.module('docsLayoutsHtml.incrementaldom');
-
-    /** @suppress {extraRequire} */
-    var soy = goog.require('soy');
-    /** @suppress {extraRequire} */
-    var soydata = goog.require('soydata');
-    /** @suppress {extraRequire} */
-    goog.require('goog.i18n.bidi');
-    /** @suppress {extraRequire} */
-    goog.require('goog.asserts');
-    /** @suppress {extraRequire} */
-    goog.require('goog.string');
-    var IncrementalDom = goog.require('incrementaldom');
-    var ie_open = IncrementalDom.elementOpen;
-    var ie_close = IncrementalDom.elementClose;
-    var ie_void = IncrementalDom.elementVoid;
-    var ie_open_start = IncrementalDom.elementOpenStart;
-    var ie_open_end = IncrementalDom.elementOpenEnd;
-    var itext = IncrementalDom.text;
-    var iattr = IncrementalDom.attr;
-
-    var $templateAlias1 = Soy.getTemplate('docs.incrementaldom', 'render');
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $render(opt_data, opt_ignored, opt_ijData) {
-      opt_data = opt_data || {};
-      var param128 = function param128() {
-        ie_open('article', null, null, 'id', 'base');
-        ie_open('h2');
-        itext('Base Layout');
-        ie_close('h2');
+        $templateAlias2({ code: 'gulp', mode: 'shell' }, null, opt_ijData);
         ie_open('p');
-        itext('All projects must have a ');
+        itext('This will run the default gulp task registered in your project\'s ');
         ie_open('code');
-        itext('layouts/base.soy');
+        itext('gulpfile.js');
         ie_close('code');
-        itext(' file. This file is responsible for the HTML boilerplate of your site. Every page will be rendered with this layout.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-soy');
-        ie_void('span', null, null, 'class', 'xml');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('namespace base');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('\n\n/**\n * @param content\n * @param page\n * @param serialized\n * @param site\n */\n');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('template .render private="true"');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('<!DOCTYPE html>');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('html');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('lang');
-        ie_close('span');
-        itext('=');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"en"');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n    ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('head');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n        ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('meta');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('charset');
-        ie_close('span');
-        itext('=');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"UTF-8"');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n        ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('meta');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('content');
-        ie_close('span');
-        itext('=');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"minimum-scale=1.0, width=device-width"');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('name');
-        ie_close('span');
-        itext('=');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"viewport"');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n        ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('meta');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('name');
-        ie_close('span');
-        itext('=');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"description"');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('content');
-        ie_close('span');
-        itext('=');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"');
-        ie_close('span');
-        ie_close('span');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('$page.description ?: \'\'');
-        ie_close('span');
-        ie_close('span');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n\n        ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('title');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('$page.title');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext(' - ');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('$site.title');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('</');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('title');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n    ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('</');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('head');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n    ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('body');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n        ');
-        ie_open('span', null, null, 'class', 'hljs-comment');
-        itext('<!-- inject:metal:js -->');
-        ie_close('span');
-        itext('\n            ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('div');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n                ');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('$content');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('\n            ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('</');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('div');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n        ');
-        ie_open('span', null, null, 'class', 'hljs-comment');
-        itext('<!-- endinject -->');
-        ie_close('span');
-        itext('\n    ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('</');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('body');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('</');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('html');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('/template');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('\n');
-        ie_close('span');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('This layout can be editted to fit the needs of your project, but it must use ');
+        itext(', which includes generating your site, starting up a development server, and starting the ');
         ie_open('code');
-        itext('base');
+        itext('watch');
         ie_close('code');
-        itext(' as the ');
-        ie_open('code');
-        itext('namespace');
-        ie_close('code');
-        itext(', and it must include the ');
-        ie_open('code');
-        itext('{$content}');
-        ie_close('code');
-        itext(' variable which renders the content of each page.');
-        ie_close('p');
-        ie_open('h3');
-        itext('Metal Component Invocation');
-        ie_close('h3');
-        ie_open('p');
-        itext('The ');
-        ie_open('code');
-        itext('<!-- inject:metal:js -->');
-        ie_close('code');
-        itext(' and ');
-        ie_open('code');
-        itext('<!-- endinject -->');
-        ie_close('code');
-        itext(' are not just comments, during the ');
-        ie_open('code');
-        itext('generate');
-        ie_close('code');
-        itext(' task they are replaced with the necessary code for automatically invoking Metal components that have been implemented in your project\'s ');
-        ie_open('code');
-        itext('soy');
-        ie_close('code');
-        itext(' files.');
-        ie_close('p');
-        ie_open('blockquote');
-        ie_open('p');
-        itext('Note: these tags only needed to be included in the ');
-        ie_open('code');
-        itext('base');
-        ie_close('code');
-        itext(' template.');
-        ie_close('p');
-        ie_close('blockquote');
-        ie_open('p');
-        itext('The injected code is what implements the ');
-        ie_open('code');
-        itext('serialized');
-        ie_close('code');
-        itext(' param that is defined at the start of the template. ');
-        ie_open('code');
-        itext('serialized');
-        ie_close('code');
-        itext(' is stringified meta data that Metal consumes to render each page.');
+        itext(' task.');
         ie_close('p');
         ie_close('article');
-        ie_open('article', null, null, 'id', 'sub');
-        ie_open('h2');
-        itext('Sub Layouts');
-        ie_close('h2');
-        ie_open('p');
-        itext('Additional layouts can be created in the ');
-        ie_open('code');
-        itext('layouts');
-        ie_close('code');
-        itext(' folder of your project. These layouts are simply ');
-        ie_open('code');
-        itext('soy');
-        ie_close('code');
-        itext(' templates that can be implemented by individual pages.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-soy');
-        ie_void('span', null, null, 'class', 'xml');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('namespace docs');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('\n\n/**\n * @param content\n * @param elementClasses\n * @param page\n * @param site\n */\n');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('template .render');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('\n    ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('div');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('class');
-        ie_close('span');
-        itext('=');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"');
-        ie_close('span');
-        ie_close('span');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('$elementClasses ?: \'main\'');
-        ie_close('span');
-        ie_close('span');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n        ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('div');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('class');
-        ie_close('span');
-        itext('=');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"topper"');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n            ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('h1');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('$site.title');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('</');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('h1');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n        ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('</');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('div');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n\n        ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('div');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('class');
-        ie_close('span');
-        itext('=');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"content"');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n            ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('h2');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('$page.title');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('</');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('h2');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n\n            ');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('$content');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('\n        ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('</');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('div');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n    ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('</');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('div');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('/template');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('\n');
-        ie_close('span');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('This template can be implemented by both ');
-        ie_open('code');
-        itext('soy');
-        ie_close('code');
-        itext(' and ');
-        ie_open('code');
-        itext('markdown');
-        ie_close('code');
-        itext(' files. The following example implements the ');
-        ie_open('code');
-        itext('docs');
-        ie_close('code');
-        itext(' layout.');
-        ie_close('p');
-        ie_open('h3');
-        ie_open('code');
-        itext('soy');
-        ie_close('code');
-        itext(' example.');
-        ie_close('h3');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-soy');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('description:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page description."');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('title:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page"');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n\n{namespace page}\n\n/**\n *\n */\n{template .render}\n    {call docs.render data=');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"all"');
-        ie_close('span');
-        itext('}\n        {param content kind=');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"html}\n            <span>Hello, World!</span>\n        {/param}\n    {/call}\n{/template}\n');
-        ie_close('span');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('Sub layouts are rendered using soy\'s ');
-        ie_open('a', null, null, 'href', 'https://developers.google.com/closure/templates/docs/commands#call');
-        itext('call command');
-        ie_close('a');
-        itext('.');
-        ie_close('p');
-        ie_open('p');
-        itext('The ');
-        ie_open('code');
-        itext('data="all"');
-        ie_close('code');
-        itext(' property needs to be set if the layout in question needs to implement any of the global params (');
-        ie_open('code');
-        itext('site');
-        ie_close('code');
-        itext(' or ');
-        ie_open('code');
-        itext('page');
-        ie_close('code');
-        itext(').');
-        ie_close('p');
-        ie_open('h3');
-        ie_open('code');
-        itext('markdown');
-        ie_close('code');
-        itext(' example.');
-        ie_close('h3');
-        ie_open('p');
-        itext('Markdown implementation doesn\'t require any ');
-        ie_open('code');
-        itext('soy');
-        ie_close('code');
-        itext(' code, rather it leverages the front matter ');
-        ie_open('code');
-        itext('layout');
-        ie_close('code');
-        itext(' property to determine the layout.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('description:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page description."');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('layout:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"docs"');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('title:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page"');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n\n');
-        ie_open('span', null, null, 'class', 'hljs-comment');
-        itext('# Hello, World!');
-        ie_close('span');
-        itext('\n\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('By specifying ');
-        ie_open('code');
-        itext('layout: "docs"');
-        ie_close('code');
-        itext(', the generator will look for a soy template in the layouts directory with the ');
-        ie_open('code');
-        itext('docs');
-        ie_close('code');
-        itext(' namespace.');
-        ie_close('p');
-        ie_open('p');
-        itext('See the section on ');
-        ie_open('a', null, null, 'href', '/docs/tasks.html#configuration');
-        itext('configuration');
-        ie_close('a');
-        itext(' for info on configuring the markdown engine.');
-        ie_close('p');
-        ie_close('article');
-      };
-      $templateAlias1(soy.$$assignDefaults({ content: param128 }, opt_data), null, opt_ijData);
-    }
-    exports.render = $render;
-    if (goog.DEBUG) {
-      $render.soyTemplateName = 'docsLayoutsHtml.render';
-    }
-
-    exports.render.params = [];
-    exports.render.types = {};
-    templates = exports;
-    return exports;
-  });
-
-  var docsLayoutsHtml = function (_Component) {
-    babelHelpers.inherits(docsLayoutsHtml, _Component);
-
-    function docsLayoutsHtml() {
-      babelHelpers.classCallCheck(this, docsLayoutsHtml);
-      return babelHelpers.possibleConstructorReturn(this, (docsLayoutsHtml.__proto__ || Object.getPrototypeOf(docsLayoutsHtml)).apply(this, arguments));
-    }
-
-    return docsLayoutsHtml;
-  }(Component);
-
-  Soy.register(docsLayoutsHtml, templates);
-  this['metalNamed']['layouts'] = this['metalNamed']['layouts'] || {};
-  this['metalNamed']['layouts']['docsLayoutsHtml'] = docsLayoutsHtml;
-  this['metalNamed']['layouts']['templates'] = templates;
-  this['metal']['layouts'] = templates;
-  /* jshint ignore:end */
-}).call(this);
-'use strict';
-
-(function () {
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-  var templates = this['metal']['layouts'];
-
-  var docsLayoutsHtml = function (_Component) {
-    babelHelpers.inherits(docsLayoutsHtml, _Component);
-
-    function docsLayoutsHtml() {
-      babelHelpers.classCallCheck(this, docsLayoutsHtml);
-      return babelHelpers.possibleConstructorReturn(this, (docsLayoutsHtml.__proto__ || Object.getPrototypeOf(docsLayoutsHtml)).apply(this, arguments));
-    }
-
-    return docsLayoutsHtml;
-  }(Component);
-
-  ;
-
-  Soy.register(docsLayoutsHtml, templates);
-
-  this['metal']['docsLayoutsHtml'] = docsLayoutsHtml;
-}).call(this);
-'use strict';
-
-(function () {
-  /* jshint ignore:start */
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-
-  var templates;
-  goog.loadModule(function (exports) {
-
-    // This file was automatically generated from metal-components.soy.
-    // Please don't edit this file by hand.
-
-    /**
-     * @fileoverview Templates in namespace docsMetalComponentsHtml.
-     * @public
-     */
-
-    goog.module('docsMetalComponentsHtml.incrementaldom');
-
-    /** @suppress {extraRequire} */
-    var soy = goog.require('soy');
-    /** @suppress {extraRequire} */
-    var soydata = goog.require('soydata');
-    /** @suppress {extraRequire} */
-    goog.require('goog.i18n.bidi');
-    /** @suppress {extraRequire} */
-    goog.require('goog.asserts');
-    /** @suppress {extraRequire} */
-    goog.require('goog.string');
-    var IncrementalDom = goog.require('incrementaldom');
-    var ie_open = IncrementalDom.elementOpen;
-    var ie_close = IncrementalDom.elementClose;
-    var ie_void = IncrementalDom.elementVoid;
-    var ie_open_start = IncrementalDom.elementOpenStart;
-    var ie_open_end = IncrementalDom.elementOpenEnd;
-    var itext = IncrementalDom.text;
-    var iattr = IncrementalDom.attr;
-
-    var $templateAlias1 = Soy.getTemplate('docs.incrementaldom', 'render');
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $render(opt_data, opt_ignored, opt_ijData) {
-      opt_data = opt_data || {};
-      var param133 = function param133() {
-        ie_open('article', null, null, 'id', 'creating');
-        ie_open('h2');
-        itext('Creating Components');
-        ie_close('h2');
-        ie_open('p');
-        itext('One of the major benefits of ');
-        ie_open('code');
-        itext('electric');
-        ie_close('code');
-        itext(' is the ability to create metal.js components and invoke them in your ');
-        ie_open('code');
-        itext('soy');
-        ie_close('code');
-        itext(' layouts and pages.');
-        ie_close('p');
-        ie_open('p');
-        itext('Components can exist anywhere in the ');
-        ie_open('code');
-        itext('src');
-        ie_close('code');
-        itext(' directory, for this example we will place them inside ');
-        ie_open('code');
-        itext('src/components');
-        ie_close('code');
-        itext('.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-bash');
-        itext('|--src/\n   |--layouts/\n      |--base.soy\n      |--docs.soy\n   |--pages/\n      |--index.soy\n   |--components/\n      |--MyComponent.soy\n      |--MyComponent.js\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        ie_open('code');
-        itext('MyComponent.soy');
-        ie_close('code');
-        itext('.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-soy');
-        ie_void('span', null, null, 'class', 'xml');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('namespace MyComponent');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('\n\n/**\n *\n */\n');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('template .render');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('\n    ');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('<');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('div');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('Hello, World!');
-        ie_open('span', null, null, 'class', 'hljs-tag');
-        itext('</');
-        ie_open('span', null, null, 'class', 'hljs-name');
-        itext('div');
-        ie_close('span');
-        itext('>');
-        ie_close('span');
-        itext('\n');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('{');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('/template');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'hljs-template-variable');
-        itext('}');
-        ie_close('span');
-        ie_open('span', null, null, 'class', 'xml');
-        itext('\n');
-        ie_close('span');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        ie_open('code');
-        itext('MyComponent.js');
-        ie_close('code');
-        itext('.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-js');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('\'use strict\'');
-        ie_close('span');
-        itext(';\n\n');
-        ie_open('span', null, null, 'class', 'hljs-keyword');
-        itext('import');
-        ie_close('span');
-        itext(' Component ');
-        ie_open('span', null, null, 'class', 'hljs-keyword');
-        itext('from');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('\'metal-component\'');
-        ie_close('span');
-        itext(';\n');
-        ie_open('span', null, null, 'class', 'hljs-keyword');
-        itext('import');
-        ie_close('span');
-        itext(' Soy ');
-        ie_open('span', null, null, 'class', 'hljs-keyword');
-        itext('from');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('\'metal-soy\'');
-        ie_close('span');
-        itext(';\n\n');
-        ie_open('span', null, null, 'class', 'hljs-keyword');
-        itext('import');
-        ie_close('span');
-        itext(' templates ');
-        ie_open('span', null, null, 'class', 'hljs-keyword');
-        itext('from');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('\'./MyComponent.soy\'');
-        ie_close('span');
-        itext(';\n\n');
-        ie_open('span', null, null, 'class', 'hljs-class');
-        ie_open('span', null, null, 'class', 'hljs-keyword');
-        itext('class');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-title');
-        itext('MyComponent');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-keyword');
-        itext('extends');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-title');
-        itext('Component');
-        ie_close('span');
-        itext(' ');
-        ie_close('span');
-        itext('{\n    attached() {\n        ');
-        ie_open('span', null, null, 'class', 'hljs-built_in');
-        itext('console');
-        ie_close('span');
-        itext('.log(');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('\'MyComponent attached!\'');
-        ie_close('span');
-        itext(');\n    }\n};\n\nSoy.register(MyComponent, templates);\n\n');
-        ie_open('span', null, null, 'class', 'hljs-keyword');
-        itext('export');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-keyword');
-        itext('default');
-        ie_close('span');
-        itext(' MyComponent;\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('Now that you have the base component files, the ');
-        ie_open('code');
-        itext('MyComponent');
-        ie_close('code');
-        itext(' template simply needs to be rendered in a page/layout.');
-        ie_close('p');
-        ie_close('article');
-        ie_open('article', null, null, 'id', 'rendering');
-        ie_open('h2');
-        itext('Rendering Components');
-        ie_close('h2');
-        ie_open('p');
-        itext('To render a metal component in a page/layout, simply use the ');
-        ie_open('code');
-        itext('call');
-        ie_close('code');
-        itext(' command to render the ');
-        ie_open('code');
-        itext('.render');
-        ie_close('code');
-        itext(' template of the component.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-soy');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('description:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page description."');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('title:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page"');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n\n{namespace page}\n\n/**\n *\n */\n{template .render}\n    <div');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('>\n        {call MyComponent.render /}\n    </div>\n{/template}\n');
-        ie_close('span');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('Now you should see \'MyComponent attached!\' in the browser console.');
-        ie_close('p');
-        ie_close('article');
-        ie_open('article', null, null, 'id', 'metal_sgg_components');
-        ie_open('h2');
-        itext('Electric Components');
-        ie_close('h2');
-        ie_open('p');
-        itext('The ');
-        ie_open('a', null, null, 'href', 'https://github.com/liferay/electric-components');
-        itext('electric-components');
-        ie_close('a');
-        itext(' package contains a number of components that are compatible with the site meta data, such as navigation and search components.');
-        ie_close('p');
-        ie_open('p');
-        itext('See ');
-        ie_open('a', null, null, 'href', '/docs/tasks.html#configuration');
-        itext('configuration');
-        ie_close('a');
-        itext(' for information on adding ');
-        ie_open('code');
-        itext('plugins');
-        ie_close('code');
-        itext(' to your project.');
-        ie_close('p');
-        ie_open('p');
-        itext('These components are invoked the same way as your own components.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-soy');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('description:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page description."');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('title:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page"');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n\n{namespace page}\n\n/**\n * @param site\n */\n{template .render}\n    <div');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('>\n        {call ElectricNavigation.render}\n            {param depth: 1 /}\n            {param section: $site.index /}\n        {/call}\n    </div>\n{/template}\n');
-        ie_close('span');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('This will render a list with all direct descendants of the index page.');
-        ie_close('p');
-        ie_close('article');
-      };
-      $templateAlias1(soy.$$assignDefaults({ content: param133 }, opt_data), null, opt_ijData);
-    }
-    exports.render = $render;
-    if (goog.DEBUG) {
-      $render.soyTemplateName = 'docsMetalComponentsHtml.render';
-    }
-
-    exports.render.params = [];
-    exports.render.types = {};
-    templates = exports;
-    return exports;
-  });
-
-  var docsMetalComponentsHtml = function (_Component) {
-    babelHelpers.inherits(docsMetalComponentsHtml, _Component);
-
-    function docsMetalComponentsHtml() {
-      babelHelpers.classCallCheck(this, docsMetalComponentsHtml);
-      return babelHelpers.possibleConstructorReturn(this, (docsMetalComponentsHtml.__proto__ || Object.getPrototypeOf(docsMetalComponentsHtml)).apply(this, arguments));
-    }
-
-    return docsMetalComponentsHtml;
-  }(Component);
-
-  Soy.register(docsMetalComponentsHtml, templates);
-  this['metalNamed']['metal-components'] = this['metalNamed']['metal-components'] || {};
-  this['metalNamed']['metal-components']['docsMetalComponentsHtml'] = docsMetalComponentsHtml;
-  this['metalNamed']['metal-components']['templates'] = templates;
-  this['metal']['metal-components'] = templates;
-  /* jshint ignore:end */
-}).call(this);
-'use strict';
-
-(function () {
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-  var templates = this['metal']['metal-components'];
-
-  var docsMetalComponentsHtml = function (_Component) {
-    babelHelpers.inherits(docsMetalComponentsHtml, _Component);
-
-    function docsMetalComponentsHtml() {
-      babelHelpers.classCallCheck(this, docsMetalComponentsHtml);
-      return babelHelpers.possibleConstructorReturn(this, (docsMetalComponentsHtml.__proto__ || Object.getPrototypeOf(docsMetalComponentsHtml)).apply(this, arguments));
-    }
-
-    return docsMetalComponentsHtml;
-  }(Component);
-
-  ;
-
-  Soy.register(docsMetalComponentsHtml, templates);
-
-  this['metal']['docsMetalComponentsHtml'] = docsMetalComponentsHtml;
-}).call(this);
-'use strict';
-
-(function () {
-  /* jshint ignore:start */
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-
-  var templates;
-  goog.loadModule(function (exports) {
-
-    // This file was automatically generated from pages.soy.
-    // Please don't edit this file by hand.
-
-    /**
-     * @fileoverview Templates in namespace docsPagesHtml.
-     * @public
-     */
-
-    goog.module('docsPagesHtml.incrementaldom');
-
-    /** @suppress {extraRequire} */
-    var soy = goog.require('soy');
-    /** @suppress {extraRequire} */
-    var soydata = goog.require('soydata');
-    /** @suppress {extraRequire} */
-    goog.require('goog.i18n.bidi');
-    /** @suppress {extraRequire} */
-    goog.require('goog.asserts');
-    /** @suppress {extraRequire} */
-    goog.require('goog.string');
-    var IncrementalDom = goog.require('incrementaldom');
-    var ie_open = IncrementalDom.elementOpen;
-    var ie_close = IncrementalDom.elementClose;
-    var ie_void = IncrementalDom.elementVoid;
-    var ie_open_start = IncrementalDom.elementOpenStart;
-    var ie_open_end = IncrementalDom.elementOpenEnd;
-    var itext = IncrementalDom.text;
-    var iattr = IncrementalDom.attr;
-
-    var $templateAlias1 = Soy.getTemplate('docs.incrementaldom', 'render');
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $render(opt_data, opt_ignored, opt_ijData) {
-      opt_data = opt_data || {};
-      var param138 = function param138() {
-        ie_open('article', null, null, 'id', 'front_matter');
-        ie_open('h2');
-        itext('Front Matter');
-        ie_close('h2');
-        ie_open('p');
-        itext('All files in the ');
-        ie_open('code');
-        itext('pages');
-        ie_close('code');
-        itext(' directory must have the following front matter declared at the beginning of the file.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('title:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page Title"');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('description:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Description."');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('The ');
-        ie_open('code');
-        itext('title');
-        ie_close('code');
-        itext(' property will be used for auto-generated navigation elements and as the page\'s ');
-        ie_open('code');
-        itext('<title>');
-        ie_close('code');
-        itext('.');
-        ie_close('p');
-        ie_open('p');
-        itext('Both the ');
-        ie_open('code');
-        itext('title');
-        ie_close('code');
-        itext(' and ');
-        ie_open('code');
-        itext('description');
-        ie_close('code');
-        itext(' properties will be used for search functionality.');
-        ie_close('p');
-        ie_close('article');
-        ie_open('article', null, null, 'id', 'soy_files');
-        ie_open('h2');
-        itext('Soy');
-        ie_close('h2');
-        ie_open('p');
-        itext('All files ending with the ');
-        ie_open('code');
-        itext('.soy');
-        ie_close('code');
-        itext(' extension will be rendered as soy templates.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-soy');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('description:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page description."');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('title:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page"');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n\n{namespace page}\n\n/**\n *\n */\n{template .render}\n    <span>Hello, World!</span');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('>\n{/template}\n');
-        ie_close('span');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('blockquote');
-        ie_open('p');
-        itext('Note: all ');
-        ie_open('code');
-        itext('namespace');
-        ie_close('code');
-        itext(' properties must be unique across all files within the ');
-        ie_open('code');
-        itext('src');
-        ie_close('code');
-        itext(' directory, and every soy file must define a ');
-        ie_open('code');
-        itext('.render');
-        ie_close('code');
-        itext(' template.');
-        ie_close('p');
-        ie_close('blockquote');
-        ie_open('h3');
-        itext('Site/Page Data');
-        ie_close('h3');
-        ie_open('p');
-        itext('Every page is passed a ');
-        ie_open('code');
-        itext('site');
-        ie_close('code');
-        itext(' and ');
-        ie_open('code');
-        itext('page');
-        ie_close('code');
-        itext(' param.');
-        ie_close('p');
-        ie_open('p');
-        itext('The ');
-        ie_open('code');
-        itext('page');
-        ie_close('code');
-        itext(' param represents the front matter of the current file.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code');
-        itext('{$page.title}\n{$page.description}\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('The ');
-        ie_open('code');
-        itext('site');
-        ie_close('code');
-        itext(' param contains project meta data such as ');
-        ie_open('code');
-        itext('site.title');
-        ie_close('code');
-        itext(' and ');
-        ie_open('code');
-        itext('site.repo');
-        ie_close('code');
-        itext('. It also contains the structure of the entire site which can be used to generate navigation elements. This structure data is defined as the ');
-        ie_open('code');
-        itext('site.index');
-        ie_close('code');
-        itext(' property representing the index page of the project.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code');
-        itext('{$site.title}\n{$site.index}\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('This data is pulled from the ');
-        ie_open('code');
-        itext('dist/site.json');
-        ie_close('code');
-        itext(' file. Additional properties can be added to this data by editing the ');
-        ie_open('code');
-        itext('src/site.json');
-        ie_close('code');
-        itext(' file.');
-        ie_close('p');
-        ie_close('article');
-        ie_open('article', null, null, 'id', 'markdown_files');
-        ie_open('h2');
-        itext('Markdown');
-        ie_close('h2');
-        ie_open('p');
-        itext('Markdown files are intended for easier writing of documentation and content, these files are rendered to HTML and then wrapped in a ');
-        ie_open('code');
-        itext('soy');
-        ie_close('code');
-        itext(' template and rendered along all ');
-        ie_open('code');
-        itext('soy');
-        ie_close('code');
-        itext(' pages.');
-        ie_close('p');
-        ie_open('p');
-        itext('The ');
-        ie_open('code');
-        itext('namespace');
-        ie_close('code');
-        itext(' is also auto-generated based on the file path, so it does not need to be declared at the top of the file.');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('description:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page description."');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('layout:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"docs"');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('title:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page"');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n\n');
-        ie_open('span', null, null, 'class', 'hljs-comment');
-        itext('# Hello, World!');
-        ie_close('span');
-        itext('\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('It\'s important to note that because markdown files are wrapped in soy templates, that some content may need to be sanitized of ');
-        ie_open('code');
-        itext('soy');
-        ie_close('code');
-        itext(' related syntax (such as curly braces).');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-soy');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('description:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page description."');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('layout:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"docs"');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('title:');
-        ie_close('span');
-        itext(' ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('"Page"');
-        ie_close('span');
-        itext('\n');
-        ie_open('span', null, null, 'class', 'hljs-meta');
-        itext('---');
-        ie_close('span');
-        itext('\n\n');
-        ie_open('span', null, null, 'class', 'hljs-comment');
-        itext('# Hello, World!');
-        ie_close('span');
-        itext('\n\n{literal}\n\n<pre');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('>\n    var example = function() {return \'Example js\';}\n</pre>\n\n{/literal}\n');
-        ie_close('span');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('See ');
-        ie_open('a', null, null, 'href', 'https://developers.google.com/closure/templates/docs/commands#specialcharacters');
-        itext('google\'s documentation');
-        ie_close('a');
-        itext(' for more info.');
-        ie_close('p');
-        ie_close('article');
-      };
-      $templateAlias1(soy.$$assignDefaults({ content: param138 }, opt_data), null, opt_ijData);
-    }
-    exports.render = $render;
-    if (goog.DEBUG) {
-      $render.soyTemplateName = 'docsPagesHtml.render';
-    }
-
-    exports.render.params = [];
-    exports.render.types = {};
-    templates = exports;
-    return exports;
-  });
-
-  var docsPagesHtml = function (_Component) {
-    babelHelpers.inherits(docsPagesHtml, _Component);
-
-    function docsPagesHtml() {
-      babelHelpers.classCallCheck(this, docsPagesHtml);
-      return babelHelpers.possibleConstructorReturn(this, (docsPagesHtml.__proto__ || Object.getPrototypeOf(docsPagesHtml)).apply(this, arguments));
-    }
-
-    return docsPagesHtml;
-  }(Component);
-
-  Soy.register(docsPagesHtml, templates);
-  this['metalNamed']['pages'] = this['metalNamed']['pages'] || {};
-  this['metalNamed']['pages']['docsPagesHtml'] = docsPagesHtml;
-  this['metalNamed']['pages']['templates'] = templates;
-  this['metal']['pages'] = templates;
-  /* jshint ignore:end */
-}).call(this);
-'use strict';
-
-(function () {
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-  var templates = this['metal']['pages'];
-
-  var docsPagesHtml = function (_Component) {
-    babelHelpers.inherits(docsPagesHtml, _Component);
-
-    function docsPagesHtml() {
-      babelHelpers.classCallCheck(this, docsPagesHtml);
-      return babelHelpers.possibleConstructorReturn(this, (docsPagesHtml.__proto__ || Object.getPrototypeOf(docsPagesHtml)).apply(this, arguments));
-    }
-
-    return docsPagesHtml;
-  }(Component);
-
-  ;
-
-  Soy.register(docsPagesHtml, templates);
-
-  this['metal']['docsPagesHtml'] = docsPagesHtml;
-}).call(this);
-'use strict';
-
-(function () {
-  /* jshint ignore:start */
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-
-  var templates;
-  goog.loadModule(function (exports) {
-
-    // This file was automatically generated from project-structure.soy.
-    // Please don't edit this file by hand.
-
-    /**
-     * @fileoverview Templates in namespace docsProjectStructureHtml.
-     * @public
-     */
-
-    goog.module('docsProjectStructureHtml.incrementaldom');
-
-    /** @suppress {extraRequire} */
-    var soy = goog.require('soy');
-    /** @suppress {extraRequire} */
-    var soydata = goog.require('soydata');
-    /** @suppress {extraRequire} */
-    goog.require('goog.i18n.bidi');
-    /** @suppress {extraRequire} */
-    goog.require('goog.asserts');
-    /** @suppress {extraRequire} */
-    goog.require('goog.string');
-    var IncrementalDom = goog.require('incrementaldom');
-    var ie_open = IncrementalDom.elementOpen;
-    var ie_close = IncrementalDom.elementClose;
-    var ie_void = IncrementalDom.elementVoid;
-    var ie_open_start = IncrementalDom.elementOpenStart;
-    var ie_open_end = IncrementalDom.elementOpenEnd;
-    var itext = IncrementalDom.text;
-    var iattr = IncrementalDom.attr;
-
-    var $templateAlias1 = Soy.getTemplate('docs.incrementaldom', 'render');
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $render(opt_data, opt_ignored, opt_ijData) {
-      opt_data = opt_data || {};
-      var param143 = function param143() {
         ie_open('article', null, null, 'id', 'structure');
         ie_open('h2');
-        itext('Structure');
+        itext('Project Structure');
         ie_close('h2');
         ie_open('p');
         itext('Here is a basic example of an ');
@@ -23081,22 +22961,14 @@ babelHelpers;
         ie_close('code');
         itext(' project.');
         ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-bash');
-        itext('|--gulpfile.js (registers tasks)\n|--src/\n   |--site.json\n   |--layouts/\n      |--base.soy (required base template)\n      |--docs.soy\n   |--pages/\n      |--index.soy (required index page)\n      |--docs/\n         |--index.soy\n         |--create.soy (soy rendered to html)\n         |--deploy.md (markdown rendered to html)\n         |--parent/\n            |--index.md\n            |--child.md\n');
-        ie_close('code');
-        ie_close('pre');
+        $templateAlias2({ code: '|--gulpfile.js\n|--src/\n   |--site.json\n   |--layouts/\n      |--base.soy\n      |--docs.soy\n   |--pages/\n      |--index.soy\n      |--docs/\n         |--index.soy\n         |--create.soy\n         |--deploy.md\n         |--parent/\n            |--index.md\n            |--child.md', mode: 'bash' }, null, opt_ijData);
         ie_close('article');
         ie_open('article', null, null, 'id', 'site_json');
         ie_open('h2');
         itext('site.json');
         ie_close('h2');
         ie_open('p');
-        itext('This file contains meta data about your project. Any property can be added to this file. Front matter from ');
-        ie_open('code');
-        itext('pages');
-        ie_close('code');
-        itext(' is merged with this data and passed to every page as a soy param.');
+        itext('This file contains meta data about your project. Any property can be added to this file. Front matter from all pages is merged with this data and passed to every page as a soy param.');
         ie_close('p');
         ie_close('article');
         ie_open('article', null, null, 'id', 'layouts');
@@ -23199,11 +23071,11 @@ babelHelpers;
         ie_close('p');
         ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param143 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param131 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
-      $render.soyTemplateName = 'docsProjectStructureHtml.render';
+      $render.soyTemplateName = 'docsGettingStartedHtml.render';
     }
 
     exports.render.params = [];
@@ -23212,22 +23084,22 @@ babelHelpers;
     return exports;
   });
 
-  var docsProjectStructureHtml = function (_Component) {
-    babelHelpers.inherits(docsProjectStructureHtml, _Component);
+  var docsGettingStartedHtml = function (_Component) {
+    babelHelpers.inherits(docsGettingStartedHtml, _Component);
 
-    function docsProjectStructureHtml() {
-      babelHelpers.classCallCheck(this, docsProjectStructureHtml);
-      return babelHelpers.possibleConstructorReturn(this, (docsProjectStructureHtml.__proto__ || Object.getPrototypeOf(docsProjectStructureHtml)).apply(this, arguments));
+    function docsGettingStartedHtml() {
+      babelHelpers.classCallCheck(this, docsGettingStartedHtml);
+      return babelHelpers.possibleConstructorReturn(this, (docsGettingStartedHtml.__proto__ || Object.getPrototypeOf(docsGettingStartedHtml)).apply(this, arguments));
     }
 
-    return docsProjectStructureHtml;
+    return docsGettingStartedHtml;
   }(Component);
 
-  Soy.register(docsProjectStructureHtml, templates);
-  this['metalNamed']['project-structure'] = this['metalNamed']['project-structure'] || {};
-  this['metalNamed']['project-structure']['docsProjectStructureHtml'] = docsProjectStructureHtml;
-  this['metalNamed']['project-structure']['templates'] = templates;
-  this['metal']['project-structure'] = templates;
+  Soy.register(docsGettingStartedHtml, templates);
+  this['metalNamed']['getting-started'] = this['metalNamed']['getting-started'] || {};
+  this['metalNamed']['getting-started']['docsGettingStartedHtml'] = docsGettingStartedHtml;
+  this['metalNamed']['getting-started']['templates'] = templates;
+  this['metal']['getting-started'] = templates;
   /* jshint ignore:end */
 }).call(this);
 'use strict';
@@ -23235,24 +23107,24 @@ babelHelpers;
 (function () {
   var Component = this['metal']['component'];
   var Soy = this['metal']['Soy'];
-  var templates = this['metal']['project-structure'];
+  var templates = this['metal']['getting-started'];
 
-  var docsProjectStructureHtml = function (_Component) {
-    babelHelpers.inherits(docsProjectStructureHtml, _Component);
+  var docsGettingStartedHtml = function (_Component) {
+    babelHelpers.inherits(docsGettingStartedHtml, _Component);
 
-    function docsProjectStructureHtml() {
-      babelHelpers.classCallCheck(this, docsProjectStructureHtml);
-      return babelHelpers.possibleConstructorReturn(this, (docsProjectStructureHtml.__proto__ || Object.getPrototypeOf(docsProjectStructureHtml)).apply(this, arguments));
+    function docsGettingStartedHtml() {
+      babelHelpers.classCallCheck(this, docsGettingStartedHtml);
+      return babelHelpers.possibleConstructorReturn(this, (docsGettingStartedHtml.__proto__ || Object.getPrototypeOf(docsGettingStartedHtml)).apply(this, arguments));
     }
 
-    return docsProjectStructureHtml;
+    return docsGettingStartedHtml;
   }(Component);
 
   ;
 
-  Soy.register(docsProjectStructureHtml, templates);
+  Soy.register(docsGettingStartedHtml, templates);
 
-  this['metal']['docsProjectStructureHtml'] = docsProjectStructureHtml;
+  this['metal']['docsGettingStartedHtml'] = docsGettingStartedHtml;
 }).call(this);
 'use strict';
 
@@ -23264,15 +23136,15 @@ babelHelpers;
   var templates;
   goog.loadModule(function (exports) {
 
-    // This file was automatically generated from tasks.soy.
+    // This file was automatically generated from layouts.soy.
     // Please don't edit this file by hand.
 
     /**
-     * @fileoverview Templates in namespace docsTasksHtml.
+     * @fileoverview Templates in namespace docsLayoutsHtml.
      * @public
      */
 
-    goog.module('docsTasksHtml.incrementaldom');
+    goog.module('docsLayoutsHtml.incrementaldom');
 
     /** @suppress {extraRequire} */
     var soy = goog.require('soy');
@@ -23293,6 +23165,8 @@ babelHelpers;
     var itext = IncrementalDom.text;
     var iattr = IncrementalDom.attr;
 
+    var $templateAlias2 = Soy.getTemplate('ElectricCode.incrementaldom', 'render');
+
     var $templateAlias1 = Soy.getTemplate('docs.incrementaldom', 'render');
 
     /**
@@ -23304,68 +23178,131 @@ babelHelpers;
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
       opt_data = opt_data || {};
-      var param148 = function param148() {
-        ie_open('article', null, null, 'id', 'registering');
+      var param188 = function param188() {
+        ie_open('article', null, null, 'id', 'base');
         ie_open('h2');
-        itext('Registering');
+        itext('Base Layout');
         ie_close('h2');
         ie_open('p');
-        itext('All tasks are registered in the project\'s ');
+        itext('All projects must have a ');
         ie_open('code');
-        itext('gulpfile.js');
+        itext('layouts/base.soy');
+        ie_close('code');
+        itext(' file. This file is responsible for the HTML boilerplate of your site. Every page will be rendered with this layout.');
+        ie_close('p');
+        $templateAlias2({ code: '&#123;namespace base&#125;\n\n/**\n * @param content\n * @param page\n * @param serialized\n * @param site\n */\n&#123;template .render private="true"&#125;\n<!DOCTYPE html>\n<html lang="en">\n    <head>\n        <meta charset="UTF-8">\n        <meta content="minimum-scale=1.0, width=device-width" name="viewport">\n        <meta name="description" content="{$page.description ?: \'\'}">\n\n        <title>{$page.title} - {$site.title}</title>\n\n        <!-- inject:css -->\n        <!-- endinject -->\n\n        <link rel="stylesheet" href="/styles/main.css">\n\n        <!-- inject:js -->\n        <!-- endinject -->\n    </head>\n    <body>\n        <!-- inject:metal:js -->\n            <div>\n                {$content}\n            </div>\n        <!-- endinject -->\n\n        <!-- inject:codemirror:js -->\n        <!-- endinject -->\n    </body>\n</html>\n&#123;/template&#125;', mode: 'soy' }, null, opt_ijData);
+        ie_open('p');
+        itext('This layout can be editted to fit the needs of your project, but it must use ');
+        ie_open('code');
+        itext('base');
+        ie_close('code');
+        itext(' as the ');
+        ie_open('code');
+        itext('namespace');
+        ie_close('code');
+        itext(', and it must include the ');
+        ie_open('code');
+        itext('{$content}');
+        ie_close('code');
+        itext(' variable which renders the content of each page.');
+        ie_close('p');
+        ie_open('h3');
+        itext('Inject Tags');
+        ie_close('h3');
+        ie_open('p');
+        itext('Inside the ');
+        ie_open('code');
+        itext('base.soy');
+        ie_close('code');
+        itext(' template there are multiple inject tags that are used by electric to import resources and scripts.');
+        ie_close('p');
+        ie_open('h4');
+        ie_open('code');
+        itext('inject:css');
+        ie_close('code');
+        itext('/');
+        ie_open('code');
+        itext('inject:js');
+        ie_close('code');
+        ie_close('h4');
+        ie_open('p');
+        itext('These tags are used to inject ');
+        ie_open('code');
+        itext('link');
+        ie_close('code');
+        itext(' and ');
+        ie_open('code');
+        itext('script');
+        ie_close('code');
+        itext(' tags for all thirdparty resources located in ');
+        ie_open('code');
+        itext('dist/vendor');
         ie_close('code');
         itext('.');
         ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-js');
-        ie_open('span', null, null, 'class', 'hljs-keyword');
-        itext('const');
-        ie_close('span');
-        itext(' gulp = ');
-        ie_open('span', null, null, 'class', 'hljs-built_in');
-        itext('require');
-        ie_close('span');
-        itext('(');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('\'gulp\'');
-        ie_close('span');
-        itext(');\n');
-        ie_open('span', null, null, 'class', 'hljs-keyword');
-        itext('const');
-        ie_close('span');
-        itext(' electric = ');
-        ie_open('span', null, null, 'class', 'hljs-built_in');
-        itext('require');
-        ie_close('span');
-        itext('(');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('\'electric\'');
-        ie_close('span');
-        itext(');\n\nelectric.registerTasks({\n    ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('gulp');
-        ie_close('span');
-        itext(': gulp\n});\n');
+        ie_open('h4');
+        ie_open('code');
+        itext('inject:metal:js');
         ie_close('code');
-        ie_close('pre');
-        ie_close('article');
-        ie_open('article', null, null, 'id', 'tasks');
-        ie_open('h2');
-        itext('Available Tasks');
-        ie_close('h2');
-        ie_open('h3');
-        itext('Generate');
-        ie_close('h3');
+        ie_close('h4');
         ie_open('p');
-        itext('To generate your distribution files, simple run the following command.');
+        itext('During the ');
+        ie_open('code');
+        itext('generate');
+        ie_close('code');
+        itext(' task they are replaced with the necessary code for automatically invoking Metal components that have been implemented in your project\'s ');
+        ie_open('code');
+        itext('soy');
+        ie_close('code');
+        itext(' files.');
         ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-bash');
-        itext('gulp generate\n');
-        ie_close('code');
-        ie_close('pre');
+        ie_open('blockquote');
         ie_open('p');
-        itext('This will render all ');
+        itext('Note: these tags only need to be included in the ');
+        ie_open('code');
+        itext('base');
+        ie_close('code');
+        itext(' template.');
+        ie_close('p');
+        ie_close('blockquote');
+        ie_open('p');
+        itext('The injected code is what implements the ');
+        ie_open('code');
+        itext('serialized');
+        ie_close('code');
+        itext(' param that is defined at the start of the template. ');
+        ie_open('code');
+        itext('serialized');
+        ie_close('code');
+        itext(' is stringified meta data that Metal consumes to render each page.');
+        ie_close('p');
+        ie_open('h4');
+        ie_open('code');
+        itext('inject:codemirror:js');
+        ie_close('code');
+        ie_close('h4');
+        ie_open('p');
+        itext('CodeMirror is responsible for Electric\'s built in syntax highlighting. This script locates all code examples and applies the appropriate syntax highlighting.');
+        ie_close('p');
+        ie_close('article');
+        ie_open('article', null, null, 'id', 'sub');
+        ie_open('h2');
+        itext('Sub Layouts');
+        ie_close('h2');
+        ie_open('p');
+        itext('Additional layouts can be created in the ');
+        ie_open('code');
+        itext('layouts');
+        ie_close('code');
+        itext(' folder of your project. These layouts are simply ');
+        ie_open('code');
+        itext('soy');
+        ie_close('code');
+        itext(' templates that can be implemented by individual pages.');
+        ie_close('p');
+        $templateAlias2({ code: '&#123;namespace docs&#125;\n\n/**\n * @param content\n * @param elementClasses\n * @param page\n * @param site\n */\n&#123;template .render&#125;\n    <div class="{$elementClasses ?: \'main\'}">\n        <div class="topper">\n            <h1>{$site.title}</h1>\n        </div>\n\n        <div class="content">\n            <h2>{$page.title}</h2>\n\n            {$content}\n        </div>\n    </div>\n&#123;/template&#125;', mode: 'soy' }, null, opt_ijData);
+        ie_open('p');
+        itext('This template can be implemented by both ');
         ie_open('code');
         itext('soy');
         ie_close('code');
@@ -23373,348 +23310,84 @@ babelHelpers;
         ie_open('code');
         itext('markdown');
         ie_close('code');
-        itext(' files from ');
+        itext(' files. The following example implements the ');
         ie_open('code');
-        itext('src');
+        itext('docs');
         ie_close('code');
-        itext(' into HTML and place them in the ');
-        ie_open('code');
-        itext('dist');
-        ie_close('code');
-        itext(' folder.');
+        itext(' layout.');
         ie_close('p');
-        ie_close('article');
-        ie_open('article', null, null, 'id', 'configuration');
-        ie_open('h2');
-        itext('Configuration');
-        ie_close('h2');
         ie_open('h3');
-        ie_open('code');
-        itext('registerTasks');
-        ie_close('code');
-        ie_close('h3');
-        ie_open('h4');
-        itext('gulp');
-        ie_close('h4');
-        ie_open('ul');
-        ie_open('li');
-        itext('Required: ');
-        ie_open('code');
-        itext('true');
-        ie_close('code');
-        ie_close('li');
-        ie_open('li');
-        itext('Type: Gulp instance');
-        ie_close('li');
-        ie_close('ul');
-        ie_open('p');
-        itext('An instance of ');
-        ie_open('a', null, null, 'href', 'http://gulpjs.com/');
-        itext('gulp');
-        ie_close('a');
-        itext('.');
-        ie_close('p');
-        ie_open('h4');
-        itext('markdownOptions');
-        ie_close('h4');
-        ie_open('ul');
-        ie_open('li');
-        itext('Required: ');
-        ie_open('code');
-        itext('false');
-        ie_close('code');
-        ie_close('li');
-        ie_open('li');
-        itext('Type: ');
-        ie_open('code');
-        itext('Object');
-        ie_close('code');
-        ie_close('li');
-        ie_close('ul');
-        ie_open('p');
-        itext('An Object Literal containing configuration options for ');
-        ie_open('a', null, null, 'href', 'https://github.com/jonschlinkert/remarkable');
-        itext('Remarkable');
-        ie_close('a');
-        itext(' which is used to render Markdown files.');
-        ie_close('p');
-        ie_open('p');
-        itext('Example:');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-js');
-        itext('ssg.registerTasks({\n    ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('gulp');
-        ie_close('span');
-        itext(': gulp,\n    ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('markdownOptions');
-        ie_close('span');
-        itext(': {\n        ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('breaks');
-        ie_close('span');
-        itext(': ');
-        ie_open('span', null, null, 'class', 'hljs-literal');
-        itext('true');
-        ie_close('span');
-        itext('\n    }\n});\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('See ');
-        ie_open('a', null, null, 'href', 'https://github.com/jonschlinkert/remarkable#options');
-        itext('Remarkable\'s documentation');
-        ie_close('a');
-        itext(' for list of options.');
-        ie_close('p');
-        ie_open('h4');
-        itext('pathDest');
-        ie_close('h4');
-        ie_open('ul');
-        ie_open('li');
-        itext('Required: ');
-        ie_open('code');
-        itext('false');
-        ie_close('code');
-        ie_close('li');
-        ie_open('li');
-        itext('Type: ');
-        ie_open('code');
-        itext('String');
-        ie_close('code');
-        ie_close('li');
-        ie_open('li');
-        itext('Default: ');
-        ie_open('code');
-        itext('dist');
-        ie_close('code');
-        ie_close('li');
-        ie_close('ul');
-        ie_open('p');
-        itext('The path that generated files are placed in.');
-        ie_close('p');
-        ie_open('p');
-        itext('Example:');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-js');
-        itext('ssg.registerTasks({\n    ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('gulp');
-        ie_close('span');
-        itext(': gulp,\n    ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('pathDest');
-        ie_close('span');
-        itext(': ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('\'build\'');
-        ie_close('span');
-        itext('\n});\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('Now all generated files will be placed in the ');
-        ie_open('code');
-        itext('build');
-        ie_close('code');
-        itext(' directory.');
-        ie_close('p');
-        ie_open('h4');
-        itext('pathSrc');
-        ie_close('h4');
-        ie_open('ul');
-        ie_open('li');
-        itext('Required: ');
-        ie_open('code');
-        itext('false');
-        ie_close('code');
-        ie_close('li');
-        ie_open('li');
-        itext('Type: ');
-        ie_open('code');
-        itext('String');
-        ie_close('code');
-        ie_close('li');
-        ie_open('li');
-        itext('Default: ');
-        ie_open('code');
-        itext('src');
-        ie_close('code');
-        ie_close('li');
-        ie_close('ul');
-        ie_open('p');
-        itext('The path where all source files are located.');
-        ie_close('p');
-        ie_open('p');
-        itext('Example:');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-js');
-        itext('ssg.registerTasks({\n    ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('gulp');
-        ie_close('span');
-        itext(': gulp,\n    ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('pathSrc');
-        ie_close('span');
-        itext(': ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('\'web\'');
-        ie_close('span');
-        itext('\n});\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('Now ');
-        ie_open('code');
-        itext('electric');
-        ie_close('code');
-        itext(' will look inside the ');
-        ie_open('code');
-        itext('web');
-        ie_close('code');
-        itext(' directory for all source files.');
-        ie_close('p');
-        ie_open('h4');
-        itext('plugins');
-        ie_close('h4');
-        ie_open('ul');
-        ie_open('li');
-        itext('Required: ');
-        ie_open('code');
-        itext('false');
-        ie_close('code');
-        ie_close('li');
-        ie_open('li');
-        itext('Type: ');
-        ie_open('code');
-        itext('Array<String>');
-        ie_close('code');
-        ie_close('li');
-        ie_close('ul');
-        ie_open('p');
-        itext('Array of ');
-        ie_open('code');
-        itext('npm');
-        ie_close('code');
-        itext(' modules that expose Metal components.');
-        ie_close('p');
-        ie_open('p');
-        itext('Example:');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-js');
-        itext('electric.registerTasks({\n    ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('gulp');
-        ie_close('span');
-        itext(': gulp,\n    ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('plugins');
-        ie_close('span');
-        itext(': [');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('\'electric-components\'');
-        ie_close('span');
-        itext(']\n});\n');
-        ie_close('code');
-        ie_close('pre');
-        ie_open('p');
-        itext('The components found in the ');
-        ie_open('code');
-        itext('electric-components');
-        ie_close('code');
-        itext(' package will now be available to all ');
         ie_open('code');
         itext('soy');
         ie_close('code');
-        itext(' files in your project.');
-        ie_close('p');
+        itext(' example.');
+        ie_close('h3');
         ie_open('p');
-        itext('Note that every package listed in ');
-        ie_open('code');
-        itext('plugins');
-        ie_close('code');
-        itext(' must also be listed as a dependency in the project\'s ');
-        ie_open('code');
-        itext('package.json');
-        ie_close('code');
+        itext('Sub layouts are rendered using soy\'s ');
+        ie_open('a', null, null, 'href', 'https://developers.google.com/closure/templates/docs/commands#call');
+        itext('call command');
+        ie_close('a');
         itext('.');
         ie_close('p');
-        ie_open('h4');
-        itext('taskPrefix');
-        ie_close('h4');
-        ie_open('ul');
-        ie_open('li');
-        itext('Required: ');
-        ie_open('code');
-        itext('false');
-        ie_close('code');
-        ie_close('li');
-        ie_open('li');
-        itext('Type: ');
-        ie_open('code');
-        itext('String');
-        ie_close('code');
-        ie_close('li');
-        ie_close('ul');
-        ie_open('p');
-        itext('String that is prefixed to every task exposed by ');
-        ie_open('code');
-        itext('electric');
-        ie_close('code');
-        itext('.');
-        ie_close('p');
-        ie_open('p');
-        itext('Example:');
-        ie_close('p');
-        ie_open('pre');
-        ie_open('code', null, null, 'class', 'language-js');
-        itext('ssg.registerTasks({\n    ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('gulp');
-        ie_close('span');
-        itext(': gulp,\n    ');
-        ie_open('span', null, null, 'class', 'hljs-attr');
-        itext('taskPrefix');
-        ie_close('span');
-        itext(': ');
-        ie_open('span', null, null, 'class', 'hljs-string');
-        itext('\'ssg:\'');
-        ie_close('span');
-        itext('\n});\n');
-        ie_close('code');
-        ie_close('pre');
+        $templateAlias2({ code: '---\ndescription: "Page description."\ntitle: "Page"\n---\n\n&#123;namespace page&#125;\n\n/**\n *\n */\n&#123;template .render&#125;\n    {call docs.render data="all"}\n        {param content kind="html"}\n            <span>Hello, World!</span>\n        {/param}\n    {/call}\n&#123;/template&#125;', mode: 'soy' }, null, opt_ijData);
         ie_open('p');
         itext('The ');
         ie_open('code');
-        itext('generate');
+        itext('data="all"');
         ie_close('code');
-        itext(' task will now be exposed as ');
+        itext(' property needs to be set if the layout in question needs to implement any of the global params (');
         ie_open('code');
-        itext('ssg:generate');
+        itext('site');
         ie_close('code');
-        itext('. This option allows you to implement ');
+        itext(' or ');
         ie_open('code');
-        itext('electric');
+        itext('page');
         ie_close('code');
-        itext(' in conjunction with other packages that expose ');
+        itext(').');
+        ie_close('p');
+        ie_open('h3');
         ie_open('code');
-        itext('gulp');
+        itext('markdown');
         ie_close('code');
-        itext(' tasks without the risk of overwriting previously defined tasks.');
+        itext(' example.');
+        ie_close('h3');
+        ie_open('p');
+        itext('Markdown implementation doesn\'t require any ');
+        ie_open('code');
+        itext('soy');
+        ie_close('code');
+        itext(' code, rather it leverages the front matter ');
+        ie_open('code');
+        itext('layout');
+        ie_close('code');
+        itext(' property to determine the layout.');
+        ie_close('p');
+        $templateAlias2({ code: '---\ndescription: "Page description."\nlayout: "docs"\ntitle: "Page"\n---\n\n# Hello, World!', mode: 'markdown' }, null, opt_ijData);
+        ie_open('p');
+        itext('By specifying ');
+        ie_open('code');
+        itext('layout: "docs"');
+        ie_close('code');
+        itext(', the generator will look for a soy template in the layouts directory with the ');
+        ie_open('code');
+        itext('docs');
+        ie_close('code');
+        itext(' namespace.');
+        ie_close('p');
+        ie_open('p');
+        itext('See the section on ');
+        ie_open('a', null, null, 'href', '/docs/configuration.html#options');
+        itext('configuration');
+        ie_close('a');
+        itext(' for info on configuring the markdown engine.');
         ie_close('p');
         ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param148 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param188 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
-      $render.soyTemplateName = 'docsTasksHtml.render';
+      $render.soyTemplateName = 'docsLayoutsHtml.render';
     }
 
     exports.render.params = [];
@@ -23723,22 +23396,22 @@ babelHelpers;
     return exports;
   });
 
-  var docsTasksHtml = function (_Component) {
-    babelHelpers.inherits(docsTasksHtml, _Component);
+  var docsLayoutsHtml = function (_Component) {
+    babelHelpers.inherits(docsLayoutsHtml, _Component);
 
-    function docsTasksHtml() {
-      babelHelpers.classCallCheck(this, docsTasksHtml);
-      return babelHelpers.possibleConstructorReturn(this, (docsTasksHtml.__proto__ || Object.getPrototypeOf(docsTasksHtml)).apply(this, arguments));
+    function docsLayoutsHtml() {
+      babelHelpers.classCallCheck(this, docsLayoutsHtml);
+      return babelHelpers.possibleConstructorReturn(this, (docsLayoutsHtml.__proto__ || Object.getPrototypeOf(docsLayoutsHtml)).apply(this, arguments));
     }
 
-    return docsTasksHtml;
+    return docsLayoutsHtml;
   }(Component);
 
-  Soy.register(docsTasksHtml, templates);
-  this['metalNamed']['tasks'] = this['metalNamed']['tasks'] || {};
-  this['metalNamed']['tasks']['docsTasksHtml'] = docsTasksHtml;
-  this['metalNamed']['tasks']['templates'] = templates;
-  this['metal']['tasks'] = templates;
+  Soy.register(docsLayoutsHtml, templates);
+  this['metalNamed']['layouts'] = this['metalNamed']['layouts'] || {};
+  this['metalNamed']['layouts']['docsLayoutsHtml'] = docsLayoutsHtml;
+  this['metalNamed']['layouts']['templates'] = templates;
+  this['metal']['layouts'] = templates;
   /* jshint ignore:end */
 }).call(this);
 'use strict';
@@ -23746,24 +23419,490 @@ babelHelpers;
 (function () {
   var Component = this['metal']['component'];
   var Soy = this['metal']['Soy'];
-  var templates = this['metal']['tasks'];
+  var templates = this['metal']['layouts'];
 
-  var docsTasksHtml = function (_Component) {
-    babelHelpers.inherits(docsTasksHtml, _Component);
+  var docsLayoutsHtml = function (_Component) {
+    babelHelpers.inherits(docsLayoutsHtml, _Component);
 
-    function docsTasksHtml() {
-      babelHelpers.classCallCheck(this, docsTasksHtml);
-      return babelHelpers.possibleConstructorReturn(this, (docsTasksHtml.__proto__ || Object.getPrototypeOf(docsTasksHtml)).apply(this, arguments));
+    function docsLayoutsHtml() {
+      babelHelpers.classCallCheck(this, docsLayoutsHtml);
+      return babelHelpers.possibleConstructorReturn(this, (docsLayoutsHtml.__proto__ || Object.getPrototypeOf(docsLayoutsHtml)).apply(this, arguments));
     }
 
-    return docsTasksHtml;
+    return docsLayoutsHtml;
   }(Component);
 
   ;
 
-  Soy.register(docsTasksHtml, templates);
+  Soy.register(docsLayoutsHtml, templates);
 
-  this['metal']['docsTasksHtml'] = docsTasksHtml;
+  this['metal']['docsLayoutsHtml'] = docsLayoutsHtml;
+}).call(this);
+'use strict';
+
+(function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
+    // This file was automatically generated from metal-components.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace docsMetalComponentsHtml.
+     * @public
+     */
+
+    goog.module('docsMetalComponentsHtml.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    var $templateAlias2 = Soy.getTemplate('ElectricCode.incrementaldom', 'render');
+
+    var $templateAlias1 = Soy.getTemplate('docs.incrementaldom', 'render');
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      opt_data = opt_data || {};
+      var param213 = function param213() {
+        ie_open('article', null, null, 'id', 'creating');
+        ie_open('h2');
+        itext('Creating Components');
+        ie_close('h2');
+        ie_open('p');
+        itext('One of the major benefits of ');
+        ie_open('code');
+        itext('electric');
+        ie_close('code');
+        itext(' is the ability to create metal.js components and invoke them in your ');
+        ie_open('code');
+        itext('soy');
+        ie_close('code');
+        itext(' layouts and pages.');
+        ie_close('p');
+        ie_open('p');
+        itext('Components can exist anywhere in the ');
+        ie_open('code');
+        itext('src');
+        ie_close('code');
+        itext(' directory, for this example we will place them inside ');
+        ie_open('code');
+        itext('src/components');
+        ie_close('code');
+        itext('.');
+        ie_close('p');
+        $templateAlias2({ code: '|--src/\n   |--layouts/\n      |--base.soy\n      |--docs.soy\n   |--pages/\n      |--index.soy\n   |--components/\n      |--MyComponent.soy\n      |--MyComponent.js', mode: 'bash' }, null, opt_ijData);
+        ie_open('p');
+        ie_open('code');
+        itext('MyComponent.soy');
+        ie_close('code');
+        itext('.');
+        ie_close('p');
+        $templateAlias2({ code: '&#123;namespace MyComponent&#125;\n\n/**\n *\n */\n&#123;template .render&#125;\n    <div>Hello, World!</div>\n&#123;/template&#125;', mode: 'soy' }, null, opt_ijData);
+        ie_open('p');
+        ie_open('code');
+        itext('MyComponent.js');
+        ie_close('code');
+        itext('.');
+        ie_close('p');
+        $templateAlias2({ code: '\'use strict\';\n\nimport Component from \'metal-component\';\nimport Soy from \'metal-soy\';\n\nimport templates from \'./MyComponent.soy\';\n\nclass MyComponent extends Component {\n    attached() {\n        console.log(\'MyComponent attached!\');\n    }\n};\n\nSoy.register(MyComponent, templates);\n\nexport default MyComponent;', mode: 'javascript' }, null, opt_ijData);
+        ie_open('p');
+        itext('Now that you have the base component files, the ');
+        ie_open('code');
+        itext('MyComponent');
+        ie_close('code');
+        itext(' template simply needs to be rendered in a page/layout.');
+        ie_close('p');
+        ie_close('article');
+        ie_open('article', null, null, 'id', 'rendering');
+        ie_open('h2');
+        itext('Rendering Components');
+        ie_close('h2');
+        ie_open('p');
+        itext('To render a metal component in a page/layout, simply use the ');
+        ie_open('code');
+        itext('call');
+        ie_close('code');
+        itext(' command to render the ');
+        ie_open('code');
+        itext('.render');
+        ie_close('code');
+        itext(' template of the component.');
+        ie_close('p');
+        $templateAlias2({ code: '---\ndescription: "Page description."\ntitle: "Page"\n---\n\n&#123;namespace page&#125;\n\n/**\n *\n */\n&#123;template .render&#125;\n    <div>\n        {call MyComponent.render /}\n    </div>\n&#123;/template&#125;', mode: 'soy' }, null, opt_ijData);
+        ie_open('p');
+        itext('Now you should see \'MyComponent attached!\' in the browser console.');
+        ie_close('p');
+        ie_close('article');
+        ie_open('article', null, null, 'id', 'metal_sgg_components');
+        ie_open('h2');
+        itext('Electric Components');
+        ie_close('h2');
+        ie_open('p');
+        itext('The ');
+        ie_open('a', null, null, 'href', 'https://github.com/liferay/electric-components');
+        itext('electric-components');
+        ie_close('a');
+        itext(' package contains a number of components that are compatible with the site meta data, such as navigation and search components.');
+        ie_close('p');
+        ie_open('p');
+        itext('See ');
+        ie_open('a', null, null, 'href', '/docs/configuration.html#options');
+        itext('configuration');
+        ie_close('a');
+        itext(' for information on adding ');
+        ie_open('code');
+        itext('plugins');
+        ie_close('code');
+        itext(' to your project.');
+        ie_close('p');
+        ie_open('p');
+        itext('These components are invoked the same way as your own components.');
+        ie_close('p');
+        $templateAlias2({ code: '---\ndescription: "Page description."\ntitle: "Page"\n---\n\n&#123;namespace page&#125;\n\n/**\n * @param site\n */\n&#123;template .render&#125;\n    <div>\n        {call ElectricNavigation.render}\n            {param depth: 1 /}\n            {param section: $site.index /}\n        {/call}\n    </div>\n&#123;/template&#125;', mode: 'soy' }, null, opt_ijData);
+        ie_open('p');
+        itext('This will render a list with all direct descendants of the index page.');
+        ie_close('p');
+        ie_close('article');
+      };
+      $templateAlias1(soy.$$assignDefaults({ content: param213 }, opt_data), null, opt_ijData);
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'docsMetalComponentsHtml.render';
+    }
+
+    exports.render.params = [];
+    exports.render.types = {};
+    templates = exports;
+    return exports;
+  });
+
+  var docsMetalComponentsHtml = function (_Component) {
+    babelHelpers.inherits(docsMetalComponentsHtml, _Component);
+
+    function docsMetalComponentsHtml() {
+      babelHelpers.classCallCheck(this, docsMetalComponentsHtml);
+      return babelHelpers.possibleConstructorReturn(this, (docsMetalComponentsHtml.__proto__ || Object.getPrototypeOf(docsMetalComponentsHtml)).apply(this, arguments));
+    }
+
+    return docsMetalComponentsHtml;
+  }(Component);
+
+  Soy.register(docsMetalComponentsHtml, templates);
+  this['metalNamed']['metal-components'] = this['metalNamed']['metal-components'] || {};
+  this['metalNamed']['metal-components']['docsMetalComponentsHtml'] = docsMetalComponentsHtml;
+  this['metalNamed']['metal-components']['templates'] = templates;
+  this['metal']['metal-components'] = templates;
+  /* jshint ignore:end */
+}).call(this);
+'use strict';
+
+(function () {
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+  var templates = this['metal']['metal-components'];
+
+  var docsMetalComponentsHtml = function (_Component) {
+    babelHelpers.inherits(docsMetalComponentsHtml, _Component);
+
+    function docsMetalComponentsHtml() {
+      babelHelpers.classCallCheck(this, docsMetalComponentsHtml);
+      return babelHelpers.possibleConstructorReturn(this, (docsMetalComponentsHtml.__proto__ || Object.getPrototypeOf(docsMetalComponentsHtml)).apply(this, arguments));
+    }
+
+    return docsMetalComponentsHtml;
+  }(Component);
+
+  ;
+
+  Soy.register(docsMetalComponentsHtml, templates);
+
+  this['metal']['docsMetalComponentsHtml'] = docsMetalComponentsHtml;
+}).call(this);
+'use strict';
+
+(function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
+    // This file was automatically generated from pages.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace docsPagesHtml.
+     * @public
+     */
+
+    goog.module('docsPagesHtml.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    var $templateAlias2 = Soy.getTemplate('ElectricCode.incrementaldom', 'render');
+
+    var $templateAlias1 = Soy.getTemplate('docs.incrementaldom', 'render');
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      opt_data = opt_data || {};
+      var param243 = function param243() {
+        ie_open('article', null, null, 'id', 'front_matter');
+        ie_open('h2');
+        itext('Front Matter');
+        ie_close('h2');
+        ie_open('p');
+        itext('All files in the ');
+        ie_open('code');
+        itext('pages');
+        ie_close('code');
+        itext(' directory must have the following front matter declared at the beginning of the file.');
+        ie_close('p');
+        $templateAlias2({ code: '---\ntitle: "Page Title"\ndescription: "Description."\n---', mode: 'text' }, null, opt_ijData);
+        ie_open('p');
+        itext('The ');
+        ie_open('code');
+        itext('title');
+        ie_close('code');
+        itext(' property will be used for auto-generated navigation elements and as the page\'s ');
+        ie_open('code');
+        itext('<title>');
+        ie_close('code');
+        itext('.');
+        ie_close('p');
+        ie_open('p');
+        itext('Both the ');
+        ie_open('code');
+        itext('title');
+        ie_close('code');
+        itext(' and ');
+        ie_open('code');
+        itext('description');
+        ie_close('code');
+        itext(' properties will be used for search functionality.');
+        ie_close('p');
+        ie_close('article');
+        ie_open('article', null, null, 'id', 'soy_files');
+        ie_open('h2');
+        itext('Soy');
+        ie_close('h2');
+        ie_open('p');
+        itext('All files ending with the ');
+        ie_open('code');
+        itext('.soy');
+        ie_close('code');
+        itext(' extension will be rendered as soy templates.');
+        ie_close('p');
+        $templateAlias2({ code: '---\ndescription: "Page description."\ntitle: "Page"\n---\n\n&#123;namespace page&#125;\n\n/**\n *\n */\n&#123;template .render&#125;\n    <span>Hello, World!</span>\n&#123;/template&#125;', mode: 'soy' }, null, opt_ijData);
+        ie_open('blockquote');
+        ie_open('p');
+        itext('Note: all ');
+        ie_open('code');
+        itext('namespace');
+        ie_close('code');
+        itext(' properties must be unique across all files within the ');
+        ie_open('code');
+        itext('src');
+        ie_close('code');
+        itext(' directory, and every soy file must define a ');
+        ie_open('code');
+        itext('.render');
+        ie_close('code');
+        itext(' template.');
+        ie_close('p');
+        ie_close('blockquote');
+        ie_open('h3');
+        itext('Site/Page Data');
+        ie_close('h3');
+        ie_open('p');
+        itext('Every page is passed a ');
+        ie_open('code');
+        itext('site');
+        ie_close('code');
+        itext(' and ');
+        ie_open('code');
+        itext('page');
+        ie_close('code');
+        itext(' param.');
+        ie_close('p');
+        ie_open('p');
+        itext('The ');
+        ie_open('code');
+        itext('page');
+        ie_close('code');
+        itext(' param represents the front matter of the current file.');
+        ie_close('p');
+        $templateAlias2({ code: '{$page.title}\n{$page.description}', mode: 'soy' }, null, opt_ijData);
+        ie_open('p');
+        itext('The ');
+        ie_open('code');
+        itext('site');
+        ie_close('code');
+        itext(' param contains project meta data such as ');
+        ie_open('code');
+        itext('site.title');
+        ie_close('code');
+        itext(' and ');
+        ie_open('code');
+        itext('site.repo');
+        ie_close('code');
+        itext('. It also contains the structure of the entire site which can be used to generate navigation elements. This structure data is defined as the ');
+        ie_open('code');
+        itext('site.index');
+        ie_close('code');
+        itext(' property representing the index page of the project.');
+        ie_close('p');
+        $templateAlias2({ code: '{$site.title}\n{$site.index}', mode: 'soy' }, null, opt_ijData);
+        ie_open('p');
+        itext('This data is pulled from the ');
+        ie_open('code');
+        itext('dist/site.json');
+        ie_close('code');
+        itext(' file. Additional properties can be added to this data by editing the ');
+        ie_open('code');
+        itext('src/site.json');
+        ie_close('code');
+        itext(' file.');
+        ie_close('p');
+        ie_close('article');
+        ie_open('article', null, null, 'id', 'markdown_files');
+        ie_open('h2');
+        itext('Markdown');
+        ie_close('h2');
+        ie_open('p');
+        itext('Markdown files are intended for easier writing of documentation and content, these files are rendered to HTML and then wrapped in a ');
+        ie_open('code');
+        itext('soy');
+        ie_close('code');
+        itext(' template and rendered along all ');
+        ie_open('code');
+        itext('soy');
+        ie_close('code');
+        itext(' pages.');
+        ie_close('p');
+        ie_open('p');
+        itext('The ');
+        ie_open('code');
+        itext('namespace');
+        ie_close('code');
+        itext(' is also auto-generated based on the file path, so it does not need to be declared at the top of the file.');
+        ie_close('p');
+        $templateAlias2({ code: '---\ndescription: "Page description."\nlayout: "docs"\ntitle: "Page"\n---\n\n# Hello, World!', mode: 'markdown' }, null, opt_ijData);
+        ie_open('p');
+        itext('See ');
+        ie_open('a', null, null, 'href', 'https://developers.google.com/closure/templates/docs/commands#specialcharacters');
+        itext('google\'s documentation');
+        ie_close('a');
+        itext(' for more info.');
+        ie_close('p');
+        ie_close('article');
+      };
+      $templateAlias1(soy.$$assignDefaults({ content: param243 }, opt_data), null, opt_ijData);
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'docsPagesHtml.render';
+    }
+
+    exports.render.params = [];
+    exports.render.types = {};
+    templates = exports;
+    return exports;
+  });
+
+  var docsPagesHtml = function (_Component) {
+    babelHelpers.inherits(docsPagesHtml, _Component);
+
+    function docsPagesHtml() {
+      babelHelpers.classCallCheck(this, docsPagesHtml);
+      return babelHelpers.possibleConstructorReturn(this, (docsPagesHtml.__proto__ || Object.getPrototypeOf(docsPagesHtml)).apply(this, arguments));
+    }
+
+    return docsPagesHtml;
+  }(Component);
+
+  Soy.register(docsPagesHtml, templates);
+  this['metalNamed']['pages'] = this['metalNamed']['pages'] || {};
+  this['metalNamed']['pages']['docsPagesHtml'] = docsPagesHtml;
+  this['metalNamed']['pages']['templates'] = templates;
+  this['metal']['pages'] = templates;
+  /* jshint ignore:end */
+}).call(this);
+'use strict';
+
+(function () {
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+  var templates = this['metal']['pages'];
+
+  var docsPagesHtml = function (_Component) {
+    babelHelpers.inherits(docsPagesHtml, _Component);
+
+    function docsPagesHtml() {
+      babelHelpers.classCallCheck(this, docsPagesHtml);
+      return babelHelpers.possibleConstructorReturn(this, (docsPagesHtml.__proto__ || Object.getPrototypeOf(docsPagesHtml)).apply(this, arguments));
+    }
+
+    return docsPagesHtml;
+  }(Component);
+
+  ;
+
+  Soy.register(docsPagesHtml, templates);
+
+  this['metal']['docsPagesHtml'] = docsPagesHtml;
 }).call(this);
 'use strict';
 
@@ -23818,11 +23957,11 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param102 = function param102() {
+      var param162 = function param162() {
         $templateAlias2({ section: opt_data.site.index.children[0] }, null, opt_ijData);
         $topics(opt_data, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param102 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param162 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -23872,18 +24011,18 @@ babelHelpers;
       ie_open('div', null, null, 'class', 'row');
       ie_open('div', null, null, 'class', 'col-md-13 col-md-offset-3 col-xs-16');
       ie_open('div', null, null, 'class', 'row');
-      var topicList123 = opt_data.site.index.children[0].children;
-      var topicListLen123 = topicList123.length;
-      for (var topicIndex123 = 0; topicIndex123 < topicListLen123; topicIndex123++) {
-        var topicData123 = topicList123[topicIndex123];
-        if (!topicData123.hidden) {
+      var topicList183 = opt_data.site.index.children[0].children;
+      var topicListLen183 = topicList183.length;
+      for (var topicIndex183 = 0; topicIndex183 < topicListLen183; topicIndex183++) {
+        var topicData183 = topicList183[topicIndex183];
+        if (!topicData183.hidden) {
           ie_open('div', null, null, 'class', 'col-md-6 col-xs-16');
-          ie_open('a', null, null, 'class', 'topic radial-out', 'href', topicData123.url);
+          ie_open('a', null, null, 'class', 'topic radial-out', 'href', topicData183.url);
           ie_open('div', null, null, 'class', 'topic-icon');
-          ie_void('span', null, null, 'class', 'icon-16-' + topicData123.icon);
+          ie_void('span', null, null, 'class', 'icon-16-' + topicData183.icon);
           ie_close('div');
           ie_open('h3', null, null, 'class', 'topic-title');
-          var dyn5 = topicData123.title;
+          var dyn5 = topicData183.title;
           if (typeof dyn5 == 'function') dyn5();else if (dyn5 != null) itext(dyn5);
           ie_close('h3');
           ie_close('a');
@@ -23951,127 +24090,6 @@ babelHelpers;
   Soy.register(pageDocsIndex, templates);
 
   this['metal']['pageDocsIndex'] = pageDocsIndex;
-}).call(this);
-'use strict';
-
-(function () {
-  /* jshint ignore:start */
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-
-  var templates;
-  goog.loadModule(function (exports) {
-
-    // This file was automatically generated from index.soy.
-    // Please don't edit this file by hand.
-
-    /**
-     * @fileoverview Templates in namespace updatesIndex.
-     * @public
-     */
-
-    goog.module('updatesIndex.incrementaldom');
-
-    /** @suppress {extraRequire} */
-    var soy = goog.require('soy');
-    /** @suppress {extraRequire} */
-    var soydata = goog.require('soydata');
-    /** @suppress {extraRequire} */
-    goog.require('goog.i18n.bidi');
-    /** @suppress {extraRequire} */
-    goog.require('goog.asserts');
-    /** @suppress {extraRequire} */
-    goog.require('goog.string');
-    var IncrementalDom = goog.require('incrementaldom');
-    var ie_open = IncrementalDom.elementOpen;
-    var ie_close = IncrementalDom.elementClose;
-    var ie_void = IncrementalDom.elementVoid;
-    var ie_open_start = IncrementalDom.elementOpenStart;
-    var ie_open_end = IncrementalDom.elementOpenEnd;
-    var itext = IncrementalDom.text;
-    var iattr = IncrementalDom.attr;
-
-    var $templateAlias2 = Soy.getTemplate('ElectricUpdates.incrementaldom', 'render');
-
-    var $templateAlias1 = Soy.getTemplate('main.incrementaldom', 'render');
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $render(opt_data, opt_ignored, opt_ijData) {
-      var param153 = function param153() {
-        ie_open('div');
-        ie_open('header', null, null, 'class', 'header');
-        ie_open('div', null, null, 'class', 'container');
-        ie_open('h1', null, null, 'class', 'header-title');
-        itext('Updates');
-        ie_close('h1');
-        ie_open('h1', null, null, 'class', 'header-subtitle');
-        itext('Check out what\'s new.');
-        ie_close('h1');
-        ie_close('div');
-        ie_close('header');
-        $templateAlias2({ updates: opt_data.page.updates }, null, opt_ijData);
-        ie_close('div');
-      };
-      $templateAlias1(soy.$$assignDefaults({ content: param153 }, opt_data), null, opt_ijData);
-    }
-    exports.render = $render;
-    if (goog.DEBUG) {
-      $render.soyTemplateName = 'updatesIndex.render';
-    }
-
-    exports.render.params = ["page"];
-    exports.render.types = { "page": "any" };
-    templates = exports;
-    return exports;
-  });
-
-  var updatesIndex = function (_Component) {
-    babelHelpers.inherits(updatesIndex, _Component);
-
-    function updatesIndex() {
-      babelHelpers.classCallCheck(this, updatesIndex);
-      return babelHelpers.possibleConstructorReturn(this, (updatesIndex.__proto__ || Object.getPrototypeOf(updatesIndex)).apply(this, arguments));
-    }
-
-    return updatesIndex;
-  }(Component);
-
-  Soy.register(updatesIndex, templates);
-  this['metalNamed']['index'] = this['metalNamed']['index'] || {};
-  this['metalNamed']['index']['updatesIndex'] = updatesIndex;
-  this['metalNamed']['index']['templates'] = templates;
-  this['metal']['index'] = templates;
-  /* jshint ignore:end */
-}).call(this);
-'use strict';
-
-(function () {
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-  var templates = this['metal']['index'];
-
-  var updatesIndex = function (_Component) {
-    babelHelpers.inherits(updatesIndex, _Component);
-
-    function updatesIndex() {
-      babelHelpers.classCallCheck(this, updatesIndex);
-      return babelHelpers.possibleConstructorReturn(this, (updatesIndex.__proto__ || Object.getPrototypeOf(updatesIndex)).apply(this, arguments));
-    }
-
-    return updatesIndex;
-  }(Component);
-
-  ;
-
-  Soy.register(updatesIndex, templates);
-
-  this['metal']['updatesIndex'] = updatesIndex;
 }).call(this);
 }).call(this);
 //# sourceMappingURL=bundle.js.map
