@@ -19447,39 +19447,24 @@ babelHelpers;
 				this.on('queryChanged', this.handleQueryChange_.bind(this));
 			}
 		}, {
-			key: 'matchesQuery_',
-			value: function matchesQuery_(data, query) {
-				var childrenOnly = this.childrenOnly;
-				var _location = location,
-				    pathname = _location.pathname;
-				var content = data.content,
+			key: 'filterResults_',
+			value: function filterResults_(data, query) {
+				var _this2 = this;
+
+				var children = data.children,
+				    content = data.content,
 				    description = data.description,
 				    hidden = data.hidden,
-				    title = data.title,
-				    url = data.url;
+				    title = data.title;
 
 
-				if (childrenOnly && url.indexOf(pathname) !== 0) {
-					return false;
-				}
+				var results = [];
 
 				content = content ? content.toLowerCase() : '';
 				description = description ? description.toLowerCase() : '';
 				title = title ? title.toLowerCase() : '';
 
-				return !hidden && title.indexOf(query) > -1 || description.indexOf(query) > -1 || content.indexOf(query) > -1;
-			}
-		}, {
-			key: 'filterResults_',
-			value: function filterResults_(data, query) {
-				var _this2 = this;
-
-				var children = data.children;
-
-
-				var results = [];
-
-				if (this.matchesQuery_(data, query)) {
+				if (!hidden && title.indexOf(query) > -1 || description.indexOf(query) > -1 || content.indexOf(query) > -1) {
 					results.push(data);
 				}
 
@@ -19545,11 +19530,6 @@ babelHelpers;
 	;
 
 	ElectricSearchBase.STATE = {
-		childrenOnly: {
-			validator: core.isBoolean,
-			value: true
-		},
-
 		data: {
 			validator: core.isObject
 		},
