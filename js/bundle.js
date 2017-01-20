@@ -22105,8 +22105,8 @@ babelHelpers;
       ie_close('div');
       ie_close('div');
       ie_open('p', null, null, 'class', 'gh-btns');
-      ie_void('iframe', null, null, 'src', 'http://ghbtns.com/github-btn.html?user=liferay&repo=electric&type=watch&count=true&size=large', 'allowtransparency', 'true', 'frameborder', '0', 'scrolling', '0', 'width', '150', 'height', '30');
-      ie_void('iframe', null, null, 'src', 'http://ghbtns.com/github-btn.html?user=liferay&repo=electric&type=fork&count=true&size=large', 'allowtransparency', 'true', 'frameborder', '0', 'scrolling', '0', 'width', '150', 'height', '30');
+      ie_void('iframe', null, null, 'src', 'http://ghbtns.com/github-btn.html?user=wedeploy&repo=electric&type=watch&count=true&size=large', 'allowtransparency', 'true', 'frameborder', '0', 'scrolling', '0', 'width', '150', 'height', '30');
+      ie_void('iframe', null, null, 'src', 'http://ghbtns.com/github-btn.html?user=wedeploy&repo=electric&type=fork&count=true&size=large', 'allowtransparency', 'true', 'frameborder', '0', 'scrolling', '0', 'width', '150', 'height', '30');
       ie_close('p');
       ie_close('header');
     }
