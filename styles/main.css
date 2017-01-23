@@ -9113,15 +9113,15 @@ button.close {
 .docs-content {
   color: rgba(14, 20, 26, 0.6); }
 
-.docs-content a {
+.docs-content a:not(.btn) {
   -webkit-transition: color 0.3s ease-in-out;
   -o-transition: color 0.3s ease-in-out;
   transition: color 0.3s ease-in-out;
   color: #FFCC00;
   font-weight: 400; }
 
-.docs-content a:hover,
-.docs-content a:focus {
+.docs-content a:not(.btn):hover,
+.docs-content a:not(.btn):focus {
   color: rgba(255, 204, 0, 0.6);
   text-decoration: none; }
 
@@ -9570,15 +9570,34 @@ button.close {
 .docs .docs-content h6 code {
   line-height: 26px; }
 
-.docs p a {
+.docs p a:not(.btn) {
   border-bottom: 1px dashed rgba(14, 20, 26, 0.4);
   color: inherit; }
-  .docs p a:hover {
+  .docs p a:not(.btn):hover {
     border-bottom: 1px dashed #FFCC00;
     color: #FFCC00; }
 
 .docs .docs-content .guide-github {
   margin: 24px 0 60px; }
+
+/* sidebar docs */
+.docs .sidebar-list li .sidebar-list {
+  padding: 0;
+  display: none; }
+
+.docs .sidebar-list li.active .sidebar-list {
+  display: block; }
+
+.docs .sidebar-list li .sidebar-list li .sidebar-link {
+  padding: 0 20px 0 56px;
+  font-size: 13px;
+  line-height: 36px;
+  height: 36px; }
+  .docs .sidebar-list li .sidebar-list li .sidebar-link .sidebar-icon {
+    display: none; }
+
+.docs .sidebar-list li .sidebar-list li:last-child {
+  margin-bottom: 0; }
 
 /* Home - Topics
    ========================================================================== */
