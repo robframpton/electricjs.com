@@ -21330,6 +21330,366 @@ babelHelpers;
 'use strict';
 
 (function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
+    // This file was automatically generated from docs.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace docs.
+     * @public
+     */
+
+    goog.module('docs.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    var $templateAlias3 = Soy.getTemplate('ElectricReadingProgress.incrementaldom', 'render');
+
+    var $templateAlias2 = Soy.getTemplate('Sidebar.incrementaldom', 'render');
+
+    var $templateAlias1 = Soy.getTemplate('main.incrementaldom', 'render');
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      var param52 = function param52() {
+        $templateAlias2(soy.$$assignDefaults({ section: opt_data.site.index.children[0] }, opt_data), null, opt_ijData);
+        $guide(opt_data, null, opt_ijData);
+      };
+      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param52 }, opt_data), null, opt_ijData);
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'docs.render';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $guide(opt_data, opt_ignored, opt_ijData) {
+      ie_open('div', null, null, 'class', 'sidebar-offset');
+      ie_open('header', null, null, 'class', 'guide-header');
+      ie_open('div', null, null, 'class', 'container-hybrid');
+      ie_open('h1', null, null, 'class', 'guide-header-title');
+      var dyn2 = opt_data.page.title;
+      if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
+      ie_close('h1');
+      ie_close('div');
+      ie_close('header');
+      ie_open('div', null, null, 'class', 'container-hybrid');
+      ie_open('div', null, null, 'class', 'docs-guide row');
+      ie_open('div', null, null, 'class', 'docs-content col-xs-16 col-md-9');
+      var dyn3 = opt_data.content;
+      if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
+      $feedback(opt_data, null, opt_ijData);
+      ie_close('div');
+      ie_open('nav', null, null, 'class', 'col-xs-16 col-md-offset-2 col-md-5');
+      ie_open('div', null, null, 'class', 'docs-nav-container');
+      $templateAlias3({ elementClasses: 'docs-nav' }, null, opt_ijData);
+      ie_close('div');
+      ie_close('nav');
+      ie_close('div');
+      ie_close('div');
+      ie_close('div');
+    }
+    exports.guide = $guide;
+    if (goog.DEBUG) {
+      $guide.soyTemplateName = 'docs.guide';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $feedback(opt_data, opt_ignored, opt_ijData) {
+      var $$temp;
+      ie_open('div');
+      ie_open('div', null, null, 'class', 'guide-github');
+      ie_open('div', null, null, 'class', 'guide-github-img');
+      ie_void('span', null, null, 'class', 'icon-16-github');
+      ie_close('div');
+      ie_open('div', null, null, 'class', 'guide-github-text');
+      ie_open('p');
+      itext('Contribute on Github! ');
+      ie_open('a', null, null, 'href', (($$temp = opt_data.site.repo) == null ? '' : $$temp) + '/tree/master/' + opt_data.page.srcFilePath, 'class', 'docs-github-link', 'target', '_blank');
+      itext('Edit this section');
+      ie_close('a');
+      itext('.');
+      ie_close('p');
+      ie_close('div');
+      ie_close('div');
+      ie_close('div');
+    }
+    exports.feedback = $feedback;
+    if (goog.DEBUG) {
+      $feedback.soyTemplateName = 'docs.feedback';
+    }
+
+    exports.render.params = ["page", "site"];
+    exports.render.types = { "page": "any", "site": "any" };
+    exports.guide.params = ["page", "content"];
+    exports.guide.types = { "page": "any", "content": "any" };
+    exports.feedback.params = ["page", "site"];
+    exports.feedback.types = { "page": "any", "site": "any" };
+    templates = exports;
+    return exports;
+  });
+
+  var docs = function (_Component) {
+    babelHelpers.inherits(docs, _Component);
+
+    function docs() {
+      babelHelpers.classCallCheck(this, docs);
+      return babelHelpers.possibleConstructorReturn(this, (docs.__proto__ || Object.getPrototypeOf(docs)).apply(this, arguments));
+    }
+
+    return docs;
+  }(Component);
+
+  Soy.register(docs, templates);
+  this['metalNamed']['docs'] = this['metalNamed']['docs'] || {};
+  this['metalNamed']['docs']['docs'] = docs;
+  this['metalNamed']['docs']['templates'] = templates;
+  this['metal']['docs'] = templates;
+  /* jshint ignore:end */
+}).call(this);
+'use strict';
+
+(function () {
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+  var templates = this['metal']['docs'];
+
+  var docs = function (_Component) {
+    babelHelpers.inherits(docs, _Component);
+
+    function docs() {
+      babelHelpers.classCallCheck(this, docs);
+      return babelHelpers.possibleConstructorReturn(this, (docs.__proto__ || Object.getPrototypeOf(docs)).apply(this, arguments));
+    }
+
+    return docs;
+  }(Component);
+
+  ;
+
+  Soy.register(docs, templates);
+
+  this['metal']['docs'] = docs;
+}).call(this);
+'use strict';
+
+(function () {
+  /* jshint ignore:start */
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+
+  var templates;
+  goog.loadModule(function (exports) {
+
+    // This file was automatically generated from main.soy.
+    // Please don't edit this file by hand.
+
+    /**
+     * @fileoverview Templates in namespace main.
+     * @public
+     */
+
+    goog.module('main.incrementaldom');
+
+    /** @suppress {extraRequire} */
+    var soy = goog.require('soy');
+    /** @suppress {extraRequire} */
+    var soydata = goog.require('soydata');
+    /** @suppress {extraRequire} */
+    goog.require('goog.i18n.bidi');
+    /** @suppress {extraRequire} */
+    goog.require('goog.asserts');
+    /** @suppress {extraRequire} */
+    goog.require('goog.string');
+    var IncrementalDom = goog.require('incrementaldom');
+    var ie_open = IncrementalDom.elementOpen;
+    var ie_close = IncrementalDom.elementClose;
+    var ie_void = IncrementalDom.elementVoid;
+    var ie_open_start = IncrementalDom.elementOpenStart;
+    var ie_open_end = IncrementalDom.elementOpenEnd;
+    var itext = IncrementalDom.text;
+    var iattr = IncrementalDom.attr;
+
+    var $templateAlias1 = Soy.getTemplate('ElectricNavigation.incrementaldom', 'render');
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $render(opt_data, opt_ignored, opt_ijData) {
+      var $$temp;
+      ie_open('div', null, null, 'class', ($$temp = opt_data.elementClasses) == null ? 'main' : $$temp);
+      ie_open('main', null, null, 'class', 'content');
+      $topbar(opt_data, null, opt_ijData);
+      var dyn4 = opt_data.content;
+      if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
+      ie_close('main');
+      ie_close('div');
+    }
+    exports.render = $render;
+    if (goog.DEBUG) {
+      $render.soyTemplateName = 'main.render';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $topbar(opt_data, opt_ignored, opt_ijData) {
+      ie_open('nav', null, null, 'class', 'topbar topbar-fixed');
+      $logo(opt_data, null, opt_ijData);
+      $menu(opt_data, null, opt_ijData);
+      ie_close('nav');
+    }
+    exports.topbar = $topbar;
+    if (goog.DEBUG) {
+      $topbar.soyTemplateName = 'main.topbar';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $logo(opt_data, opt_ignored, opt_ijData) {
+      ie_open('div', null, null, 'class', 'topbar-logo');
+      ie_open('a', null, null, 'class', 'topbar-logo-link', 'href', '/');
+      ie_void('span', null, null, 'class', 'icon icon-16-flash');
+      ie_open('span', null, null, 'class', 'name');
+      itext('Electric');
+      ie_close('span');
+      ie_open('span', null, null, 'class', 'by');
+      itext('by Liferay');
+      ie_close('span');
+      ie_close('a');
+      ie_close('div');
+    }
+    exports.logo = $logo;
+    if (goog.DEBUG) {
+      $logo.soyTemplateName = 'main.logo';
+    }
+
+    /**
+     * @param {Object<string, *>=} opt_data
+     * @param {(null|undefined)=} opt_ignored
+     * @param {Object<string, *>=} opt_ijData
+     * @return {void}
+     * @suppress {checkTypes}
+     */
+    function $menu(opt_data, opt_ignored, opt_ijData) {
+      $templateAlias1({ depth: 1, elementClasses: 'topbar-list', linkClasses: 'topbar-link', listItemClasses: 'topbar-item', section: opt_data.site.index }, null, opt_ijData);
+    }
+    exports.menu = $menu;
+    if (goog.DEBUG) {
+      $menu.soyTemplateName = 'main.menu';
+    }
+
+    exports.render.params = ["content", "elementClasses"];
+    exports.render.types = { "content": "any", "elementClasses": "any" };
+    exports.topbar.params = ["site"];
+    exports.topbar.types = { "site": "any" };
+    exports.logo.params = [];
+    exports.logo.types = {};
+    exports.menu.params = ["site"];
+    exports.menu.types = { "site": "any" };
+    templates = exports;
+    return exports;
+  });
+
+  var main = function (_Component) {
+    babelHelpers.inherits(main, _Component);
+
+    function main() {
+      babelHelpers.classCallCheck(this, main);
+      return babelHelpers.possibleConstructorReturn(this, (main.__proto__ || Object.getPrototypeOf(main)).apply(this, arguments));
+    }
+
+    return main;
+  }(Component);
+
+  Soy.register(main, templates);
+  this['metalNamed']['main'] = this['metalNamed']['main'] || {};
+  this['metalNamed']['main']['main'] = main;
+  this['metalNamed']['main']['templates'] = templates;
+  this['metal']['main'] = templates;
+  /* jshint ignore:end */
+}).call(this);
+'use strict';
+
+(function () {
+  var Component = this['metal']['component'];
+  var Soy = this['metal']['Soy'];
+  var templates = this['metal']['main'];
+
+  var main = function (_Component) {
+    babelHelpers.inherits(main, _Component);
+
+    function main() {
+      babelHelpers.classCallCheck(this, main);
+      return babelHelpers.possibleConstructorReturn(this, (main.__proto__ || Object.getPrototypeOf(main)).apply(this, arguments));
+    }
+
+    return main;
+  }(Component);
+
+  ;
+
+  Soy.register(main, templates);
+
+  this['metal']['main'] = main;
+}).call(this);
+'use strict';
+
+(function () {
 	var core = this['metal']['metal'];
 	var dom = this['metal']['dom'];
 	var EventHandler = this['metalNamed']['events']['EventHandler'];
@@ -21589,7 +21949,7 @@ babelHelpers;
       ie_close('a');
       ie_open('div', null, null, 'class', 'sidebar-toggler-content toggler-collapsed');
       ie_open('div', null, null, 'class', 'sidebar-search');
-      $templateAlias1({ path: '/docs', placeholder: 'Search Docs' }, null, opt_ijData);
+      $templateAlias1({ maxResults: 3, path: '/docs', placeholder: 'Search Docs' }, null, opt_ijData);
       ie_close('div');
       $templateAlias2({ elementClasses: 'sidebar-list sidebar-list-1', listItemClasses: 'sidebar-item', anchorVariant: 'sidebar', section: opt_data.section }, null, opt_ijData);
       ie_close('div');
@@ -21607,7 +21967,7 @@ babelHelpers;
      * @return {void}
      * @suppress {checkTypes}
      */
-    function __deltemplate_s14_d34389eb(opt_data, opt_ignored, opt_ijData) {
+    function __deltemplate_s15_d34389eb(opt_data, opt_ignored, opt_ijData) {
       ie_open('a', null, null, 'class', 'sidebar-link ' + (opt_data.page.active ? 'sidebar-link-selected' : ''), 'href', opt_data.page.url);
       ie_void('span', null, null, 'class', 'sidebar-icon icon-16-' + opt_data.page.icon);
       ie_open('span');
@@ -21616,11 +21976,11 @@ babelHelpers;
       ie_close('span');
       ie_close('a');
     }
-    exports.__deltemplate_s14_d34389eb = __deltemplate_s14_d34389eb;
+    exports.__deltemplate_s15_d34389eb = __deltemplate_s15_d34389eb;
     if (goog.DEBUG) {
-      __deltemplate_s14_d34389eb.soyTemplateName = 'Sidebar.__deltemplate_s14_d34389eb';
+      __deltemplate_s15_d34389eb.soyTemplateName = 'Sidebar.__deltemplate_s15_d34389eb';
     }
-    soy.$$registerDelegateFn(soy.$$getDelTemplateId('ElectricNavigation.anchor.idom'), 'sidebar', 0, __deltemplate_s14_d34389eb);
+    soy.$$registerDelegateFn(soy.$$getDelTemplateId('ElectricNavigation.anchor.idom'), 'sidebar', 0, __deltemplate_s15_d34389eb);
 
     exports.render.params = ["section"];
     exports.render.types = { "section": "any" };
@@ -21729,7 +22089,7 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param72 = function param72() {
+      var param27 = function param27() {
         $header(opt_data, null, opt_ijData);
         $why(null, null, opt_ijData);
         $highlights(null, null, opt_ijData);
@@ -21737,7 +22097,7 @@ babelHelpers;
         $features(null, null, opt_ijData);
         $footer(null, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param72 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param27 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -21759,8 +22119,8 @@ babelHelpers;
       itext(' Electric');
       ie_close('h1');
       ie_open('h2', null, null, 'class', 'header-subtitle');
-      var dyn4 = opt_data.site.index.description;
-      if (typeof dyn4 == 'function') dyn4();else if (dyn4 != null) itext(dyn4);
+      var dyn1 = opt_data.site.index.description;
+      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
       ie_close('h2');
       ie_open('div', null, null, 'class', 'header-cta');
       ie_open('a', null, null, 'href', '/docs/getting-started.html', 'class', 'btn btn-accent');
@@ -22092,366 +22452,6 @@ babelHelpers;
   var templates;
   goog.loadModule(function (exports) {
 
-    // This file was automatically generated from docs.soy.
-    // Please don't edit this file by hand.
-
-    /**
-     * @fileoverview Templates in namespace docs.
-     * @public
-     */
-
-    goog.module('docs.incrementaldom');
-
-    /** @suppress {extraRequire} */
-    var soy = goog.require('soy');
-    /** @suppress {extraRequire} */
-    var soydata = goog.require('soydata');
-    /** @suppress {extraRequire} */
-    goog.require('goog.i18n.bidi');
-    /** @suppress {extraRequire} */
-    goog.require('goog.asserts');
-    /** @suppress {extraRequire} */
-    goog.require('goog.string');
-    var IncrementalDom = goog.require('incrementaldom');
-    var ie_open = IncrementalDom.elementOpen;
-    var ie_close = IncrementalDom.elementClose;
-    var ie_void = IncrementalDom.elementVoid;
-    var ie_open_start = IncrementalDom.elementOpenStart;
-    var ie_open_end = IncrementalDom.elementOpenEnd;
-    var itext = IncrementalDom.text;
-    var iattr = IncrementalDom.attr;
-
-    var $templateAlias3 = Soy.getTemplate('ElectricReadingProgress.incrementaldom', 'render');
-
-    var $templateAlias2 = Soy.getTemplate('Sidebar.incrementaldom', 'render');
-
-    var $templateAlias1 = Soy.getTemplate('main.incrementaldom', 'render');
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $render(opt_data, opt_ignored, opt_ijData) {
-      var param27 = function param27() {
-        $templateAlias2(soy.$$assignDefaults({ section: opt_data.site.index.children[0] }, opt_data), null, opt_ijData);
-        $guide(opt_data, null, opt_ijData);
-      };
-      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param27 }, opt_data), null, opt_ijData);
-    }
-    exports.render = $render;
-    if (goog.DEBUG) {
-      $render.soyTemplateName = 'docs.render';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $guide(opt_data, opt_ignored, opt_ijData) {
-      ie_open('div', null, null, 'class', 'sidebar-offset');
-      ie_open('header', null, null, 'class', 'guide-header');
-      ie_open('div', null, null, 'class', 'container-hybrid');
-      ie_open('h1', null, null, 'class', 'guide-header-title');
-      var dyn1 = opt_data.page.title;
-      if (typeof dyn1 == 'function') dyn1();else if (dyn1 != null) itext(dyn1);
-      ie_close('h1');
-      ie_close('div');
-      ie_close('header');
-      ie_open('div', null, null, 'class', 'container-hybrid');
-      ie_open('div', null, null, 'class', 'docs-guide row');
-      ie_open('div', null, null, 'class', 'docs-content col-xs-16 col-md-9');
-      var dyn2 = opt_data.content;
-      if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
-      $feedback(opt_data, null, opt_ijData);
-      ie_close('div');
-      ie_open('nav', null, null, 'class', 'col-xs-16 col-md-offset-2 col-md-5');
-      ie_open('div', null, null, 'class', 'docs-nav-container');
-      $templateAlias3({ elementClasses: 'docs-nav' }, null, opt_ijData);
-      ie_close('div');
-      ie_close('nav');
-      ie_close('div');
-      ie_close('div');
-      ie_close('div');
-    }
-    exports.guide = $guide;
-    if (goog.DEBUG) {
-      $guide.soyTemplateName = 'docs.guide';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $feedback(opt_data, opt_ignored, opt_ijData) {
-      var $$temp;
-      ie_open('div');
-      ie_open('div', null, null, 'class', 'guide-github');
-      ie_open('div', null, null, 'class', 'guide-github-img');
-      ie_void('span', null, null, 'class', 'icon-16-github');
-      ie_close('div');
-      ie_open('div', null, null, 'class', 'guide-github-text');
-      ie_open('p');
-      itext('Contribute on Github! ');
-      ie_open('a', null, null, 'href', (($$temp = opt_data.site.repo) == null ? '' : $$temp) + '/tree/master/' + opt_data.page.srcFilePath, 'class', 'docs-github-link', 'target', '_blank');
-      itext('Edit this section');
-      ie_close('a');
-      itext('.');
-      ie_close('p');
-      ie_close('div');
-      ie_close('div');
-      ie_close('div');
-    }
-    exports.feedback = $feedback;
-    if (goog.DEBUG) {
-      $feedback.soyTemplateName = 'docs.feedback';
-    }
-
-    exports.render.params = ["page", "site"];
-    exports.render.types = { "page": "any", "site": "any" };
-    exports.guide.params = ["page", "content"];
-    exports.guide.types = { "page": "any", "content": "any" };
-    exports.feedback.params = ["page", "site"];
-    exports.feedback.types = { "page": "any", "site": "any" };
-    templates = exports;
-    return exports;
-  });
-
-  var docs = function (_Component) {
-    babelHelpers.inherits(docs, _Component);
-
-    function docs() {
-      babelHelpers.classCallCheck(this, docs);
-      return babelHelpers.possibleConstructorReturn(this, (docs.__proto__ || Object.getPrototypeOf(docs)).apply(this, arguments));
-    }
-
-    return docs;
-  }(Component);
-
-  Soy.register(docs, templates);
-  this['metalNamed']['docs'] = this['metalNamed']['docs'] || {};
-  this['metalNamed']['docs']['docs'] = docs;
-  this['metalNamed']['docs']['templates'] = templates;
-  this['metal']['docs'] = templates;
-  /* jshint ignore:end */
-}).call(this);
-'use strict';
-
-(function () {
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-  var templates = this['metal']['docs'];
-
-  var docs = function (_Component) {
-    babelHelpers.inherits(docs, _Component);
-
-    function docs() {
-      babelHelpers.classCallCheck(this, docs);
-      return babelHelpers.possibleConstructorReturn(this, (docs.__proto__ || Object.getPrototypeOf(docs)).apply(this, arguments));
-    }
-
-    return docs;
-  }(Component);
-
-  ;
-
-  Soy.register(docs, templates);
-
-  this['metal']['docs'] = docs;
-}).call(this);
-'use strict';
-
-(function () {
-  /* jshint ignore:start */
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-
-  var templates;
-  goog.loadModule(function (exports) {
-
-    // This file was automatically generated from main.soy.
-    // Please don't edit this file by hand.
-
-    /**
-     * @fileoverview Templates in namespace main.
-     * @public
-     */
-
-    goog.module('main.incrementaldom');
-
-    /** @suppress {extraRequire} */
-    var soy = goog.require('soy');
-    /** @suppress {extraRequire} */
-    var soydata = goog.require('soydata');
-    /** @suppress {extraRequire} */
-    goog.require('goog.i18n.bidi');
-    /** @suppress {extraRequire} */
-    goog.require('goog.asserts');
-    /** @suppress {extraRequire} */
-    goog.require('goog.string');
-    var IncrementalDom = goog.require('incrementaldom');
-    var ie_open = IncrementalDom.elementOpen;
-    var ie_close = IncrementalDom.elementClose;
-    var ie_void = IncrementalDom.elementVoid;
-    var ie_open_start = IncrementalDom.elementOpenStart;
-    var ie_open_end = IncrementalDom.elementOpenEnd;
-    var itext = IncrementalDom.text;
-    var iattr = IncrementalDom.attr;
-
-    var $templateAlias1 = Soy.getTemplate('ElectricNavigation.incrementaldom', 'render');
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $render(opt_data, opt_ignored, opt_ijData) {
-      var $$temp;
-      ie_open('div', null, null, 'class', ($$temp = opt_data.elementClasses) == null ? 'main' : $$temp);
-      ie_open('main', null, null, 'class', 'content');
-      $topbar(opt_data, null, opt_ijData);
-      var dyn3 = opt_data.content;
-      if (typeof dyn3 == 'function') dyn3();else if (dyn3 != null) itext(dyn3);
-      ie_close('main');
-      ie_close('div');
-    }
-    exports.render = $render;
-    if (goog.DEBUG) {
-      $render.soyTemplateName = 'main.render';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $topbar(opt_data, opt_ignored, opt_ijData) {
-      ie_open('nav', null, null, 'class', 'topbar topbar-fixed');
-      $logo(opt_data, null, opt_ijData);
-      $menu(opt_data, null, opt_ijData);
-      ie_close('nav');
-    }
-    exports.topbar = $topbar;
-    if (goog.DEBUG) {
-      $topbar.soyTemplateName = 'main.topbar';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $logo(opt_data, opt_ignored, opt_ijData) {
-      ie_open('div', null, null, 'class', 'topbar-logo');
-      ie_open('a', null, null, 'class', 'topbar-logo-link', 'href', '/');
-      ie_void('span', null, null, 'class', 'icon icon-16-flash');
-      ie_open('span', null, null, 'class', 'name');
-      itext('Electric');
-      ie_close('span');
-      ie_open('span', null, null, 'class', 'by');
-      itext('by Liferay');
-      ie_close('span');
-      ie_close('a');
-      ie_close('div');
-    }
-    exports.logo = $logo;
-    if (goog.DEBUG) {
-      $logo.soyTemplateName = 'main.logo';
-    }
-
-    /**
-     * @param {Object<string, *>=} opt_data
-     * @param {(null|undefined)=} opt_ignored
-     * @param {Object<string, *>=} opt_ijData
-     * @return {void}
-     * @suppress {checkTypes}
-     */
-    function $menu(opt_data, opt_ignored, opt_ijData) {
-      $templateAlias1({ depth: 1, elementClasses: 'topbar-list', linkClasses: 'topbar-link', listItemClasses: 'topbar-item', section: opt_data.site.index }, null, opt_ijData);
-    }
-    exports.menu = $menu;
-    if (goog.DEBUG) {
-      $menu.soyTemplateName = 'main.menu';
-    }
-
-    exports.render.params = ["content", "elementClasses"];
-    exports.render.types = { "content": "any", "elementClasses": "any" };
-    exports.topbar.params = ["site"];
-    exports.topbar.types = { "site": "any" };
-    exports.logo.params = [];
-    exports.logo.types = {};
-    exports.menu.params = ["site"];
-    exports.menu.types = { "site": "any" };
-    templates = exports;
-    return exports;
-  });
-
-  var main = function (_Component) {
-    babelHelpers.inherits(main, _Component);
-
-    function main() {
-      babelHelpers.classCallCheck(this, main);
-      return babelHelpers.possibleConstructorReturn(this, (main.__proto__ || Object.getPrototypeOf(main)).apply(this, arguments));
-    }
-
-    return main;
-  }(Component);
-
-  Soy.register(main, templates);
-  this['metalNamed']['main'] = this['metalNamed']['main'] || {};
-  this['metalNamed']['main']['main'] = main;
-  this['metalNamed']['main']['templates'] = templates;
-  this['metal']['main'] = templates;
-  /* jshint ignore:end */
-}).call(this);
-'use strict';
-
-(function () {
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-  var templates = this['metal']['main'];
-
-  var main = function (_Component) {
-    babelHelpers.inherits(main, _Component);
-
-    function main() {
-      babelHelpers.classCallCheck(this, main);
-      return babelHelpers.possibleConstructorReturn(this, (main.__proto__ || Object.getPrototypeOf(main)).apply(this, arguments));
-    }
-
-    return main;
-  }(Component);
-
-  ;
-
-  Soy.register(main, templates);
-
-  this['metal']['main'] = main;
-}).call(this);
-'use strict';
-
-(function () {
-  /* jshint ignore:start */
-  var Component = this['metal']['component'];
-  var Soy = this['metal']['Soy'];
-
-  var templates;
-  goog.loadModule(function (exports) {
-
     // This file was automatically generated from configuration.soy.
     // Please don't edit this file by hand.
 
@@ -22494,7 +22494,7 @@ babelHelpers;
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
       opt_data = opt_data || {};
-      var param96 = function param96() {
+      var param97 = function param97() {
         ie_open('article', null, null, 'id', 'registering');
         ie_open('h2');
         itext('Registering');
@@ -22810,7 +22810,7 @@ babelHelpers;
         ie_close('p');
         ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param96 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param97 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -22917,7 +22917,7 @@ babelHelpers;
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
       opt_data = opt_data || {};
-      var param131 = function param131() {
+      var param132 = function param132() {
         ie_open('article', null, null, 'id', 'yeoman');
         ie_open('h2');
         itext('Yeoman Generator');
@@ -23103,7 +23103,7 @@ babelHelpers;
         ie_close('p');
         ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param131 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param132 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -23210,7 +23210,7 @@ babelHelpers;
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
       opt_data = opt_data || {};
-      var param187 = function param187() {
+      var param189 = function param189() {
         ie_open('article', null, null, 'id', 'base');
         ie_open('h2');
         itext('Base Layout');
@@ -23415,7 +23415,7 @@ babelHelpers;
         ie_close('p');
         ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param187 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param189 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -23522,7 +23522,7 @@ babelHelpers;
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
       opt_data = opt_data || {};
-      var param212 = function param212() {
+      var param214 = function param214() {
         ie_open('article', null, null, 'id', 'creating');
         ie_open('h2');
         itext('Creating Components');
@@ -23621,7 +23621,7 @@ babelHelpers;
         ie_close('p');
         ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param212 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param214 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -23728,7 +23728,7 @@ babelHelpers;
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
       opt_data = opt_data || {};
-      var param242 = function param242() {
+      var param244 = function param244() {
         ie_open('article', null, null, 'id', 'front_matter');
         ie_open('h2');
         itext('Front Matter');
@@ -23879,7 +23879,7 @@ babelHelpers;
         ie_close('p');
         ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param242 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param244 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -23987,11 +23987,11 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param162 = function param162() {
+      var param163 = function param163() {
         $templateAlias2({ section: opt_data.site.index.children[0] }, null, opt_ijData);
         $topics(opt_data, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param162 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param163 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -24026,7 +24026,7 @@ babelHelpers;
       ie_open('form', null, null, 'action', '/docs/search.html', 'method', 'GET', 'enctype', 'multipart/form-data');
       ie_open('div', null, null, 'class', 'row');
       ie_open('div', null, null, 'class', 'col-md-7 col-md-offset-3 col-xs-16');
-      $templateAlias3({ path: '/docs', placeholder: 'Search Docs' }, null, opt_ijData);
+      $templateAlias3({ maxResults: 3, path: '/docs', placeholder: 'Search Docs' }, null, opt_ijData);
       ie_close('div');
       ie_open('div', null, null, 'class', 'col-md-3 col-xs-16');
       ie_open('button', null, null, 'class', 'btn btn-accent btn-block', 'type', 'submit');
@@ -24052,18 +24052,18 @@ babelHelpers;
       ie_open('div', null, null, 'class', 'row');
       ie_open('div', null, null, 'class', 'col-md-13 col-md-offset-3 col-xs-16');
       ie_open('div', null, null, 'class', 'row');
-      var topicList182 = opt_data.site.index.children[0].children;
-      var topicListLen182 = topicList182.length;
-      for (var topicIndex182 = 0; topicIndex182 < topicListLen182; topicIndex182++) {
-        var topicData182 = topicList182[topicIndex182];
-        if (!topicData182.hidden) {
+      var topicList184 = opt_data.site.index.children[0].children;
+      var topicListLen184 = topicList184.length;
+      for (var topicIndex184 = 0; topicIndex184 < topicListLen184; topicIndex184++) {
+        var topicData184 = topicList184[topicIndex184];
+        if (!topicData184.hidden) {
           ie_open('div', null, null, 'class', 'col-md-6 col-xs-16');
-          ie_open('a', null, null, 'class', 'topic radial-out', 'href', topicData182.url);
+          ie_open('a', null, null, 'class', 'topic radial-out', 'href', topicData184.url);
           ie_open('div', null, null, 'class', 'topic-icon');
-          ie_void('span', null, null, 'class', 'icon-16-' + topicData182.icon);
+          ie_void('span', null, null, 'class', 'icon-16-' + topicData184.icon);
           ie_close('div');
           ie_open('h3', null, null, 'class', 'topic-title');
-          var dyn5 = topicData182.title;
+          var dyn5 = topicData184.title;
           if (typeof dyn5 == 'function') dyn5();else if (dyn5 != null) itext(dyn5);
           ie_close('h3');
           ie_close('a');
@@ -24185,7 +24185,7 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param273 = function param273() {
+      var param275 = function param275() {
         $templateAlias2({ section: opt_data.site.index.children[0] }, null, opt_ijData);
         ie_open('div', null, null, 'class', 'sidebar-offset');
         ie_open('div', null, null, 'class', 'container-hybrid docs-home-top');
@@ -24210,7 +24210,7 @@ babelHelpers;
         ie_close('div');
         ie_close('div');
       };
-      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param273 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param275 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
