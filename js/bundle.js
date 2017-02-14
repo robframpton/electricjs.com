@@ -16894,6 +16894,21 @@ babelHelpers;
 					});
 				}
 			}
+		}, {
+			key: 'disposed',
+			value: function disposed() {
+				var affix = this.affix,
+				    progress = this.progress;
+
+
+				if (affix) {
+					affix.dispose();
+				}
+
+				if (progress) {
+					progress.dispose();
+				}
+			}
 		}]);
 		return ElectricReadingProgress;
 	}(Component);
@@ -20468,7 +20483,7 @@ babelHelpers;
 
 
 				if (input) {
-					var autocomplete = new Autocomplete({
+					this.autocomplete = new Autocomplete({
 						data: this.search_.bind(this),
 						format: this.format_.bind(this),
 						inputElement: input,
@@ -20496,6 +20511,16 @@ babelHelpers;
 					textPrimary: '<a class="autocomplete-link" href="' + url + '">\n\t\t\t\t<div class="autocomplete-result">\n\t\t\t\t\t<p class="autocomplete-title">' + title + '</p>\n\t\t\t\t\t<p class="autocomplete-text">' + description + '</p>\n\t\t\t\t</div>\n\t\t\t</a>',
 					url: url
 				};
+			}
+		}, {
+			key: 'disposed',
+			value: function disposed() {
+				var autocomplete = this.autocomplete;
+
+
+				if (autocomplete) {
+					autocomplete.dispose();
+				}
 			}
 		}]);
 		return ElectricSearchAutocomplete;
@@ -21731,10 +21756,15 @@ babelHelpers;
 		babelHelpers.createClass(Sidebar, [{
 			key: 'attached',
 			value: function attached() {
-				new Toggler({
+				this._toggler = new Toggler({
 					content: '.sidebar-toggler-content',
 					header: '.sidebar-header'
 				});
+			}
+		}, {
+			key: 'disposed',
+			value: function disposed() {
+				this._toggler.dispose();
 			}
 		}]);
 		return Sidebar;
@@ -21832,7 +21862,9 @@ babelHelpers;
       ie_open('div', null, null, 'class', 'docs-content col-xs-16 col-md-9');
       var dyn2 = opt_data.content;
       if (typeof dyn2 == 'function') dyn2();else if (dyn2 != null) itext(dyn2);
-      $feedback(opt_data, null, opt_ijData);
+      if (opt_data.site.githubRepo) {
+        $feedback(opt_data, null, opt_ijData);
+      }
       ie_close('div');
       ie_open('nav', null, null, 'class', 'col-xs-16 col-md-offset-2 col-md-5');
       ie_open('div', null, null, 'class', 'docs-nav-container');
@@ -21856,7 +21888,6 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $feedback(opt_data, opt_ignored, opt_ijData) {
-      var $$temp;
       ie_open('div');
       ie_open('div', null, null, 'class', 'guide-github');
       ie_open('div', null, null, 'class', 'guide-github-img');
@@ -21865,7 +21896,7 @@ babelHelpers;
       ie_open('div', null, null, 'class', 'guide-github-text');
       ie_open('p');
       itext('Contribute on Github! ');
-      ie_open('a', null, null, 'href', (($$temp = opt_data.site.repo) == null ? '' : $$temp) + '/tree/master/' + opt_data.page.srcFilePath, 'class', 'docs-github-link', 'target', '_blank');
+      ie_open('a', null, null, 'href', 'https://github.com/' + opt_data.site.githubRepo + '/tree/master/' + opt_data.page.srcFilePath, 'class', 'docs-github-link', 'target', '_blank');
       itext('Edit this section');
       ie_close('a');
       itext('.');
@@ -21881,8 +21912,8 @@ babelHelpers;
 
     exports.render.params = ["page", "site"];
     exports.render.types = { "page": "any", "site": "any" };
-    exports.guide.params = ["page", "content"];
-    exports.guide.types = { "page": "any", "content": "any" };
+    exports.guide.params = ["page", "site", "content"];
+    exports.guide.types = { "page": "any", "site": "any", "content": "any" };
     exports.feedback.params = ["page", "site"];
     exports.feedback.types = { "page": "any", "site": "any" };
     templates = exports;
@@ -22155,7 +22186,7 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param74 = function param74() {
+      var param76 = function param76() {
         $header(opt_data, null, opt_ijData);
         $why(null, null, opt_ijData);
         $highlights(null, null, opt_ijData);
@@ -22163,7 +22194,7 @@ babelHelpers;
         $features(null, null, opt_ijData);
         $footer(null, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param74 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param76 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -22560,7 +22591,7 @@ babelHelpers;
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
       opt_data = opt_data || {};
-      var param98 = function param98() {
+      var param100 = function param100() {
         ie_open('article', null, null, 'id', 'registering');
         ie_open('h2');
         itext('Registering');
@@ -22876,7 +22907,7 @@ babelHelpers;
         ie_close('p');
         ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param98 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param100 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -22983,7 +23014,7 @@ babelHelpers;
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
       opt_data = opt_data || {};
-      var param133 = function param133() {
+      var param135 = function param135() {
         ie_open('article', null, null, 'id', 'yeoman');
         ie_open('h2');
         itext('Yeoman Generator');
@@ -23169,7 +23200,7 @@ babelHelpers;
         ie_close('p');
         ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param133 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param135 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -23276,7 +23307,7 @@ babelHelpers;
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
       opt_data = opt_data || {};
-      var param190 = function param190() {
+      var param192 = function param192() {
         ie_open('article', null, null, 'id', 'base');
         ie_open('h2');
         itext('Base Layout');
@@ -23481,7 +23512,7 @@ babelHelpers;
         ie_close('p');
         ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param190 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param192 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -23588,7 +23619,7 @@ babelHelpers;
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
       opt_data = opt_data || {};
-      var param215 = function param215() {
+      var param217 = function param217() {
         ie_open('article', null, null, 'id', 'creating');
         ie_open('h2');
         itext('Creating Components');
@@ -23687,7 +23718,7 @@ babelHelpers;
         ie_close('p');
         ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param215 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param217 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -23794,7 +23825,7 @@ babelHelpers;
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
       opt_data = opt_data || {};
-      var param245 = function param245() {
+      var param247 = function param247() {
         ie_open('article', null, null, 'id', 'front_matter');
         ie_open('h2');
         itext('Front Matter');
@@ -23945,7 +23976,7 @@ babelHelpers;
         ie_close('p');
         ie_close('article');
       };
-      $templateAlias1(soy.$$assignDefaults({ content: param245 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ content: param247 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -24053,11 +24084,11 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param164 = function param164() {
+      var param166 = function param166() {
         $templateAlias2({ section: opt_data.site.index.children[0] }, null, opt_ijData);
         $topics(opt_data, null, opt_ijData);
       };
-      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param164 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param166 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
@@ -24118,18 +24149,18 @@ babelHelpers;
       ie_open('div', null, null, 'class', 'row');
       ie_open('div', null, null, 'class', 'col-md-13 col-md-offset-3 col-xs-16');
       ie_open('div', null, null, 'class', 'row');
-      var topicList185 = opt_data.site.index.children[0].children;
-      var topicListLen185 = topicList185.length;
-      for (var topicIndex185 = 0; topicIndex185 < topicListLen185; topicIndex185++) {
-        var topicData185 = topicList185[topicIndex185];
-        if (!topicData185.hidden) {
+      var topicList187 = opt_data.site.index.children[0].children;
+      var topicListLen187 = topicList187.length;
+      for (var topicIndex187 = 0; topicIndex187 < topicListLen187; topicIndex187++) {
+        var topicData187 = topicList187[topicIndex187];
+        if (!topicData187.hidden) {
           ie_open('div', null, null, 'class', 'col-md-6 col-xs-16');
-          ie_open('a', null, null, 'class', 'topic radial-out', 'href', topicData185.url);
+          ie_open('a', null, null, 'class', 'topic radial-out', 'href', topicData187.url);
           ie_open('div', null, null, 'class', 'topic-icon');
-          ie_void('span', null, null, 'class', 'icon-16-' + topicData185.icon);
+          ie_void('span', null, null, 'class', 'icon-16-' + topicData187.icon);
           ie_close('div');
           ie_open('h3', null, null, 'class', 'topic-title');
-          var dyn5 = topicData185.title;
+          var dyn5 = topicData187.title;
           if (typeof dyn5 == 'function') dyn5();else if (dyn5 != null) itext(dyn5);
           ie_close('h3');
           ie_close('a');
@@ -24251,7 +24282,7 @@ babelHelpers;
      * @suppress {checkTypes}
      */
     function $render(opt_data, opt_ignored, opt_ijData) {
-      var param276 = function param276() {
+      var param278 = function param278() {
         $templateAlias2({ section: opt_data.site.index.children[0] }, null, opt_ijData);
         ie_open('div', null, null, 'class', 'sidebar-offset');
         ie_open('div', null, null, 'class', 'container-hybrid docs-home-top');
@@ -24276,7 +24307,7 @@ babelHelpers;
         ie_close('div');
         ie_close('div');
       };
-      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param276 }, opt_data), null, opt_ijData);
+      $templateAlias1(soy.$$assignDefaults({ elementClasses: 'docs', content: param278 }, opt_data), null, opt_ijData);
     }
     exports.render = $render;
     if (goog.DEBUG) {
